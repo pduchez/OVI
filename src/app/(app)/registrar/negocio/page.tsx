@@ -40,6 +40,7 @@ export default async function NegocioPage() {
           proyectos={proyectos}
           vendedores={vendedores}
           fuerzaFija={scope.fuerzaFija}
+          requiereBoleta={scope.requiereBoleta}
         />
       </div>
     </div>

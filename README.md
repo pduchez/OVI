@@ -20,14 +20,29 @@ plataforma en línea** con dashboard, reportes y control de acceso por rol.
   JavaScript, sin librerías pesadas. Se ve igual de bien en celular.
 - **Batería de reportes** exportables a CSV e imprimibles a PDF.
 
-## Roles (4 niveles de acceso)
+## Roles y accesos
 
-| Rol | Ve / hace |
-|-----|-----------|
-| **Director** (Director 1 y 2) | Todo. Administra proyectos, usuarios y vendedores. |
-| **Gerente de ventas** | Todos los proyectos, filtrado a **su fuerza** (Oficina = Lic. Claudia · UCOES = Lic. Max). |
-| **Líder de central** | Solo los **proyectos asignados** (varios a la vez). |
-| **Líder de sitio** | Solo **su proyecto**. Registra el día a día. |
+| Rol | Usuario | Ve / hace |
+|-----|---------|-----------|
+| **Director** | `director1`, `director2` | Todo. Administra proyectos, usuarios y seguridad. |
+| **Gerente de ventas** | `gerente_interna`, `gerente_ucoes` | Toda la actividad de todos los proyectos. **Fija los precios** y carga inventario. |
+| **Asistente ejecutiva** | `asist_interna`, `asist_ucoes`, `asist_dp` | Igual que el gerente pero **sin tocar precios**. Administra los usuarios de su fuerza. |
+| **Ventas de sitio** | `ventas<Proyecto>` | **Su** proyecto: registra el día a día y **marca los lotes que se reservan o se venden**. |
+| **UCOES** | `vucoes1` … `vucoes10` | Ven el inventario de **todos** los proyectos y venden en cualquiera. Su actividad queda en su fuerza. |
+| **Destinopropiedades.com** | `vdp1` … `vdp10` | Igual que UCOES, en la fuerza DP. Su actividad no se mezcla con la de Chacón. |
+
+El usuario de sitio se llama como su proyecto para recordarlo sin lista:
+`ventasBypass`, `ventasCondadovillalourdes`, `ventasCumbresdesantiago`… El
+ingreso **no distingue mayúsculas**.
+
+### Dos reglas duras
+
+1. **El precio del lote lo fija solo Grupo Chacón** (gerentes y dirección).
+   Nadie más lo puede alterar, ni al reservar ni al vender.
+2. **Toda reserva o venta va amarrada a un depósito con su boleta.** Sin la
+   foto de la boleta no se puede marcar un lote. Solo la capa de mando puede
+   registrar sin ella, y esa excepción queda anotada en la bitácora de
+   seguridad con quién la hizo.
 
 ## Módulos
 
@@ -35,7 +50,9 @@ plataforma en línea** con dashboard, reportes y control de acceso por rol.
 - **Registrar** — Visita · Reserva/Venta · Abono/Pago · Novedad/Problema.
 - **Negocios** — cada venta con su ciclo de vida (reserva → venta → abonos →
   escritura, o caída con motivo) e historial de pagos.
-- **Proyectos** — inventario y avance por proyecto.
+- **Inventario** — lotes, precios y **estado real de cada lote**. Desde aquí
+  el vendedor marca en el momento lo que se reserva o se vende, con la boleta
+  del depósito; el lote queda bloqueado para todos al instante.
 - **Novedades** — bitácora de problemas con prioridad y estado.
 - **Reportes** — Resumen ejecutivo · por proyecto · por vendedor · por fuerza ·
   análisis de caídas · cartera y cobranza. (CSV + Imprimir/PDF)
@@ -46,7 +63,7 @@ plataforma en línea** con dashboard, reportes y control de acceso por rol.
 
 ## Stack
 
-Next.js 14 (App Router, Server Actions) · Prisma · PostgreSQL · Tailwind ·
+Next.js 16 (App Router, Server Actions) · Prisma · PostgreSQL · Tailwind ·
 TypeScript. Autenticación propia (scrypt + cookie firmada HMAC), **sin servicios
 externos de login**.
 
@@ -59,18 +76,11 @@ npm run setup                 # prisma generate + db push + seed (datos demo)
 npm run dev                   # http://localhost:3000
 ```
 
-Usuarios de arranque (contraseña inicial `password`, cámbiala en Administración):
+Todos los usuarios nacen con la contraseña `password` y **la deben cambiar en
+el primer ingreso**. Ver la tabla de roles arriba para los nombres de usuario.
 
-| Usuario | Rol |
-|---------|-----|
-| `director1`, `director2` | Director |
-| `claudia` | Gerente (Interna/Oficina) |
-| `max` | Gerente (UCOES) |
-| `central1` | Líder de central (3 proyectos) |
-| `sitio1` | Líder de sitio (1 proyecto) |
-
-Los **15 proyectos** que se siembran son un punto de partida; el Director los
-edita/reemplaza por los reales desde **Administración → Proyectos**.
+Los **20 proyectos** del Grupo Chacón se siembran solos; cada proyecto nuevo
+genera además su usuario `ventas<Proyecto>` sin tocar el código.
 
 ## Variables de entorno
 

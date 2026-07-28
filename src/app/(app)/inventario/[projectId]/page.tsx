@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth";
-import { getScope, canAccessProject } from "@/lib/permissions";
+import { getScope, canAccessInventario } from "@/lib/permissions";
 import { prisma } from "@/lib/db";
 import { ESTADOS_LOTE } from "@/lib/constants";
 import { money, num, fechaHora } from "@/lib/format";
@@ -10,6 +10,7 @@ import LogoProyecto from "@/components/LogoProyecto";
 import ActionForm from "@/components/ActionForm";
 import { Field, Select, Input, Textarea } from "@/components/fields";
 import { guardarLote, importarInventario, subirDocumento } from "../actions";
+import ReservaLote, { LiberarLote } from "@/components/ReservaLote";
 
 export const dynamic = "force-dynamic";
 
@@ -18,13 +19,16 @@ export default async function InventarioProyecto({
   searchParams,
 }: {
   params: Promise<{ projectId: string }>;
-  searchParams: Promise<{ edit?: string; ok?: string; c?: string; a?: string; h?: string; ig?: string }>;
+  searchParams: Promise<{
+    edit?: string; ok?: string; c?: string; a?: string; h?: string; ig?: string;
+    l?: string; reservar?: string; liberar?: string;
+  }>;
 }) {
   const sp = await searchParams;
   const par = await params;
   const user = await requireUser();
   const scope = await getScope(user);
-  if (!canAccessProject(scope, par.projectId)) redirect("/inventario");
+  if (!canAccessInventario(scope, par.projectId)) redirect("/inventario");
 
   const project = await prisma.project.findUnique({ where: { id: par.projectId } });
   if (!project) notFound();
@@ -44,7 +48,10 @@ export default async function InventarioProyecto({
   ]);
   const cnt = (e: string) => porEstado.find((g) => g.estado === e)?._count._all || 0;
   const editing = sp.edit ? lotes.find((l) => l.id === sp.edit) : null;
-  const canManage = scope.canManageInventory; // DP entra en solo-lectura
+  const canManage = scope.canManageInventory; // solo gerentes y dirección
+  const puedeMarcar = scope.canSetLoteEstado;
+  const reservando = sp.reservar ? lotes.find((l) => l.id === sp.reservar) : null;
+  const liberando = sp.liberar ? lotes.find((l) => l.id === sp.liberar) : null;
 
   return (
     <div>
@@ -73,7 +80,9 @@ export default async function InventarioProyecto({
 
       {!canManage ? (
         <p className="mb-4 rounded-lg bg-orange-50 px-4 py-3 text-sm font-medium text-orange-700">
-          Vista de inventario (solo lectura). Los precios los fija Grupo Chacón.
+          Los precios los fija Grupo Chacón y no se pueden alterar aquí. Lo que sí
+          puedes —y debes— hacer es marcar cada lote que se reserve o se venda,
+          en el momento.
         </p>
       ) : null}
 
@@ -86,6 +95,15 @@ export default async function InventarioProyecto({
               {sp.ig && sp.ig !== "0" ? ` · se ignoraron ${sp.ig} hoja(s) sin lotes` : ""}.
             </span>
           ) : null}
+        </p>
+      ) : sp.ok === "reserva" || sp.ok === "venta" ? (
+        <p className="mb-4 rounded-lg bg-emerald-50 px-4 py-3 font-medium text-emerald-700">
+          ✓ Lote {sp.l} marcado como {sp.ok === "venta" ? "VENDIDO" : "RESERVADO"}.
+          Ya está bloqueado para todos.
+        </p>
+      ) : sp.ok === "liberado" ? (
+        <p className="mb-4 rounded-lg bg-emerald-50 px-4 py-3 font-medium text-emerald-700">
+          ✓ Lote {sp.l} liberado: vuelve a estar disponible.
         </p>
       ) : sp.ok ? (
         <p className="mb-4 rounded-lg bg-emerald-50 px-4 py-3 font-medium text-emerald-700">
@@ -173,6 +191,41 @@ export default async function InventarioProyecto({
       </div>
       ) : null}
 
+      {/* Acción de campo: reservar / vender / liberar un lote */}
+      {reservando ? (
+        <div className="card mb-6 border-2 border-ovi-primary">
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="font-bold text-ovi-ink">Reservar o vender un lote</h2>
+            <Link href={`/inventario/${project.id}`} className="text-sm text-slate-500">
+              Cancelar
+            </Link>
+          </div>
+          <ReservaLote
+            lote={{
+              id: reservando.id,
+              numero: reservando.numero,
+              precio: reservando.precio,
+              area: reservando.area,
+            }}
+            requiereBoleta={scope.requiereBoleta}
+          />
+        </div>
+      ) : null}
+
+      {liberando && scope.canLiberarLote ? (
+        <div className="card mb-6 border-2 border-amber-400">
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="font-bold text-ovi-ink">Liberar lote</h2>
+            <Link href={`/inventario/${project.id}`} className="text-sm text-slate-500">
+              Cancelar
+            </Link>
+          </div>
+          <LiberarLote
+            lote={{ id: liberando.id, numero: liberando.numero, estado: liberando.estado }}
+          />
+        </div>
+      ) : null}
+
       {/* Lotes + alta/edición */}
       <div className={`grid gap-6 ${canManage ? "lg:grid-cols-[1fr_320px]" : ""}`}>
         <div className="card overflow-x-auto">
@@ -189,7 +242,7 @@ export default async function InventarioProyecto({
                   <th className="text-right">Área m²</th>
                   <th className="text-right">Precio</th>
                   <th>Estado</th>
-                  {canManage ? <th></th> : null}
+                  {puedeMarcar || canManage ? <th></th> : null}
                 </tr>
               </thead>
               <tbody>
@@ -199,14 +252,32 @@ export default async function InventarioProyecto({
                     <td data-label="Área m²" className="text-right">{num(l.area)}</td>
                     <td data-label="Precio" className="text-right font-semibold">{money(l.precio)}</td>
                     <td data-label="Estado"><Badge value={l.estado} /></td>
-                    {canManage ? (
-                      <td data-label="">
-                        <Link
-                          href={`/inventario/${project.id}?edit=${l.id}`}
-                          className="text-sm font-semibold text-ovi-primary"
-                        >
-                          Editar
-                        </Link>
+                    {puedeMarcar || canManage ? (
+                      <td data-label="" className="whitespace-nowrap">
+                        {puedeMarcar && l.estado === "disponible" ? (
+                          <Link
+                            href={`/inventario/${project.id}?reservar=${l.id}`}
+                            className="btn-primary px-3 py-1.5 text-sm"
+                          >
+                            Reservar / Vender
+                          </Link>
+                        ) : null}
+                        {scope.canLiberarLote && ["reservado", "vendido"].includes(l.estado) ? (
+                          <Link
+                            href={`/inventario/${project.id}?liberar=${l.id}`}
+                            className="ml-2 text-sm font-semibold text-amber-700"
+                          >
+                            Liberar
+                          </Link>
+                        ) : null}
+                        {canManage ? (
+                          <Link
+                            href={`/inventario/${project.id}?edit=${l.id}`}
+                            className="ml-3 text-sm font-semibold text-ovi-primary"
+                          >
+                            Editar
+                          </Link>
+                        ) : null}
                       </td>
                     ) : null}
                   </tr>

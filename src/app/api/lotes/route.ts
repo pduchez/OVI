@@ -1,13 +1,14 @@
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
-import { getScope, canAccessProject } from "@/lib/permissions";
+import { getScope, canAccessInventario } from "@/lib/permissions";
 
 export const dynamic = "force-dynamic";
 
 /**
  * GET /api/lotes?projectId=...&all=1
  * Devuelve los lotes de un proyecto (por defecto solo los DISPONIBLES) para
- * poblar el dropdown de reserva/venta. Respeta el acceso del usuario.
+ * poblar el dropdown de reserva/venta. Usa el alcance de INVENTARIO: UCOES
+ * y DP venden en cualquier proyecto, así que ven todos los lotes.
  */
 export async function GET(req: Request) {
   const user = await getCurrentUser().catch(() => null);
@@ -17,7 +18,7 @@ export async function GET(req: Request) {
   const url = new URL(req.url);
   const projectId = url.searchParams.get("projectId") || "";
   const all = url.searchParams.get("all") === "1";
-  if (!projectId || !canAccessProject(scope, projectId)) {
+  if (!projectId || !canAccessInventario(scope, projectId)) {
     return Response.json({ lotes: [], total: 0 });
   }
 

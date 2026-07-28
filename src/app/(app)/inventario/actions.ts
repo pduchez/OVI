@@ -4,14 +4,22 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
-import { getScope, canAccessProject } from "@/lib/permissions";
+import { getScope, canAccessProject, canAccessInventario } from "@/lib/permissions";
 import { storeFile } from "@/lib/files";
 import { logSecurity } from "@/lib/securityLog";
 import { parseInventoryDetallado } from "@/lib/inventory";
+import { notifyAccounting } from "@/lib/integrations/accounting";
 
 function money(v: FormDataEntryValue | null): number {
   const n = parseFloat(String(v || "0").replace(/[^0-9.]/g, ""));
   return isNaN(n) ? 0 : n;
+}
+
+function parseDate(v: FormDataEntryValue | null): Date {
+  const s = String(v || "").trim();
+  if (!s) return new Date();
+  const d = new Date(s + "T12:00:00");
+  return isNaN(d.getTime()) ? new Date() : d;
 }
 
 /** Solo gerentes de ventas y directores pueden gestionar inventario/precios. */
@@ -26,6 +34,17 @@ async function guardInv(projectId?: string) {
     throw new Error("No tienes acceso a este proyecto.");
   }
   return user;
+}
+
+/** Quien puede mover el ESTADO de un lote: ventas de sitio, UCOES, DP y mando. */
+async function guardEstadoLote(projectId: string) {
+  const user = await getCurrentUser();
+  if (!user) redirect("/login");
+  const scope = await getScope(user);
+  if (!scope.canSetLoteEstado || !canAccessInventario(scope, projectId)) {
+    throw new Error("No tienes permiso para actualizar lotes de este proyecto.");
+  }
+  return { user, scope };
 }
 
 // --- Alta / edición de un lote (precio editable SOLO aquí) ----------------
@@ -189,4 +208,169 @@ export async function subirDocumento(_prev: unknown, fd: FormData) {
   await logSecurity(user, "doc_upload", `Documento cargado: ${stored.nombre}`, projectId);
   revalidatePath(`/inventario/${projectId}`);
   redirect(`/inventario/${projectId}?ok=doc`);
+}
+
+// --- Reserva / venta de un lote DESDE EL INVENTARIO ----------------------
+// Es la acción de campo de OVI: el vendedor está parado en el proyecto, marca
+// el lote y queda bloqueado para todos al instante.
+//
+// Regla dura: toda reserva o venta va amarrada a un depósito con su boleta.
+// La capa de mando (dirección, gerentes, asistentes) puede registrar sin
+// boleta —para casos excepcionales— y esa excepción queda en la bitácora.
+export async function reservarLote(_prev: unknown, fd: FormData) {
+  const loteId = String(fd.get("loteId") || "");
+  const lote = await prisma.lote.findUnique({ where: { id: loteId } });
+  if (!lote) return { error: "El lote no existe." };
+  const { user, scope } = await guardEstadoLote(lote.projectId);
+
+  if (lote.estado !== "disponible") {
+    return { error: `El lote ${lote.numero} ya está ${lote.estado}. Actualiza la página.` };
+  }
+
+  const tipo = String(fd.get("tipo") || "reserva"); // reserva | venta
+  const esVenta = tipo === "venta";
+  const cliente = String(fd.get("clienteNombre") || "").trim();
+  if (!cliente) return { error: "Escribe el nombre del cliente." };
+  const monto = money(fd.get("monto"));
+  const fecha = parseDate(fd.get("fecha"));
+
+  // Depósito + boleta: obligatorios para las fuerzas de venta.
+  let boletaFileId: string | null = null;
+  if (scope.requiereBoleta) {
+    if (monto <= 0) {
+      return { error: "La reserva o venta debe ir respaldada con un depósito. Escribe el monto recibido." };
+    }
+    let stored: { id: string } | null = null;
+    try {
+      stored = await storeFile(fd.get("boleta") as File | null, "boleta", user.id);
+    } catch (e) {
+      return { error: (e as Error).message };
+    }
+    if (!stored) {
+      return { error: "Adjunta la foto de la boleta del depósito. Sin boleta no se puede reservar ni vender." };
+    }
+    boletaFileId = stored.id;
+  } else if (monto > 0) {
+    // El mando puede adjuntarla igual; si la trae, se guarda.
+    try {
+      const stored = await storeFile(fd.get("boleta") as File | null, "boleta", user.id);
+      boletaFileId = stored?.id || null;
+    } catch (e) {
+      return { error: (e as Error).message };
+    }
+  }
+
+  const fuerza = scope.fuerzaFija || String(fd.get("fuerza") || "interna");
+  const negocio = await prisma.negocio.create({
+    data: {
+      projectId: lote.projectId,
+      loteId: lote.id,
+      loteRef: lote.numero,
+      clienteNombre: cliente,
+      clienteTelefono: String(fd.get("clienteTelefono") || "").trim(),
+      fuerza,
+      estado: esVenta ? "vendido" : "reservado",
+      precioLote: lote.precio, // precio bloqueado desde inventario
+      prima: monto,
+      fechaReserva: fecha,
+      fechaVenta: esVenta ? fecha : null,
+      notas: String(fd.get("notas") || "").trim(),
+      registradoPorId: user.id,
+    },
+  });
+
+  // Bloqueo del inventario: a partir de aquí el lote no está disponible.
+  await prisma.lote.update({
+    where: { id: lote.id },
+    data: { estado: esVenta ? "vendido" : "reservado" },
+  });
+
+  if (monto > 0) {
+    const abono = await prisma.abono.create({
+      data: {
+        negocioId: negocio.id,
+        fecha,
+        monto,
+        tipo: "prima",
+        metodo: boletaFileId ? "deposito" : "efectivo",
+        referencia: String(fd.get("referencia") || "").trim(),
+        boletaFileId,
+        registradoPorId: user.id,
+      },
+    });
+    await notifyAccounting({
+      abonoId: abono.id,
+      negocioId: negocio.id,
+      projectId: lote.projectId,
+      monto,
+      tipo: "prima",
+      metodo: abono.metodo,
+      fecha,
+      boletaFileId,
+    });
+  }
+
+  await prisma.registro.create({
+    data: {
+      tipo: esVenta ? "venta" : "reserva",
+      projectId: lote.projectId,
+      refId: negocio.id,
+      resumen: `${esVenta ? "Venta" : "Reserva"} de ${lote.numero} — ${cliente} (desde inventario)`,
+      monto: esVenta ? lote.precio : monto,
+      registradoPorId: user.id,
+    },
+  });
+
+  if (!boletaFileId) {
+    // Excepción de mando: queda explícita para que se pueda auditar.
+    await logSecurity(
+      user,
+      "lote_sin_boleta",
+      `${esVenta ? "Venta" : "Reserva"} de ${lote.numero} registrada SIN boleta de depósito`,
+      lote.projectId
+    );
+  }
+
+  revalidatePath(`/inventario/${lote.projectId}`);
+  redirect(`/inventario/${lote.projectId}?ok=${esVenta ? "venta" : "reserva"}&l=${encodeURIComponent(lote.numero)}`);
+}
+
+// --- Liberar un lote (revertir) -----------------------------------------
+// Solo la capa de mando: devolver un lote a disponible deshace una reserva o
+// una venta, así que no es una acción de campo.
+export async function liberarLote(_prev: unknown, fd: FormData) {
+  const loteId = String(fd.get("loteId") || "");
+  const lote = await prisma.lote.findUnique({ where: { id: loteId } });
+  if (!lote) return { error: "El lote no existe." };
+  const { user, scope } = await guardEstadoLote(lote.projectId);
+  if (!scope.canLiberarLote) {
+    return { error: "Solo la dirección, los gerentes y las asistentes pueden liberar un lote." };
+  }
+  const motivo = String(fd.get("motivo") || "").trim();
+  if (!motivo) return { error: "Escribe el motivo por el que se libera el lote." };
+
+  // Da de baja el negocio vivo que tenga el lote, si lo hay.
+  const vivos = await prisma.negocio.findMany({
+    where: { loteId: lote.id, estado: { in: ["reservado", "vendido", "en_mora"] } },
+  });
+  for (const n of vivos) {
+    await prisma.negocio.update({
+      where: { id: n.id },
+      data: {
+        estado: "caido",
+        fechaCaida: new Date(),
+        motivoCaida: "liberado_inventario",
+        notas: n.notas ? `${n.notas}\n[Liberado] ${motivo}` : `[Liberado] ${motivo}`,
+      },
+    });
+  }
+  await prisma.lote.update({ where: { id: lote.id }, data: { estado: "disponible" } });
+  await logSecurity(
+    user,
+    "lote_liberado",
+    `Lote ${lote.numero} liberado (${lote.estado} → disponible): ${motivo}`,
+    lote.projectId
+  );
+  revalidatePath(`/inventario/${lote.projectId}`);
+  redirect(`/inventario/${lote.projectId}?ok=liberado&l=${encodeURIComponent(lote.numero)}`);
 }

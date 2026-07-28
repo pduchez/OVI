@@ -134,6 +134,69 @@ async function upsertUser(u: {
   return created.id;
 }
 
+const pad = (n: number) => String(n).padStart(2, "0");
+
+/**
+ * Usuario de ventas de sitio a partir del nombre del proyecto:
+ *   "Condado Villa Lourdes" → "ventasCondadovillalourdes"
+ *   "Vía Bypass"            → "ventasViabypass"
+ * El ingreso NO distingue mayúsculas, así que la capital es solo para leerlo
+ * más fácil: "ventasbypass" también entra.
+ */
+export function usuarioVentas(nombreProyecto: string): string {
+  const base = nombreProyecto
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // quita acentos
+    .replace(/[^A-Za-z0-9]+/g, "") // solo letras y números
+    .toLowerCase();
+  if (!base) return "ventas";
+  return "ventas" + base.charAt(0).toUpperCase() + base.slice(1);
+}
+
+/**
+ * Renombra un usuario del esquema anterior al nuevo, conservando su historial,
+ * su contraseña y su asignación de proyecto. Si el nombre nuevo ya existe o el
+ * viejo ya no está, no hace nada (idempotente).
+ */
+async function renombrarUsuario(viejo: string, nuevo: string, displayName: string) {
+  if (viejo.toLowerCase() === nuevo.toLowerCase()) return;
+  const u = await prisma.user.findFirst({
+    where: { username: { equals: viejo, mode: "insensitive" } },
+  });
+  if (!u) return;
+  const ocupado = await prisma.user.findFirst({
+    where: { username: { equals: nuevo, mode: "insensitive" } },
+  });
+  if (ocupado) return;
+  // El nombre visible solo se actualiza si sigue siendo el automático: si la
+  // asistente ya puso a la persona real, se respeta.
+  const esAutomatico = /^(Vendedor (Interna|UCOES|DP) \d+)$/.test(u.displayName.trim());
+  await prisma.user.update({
+    where: { id: u.id },
+    data: { username: nuevo, ...(esAutomatico ? { displayName } : {}) },
+  });
+}
+
+/** Retira un cupo que sobra: se borra si nunca se usó; si no, se desactiva. */
+async function retirarCupo(username: string) {
+  const u = await prisma.user.findFirst({
+    where: { username: { equals: username, mode: "insensitive" } },
+    include: {
+      _count: { select: { visitas: true, negocios: true, abonos: true, novedades: true, registros: true, subordinados: true } },
+    },
+  });
+  if (!u) return;
+  const c = u._count;
+  const sinUso = !c.visitas && !c.negocios && !c.abonos && !c.novedades && !c.registros && !c.subordinados;
+  if (sinUso) {
+    await prisma.projectAssignment.deleteMany({ where: { userId: u.id } });
+    await prisma.user.delete({ where: { id: u.id } });
+  } else if (u.activo) {
+    // Tiene historial: se conserva para trazabilidad, solo pierde el acceso.
+    await prisma.user.update({ where: { id: u.id }, data: { activo: false } });
+  }
+}
+
 export async function ensureOrgUsers(): Promise<void> {
   const dir1 = await prisma.user.findFirst({ where: { username: "director1" } });
   const dir2 = await prisma.user.findFirst({ where: { username: "director2" } });
@@ -146,42 +209,47 @@ export async function ensureOrgUsers(): Promise<void> {
   const aUcoes = await upsertUser({ username: "asist_ucoes", role: "asistente", displayName: "Asistente Ejecutiva — UCOES", fuerza: "ucoes", supervisorId: gUcoes });
   const aDp = await upsertUser({ username: "asist_dp", role: "asistente", displayName: "Asistente Ejecutiva — Destinopropiedades.com", fuerza: "destino", supervisorId: dir2?.id });
 
-  // --- Vendedores (cupos) ---
-  const pad = (n: number) => String(n).padStart(2, "0");
-
-  // Un cupo de vendedor por proyecto, en cada fuerza de Chacón (Interna y
-  // UCOES). El número del cupo sale del CÓDIGO del proyecto —GIC-20 genera
-  // v_interna_20 y v_ucoes_20—, no de un contador: así el mapeo cupo↔proyecto
-  // es siempre el mismo aunque cambie el orden o se agreguen proyectos, y cada
-  // proyecto nuevo trae su cupo solo, sin tocar el código.
-  const FUERZAS_CHACON = [
-    { prefijo: "v_interna", fuerza: "interna", etiqueta: "Interna", jefe: aInterna },
-    { prefijo: "v_ucoes", fuerza: "ucoes", etiqueta: "UCOES", jefe: aUcoes },
-  ];
+  // --- Ventas de sitio: un usuario por proyecto ---------------------------
+  // El usuario se llama como el proyecto (ventasBypass, ventasCondadovillalourdes)
+  // para que se recuerde sin lista. Ve y actualiza el inventario de SU proyecto.
+  const usados = new Set<string>();
   for (const proj of projects) {
+    let username = usuarioVentas(proj.nombre);
+    // Desempate por si dos proyectos generan el mismo usuario.
+    if (usados.has(username.toLowerCase())) username += proj.codigo.replace(/\D/g, "");
+    usados.add(username.toLowerCase());
+    const nombre = `Ventas — ${proj.nombre}`;
+
+    // Migración desde el esquema anterior (v_interna_NN), conservando el
+    // usuario y por lo tanto su historial y su asignación de proyecto.
     const n = proj.codigo.trim().toUpperCase().replace(/^GIC-/, "");
-    // Un proyecto con código fuera del estándar GIC-NN no genera cupo
-    // automático: lo asigna a mano el gerente o la asistente.
-    if (!/^\d+$/.test(n)) continue;
-    const num = pad(parseInt(n, 10));
-    for (const f of FUERZAS_CHACON) {
-      const uid = await upsertUser({
-        username: `${f.prefijo}_${num}`,
-        role: "vendedor",
-        displayName: `Vendedor ${f.etiqueta} ${num}`,
-        fuerza: f.fuerza,
-        supervisorId: f.jefe,
-      });
-      // Solo se asigna si el cupo no tiene ya proyecto: nunca se pisa una
-      // reasignación hecha por la asistente desde el panel de usuarios.
-      if ((await prisma.projectAssignment.count({ where: { userId: uid } })) === 0) {
-        await prisma.projectAssignment.create({ data: { userId: uid, projectId: proj.id } });
-      }
+    if (/^\d+$/.test(n)) await renombrarUsuario(`v_interna_${pad(+n)}`, username, nombre);
+
+    const uid = await upsertUser({ username, role: "vendedor", displayName: nombre, fuerza: "interna", supervisorId: aInterna });
+    // Solo se asigna si el usuario no tiene ya proyecto: nunca se pisa una
+    // reasignación hecha por la asistente desde el panel de usuarios.
+    if ((await prisma.projectAssignment.count({ where: { userId: uid } })) === 0) {
+      await prisma.projectAssignment.create({ data: { userId: uid, projectId: proj.id } });
     }
   }
 
-  // Destinopropiedades.com: 10 (ven todo el inventario; sin proyecto fijo).
+  // --- UCOES: 10, itinerantes -------------------------------------------
+  // Ven el inventario de TODOS los proyectos, así que no llevan proyecto fijo.
   for (let i = 1; i <= 10; i++) {
-    await upsertUser({ username: `v_dp_${pad(i)}`, role: "vendedor", displayName: `Vendedor DP ${pad(i)}`, fuerza: "destino", supervisorId: aDp });
+    const nombre = `Vendedor UCOES ${i}`;
+    await renombrarUsuario(`v_ucoes_${pad(i)}`, `vucoes${i}`, nombre);
+    const uid = await upsertUser({ username: `vucoes${i}`, role: "vendedor", displayName: nombre, fuerza: "ucoes", supervisorId: aUcoes });
+    await prisma.projectAssignment.deleteMany({ where: { userId: uid } });
+  }
+  // Los cupos UCOES 11..20 se crearon cuando UCOES iba por proyecto. Con la
+  // fuerza itinerante sobran: se retiran si nunca se usaron.
+  for (let i = 11; i <= 20; i++) await retirarCupo(`v_ucoes_${pad(i)}`);
+
+  // --- Destinopropiedades.com: 10, itinerantes ---------------------------
+  for (let i = 1; i <= 10; i++) {
+    const nombre = `Vendedor DP ${i}`;
+    await renombrarUsuario(`v_dp_${pad(i)}`, `vdp${i}`, nombre);
+    const uid = await upsertUser({ username: `vdp${i}`, role: "vendedor", displayName: nombre, fuerza: "destino", supervisorId: aDp });
+    await prisma.projectAssignment.deleteMany({ where: { userId: uid } });
   }
 }

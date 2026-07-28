@@ -7,6 +7,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { getScope, canAccessProject } from "@/lib/permissions";
 import { ESTADOS_VENTA_VIVA } from "@/lib/constants";
 import { storeFile } from "@/lib/files";
+import { logSecurity } from "@/lib/securityLog";
 import { notifyAccounting } from "@/lib/integrations/accounting";
 
 function parseDate(v: FormDataEntryValue | null): Date {
@@ -121,6 +122,39 @@ export async function registrarNegocio(_prev: unknown, fd: FormData) {
     loteRef = lote.numero;
   }
 
+  // Depósito + boleta: toda reserva o venta de una fuerza de venta va
+  // respaldada con la foto de la boleta. La capa de mando puede registrar sin
+  // ella (excepción) y queda anotado en la bitácora de seguridad.
+  let boletaFileId: string | null = null;
+  if (scope.requiereBoleta) {
+    if (prima <= 0) {
+      return {
+        error:
+          "La reserva o venta debe ir respaldada con un depósito. Escribe el monto recibido.",
+      };
+    }
+    let stored: { id: string } | null = null;
+    try {
+      stored = await storeFile(fd.get("boleta") as File | null, "boleta", user.id);
+    } catch (e) {
+      return { error: (e as Error).message };
+    }
+    if (!stored) {
+      return {
+        error:
+          "Adjunta la foto de la boleta del depósito. Sin boleta no se puede reservar ni vender.",
+      };
+    }
+    boletaFileId = stored.id;
+  } else if (prima > 0) {
+    try {
+      const stored = await storeFile(fd.get("boleta") as File | null, "boleta", user.id);
+      boletaFileId = stored?.id || null;
+    } catch (e) {
+      return { error: (e as Error).message };
+    }
+  }
+
   const negocio = await prisma.negocio.create({
     data: {
       projectId,
@@ -148,7 +182,7 @@ export async function registrarNegocio(_prev: unknown, fd: FormData) {
     });
   }
 
-  // Si registró prima al momento, crea el abono inicial.
+  // Si registró prima al momento, crea el abono inicial con su boleta.
   if (prima > 0) {
     await prisma.abono.create({
       data: {
@@ -156,10 +190,19 @@ export async function registrarNegocio(_prev: unknown, fd: FormData) {
         fecha,
         monto: prima,
         tipo: "prima",
-        metodo: String(fd.get("metodo") || "efectivo"),
+        metodo: boletaFileId ? "deposito" : String(fd.get("metodo") || "efectivo"),
+        boletaFileId,
         registradoPorId: user.id,
       },
     });
+  }
+  if (!boletaFileId) {
+    await logSecurity(
+      user,
+      "negocio_sin_boleta",
+      `${esVenta ? "Venta" : "Reserva"} de ${loteRef || "lote sin inventario"} — ${cliente}: registrada SIN boleta de depósito`,
+      projectId
+    );
   }
 
   await logRegistro({

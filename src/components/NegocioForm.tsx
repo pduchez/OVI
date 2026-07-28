@@ -21,10 +21,13 @@ export default function NegocioForm({
   proyectos,
   vendedores,
   fuerzaFija,
+  requiereBoleta,
 }: {
   proyectos: Opt[];
   vendedores: Opt[];
   fuerzaFija?: string | null;
+  /** Las fuerzas de venta deben respaldar la reserva/venta con la boleta. */
+  requiereBoleta?: boolean;
 }) {
   const [state, action] = useFormState(registrarNegocio, undefined as { error?: string } | undefined);
   const [projectId, setProjectId] = useState(proyectos.length === 1 ? proyectos[0].value : "");
@@ -194,17 +197,44 @@ export default function NegocioForm({
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <label className="block">
-          <span className="label">Prima recibida (US$)</span>
-          <input name="prima" inputMode="decimal" className="field" placeholder="0" />
+          <span className="label">
+            Prima recibida (US$){requiereBoleta ? " *" : ""}
+          </span>
+          <input
+            name="prima"
+            inputMode="decimal"
+            className="field"
+            placeholder="0"
+            required={requiereBoleta}
+          />
         </label>
         <label className="block">
           <span className="label">Método de la prima</span>
-          <select name="metodo" className="field" defaultValue="efectivo">
+          <select name="metodo" className="field" defaultValue={requiereBoleta ? "deposito" : "efectivo"}>
             <option value="efectivo">Efectivo</option>
             <option value="deposito">Depósito / Transferencia</option>
           </select>
         </label>
       </div>
+
+      <label className="block">
+        <span className="label">
+          Foto de la boleta del depósito{requiereBoleta ? " *" : " (opcional)"}
+        </span>
+        <input
+          type="file"
+          name="boleta"
+          accept="image/*,.pdf"
+          capture="environment"
+          className="field bg-white"
+          required={requiereBoleta}
+        />
+        <span className="mt-1 block text-xs text-slate-500">
+          {requiereBoleta
+            ? "Obligatoria: sin boleta no se puede reservar ni vender. Puedes tomarla con la cámara."
+            : "Como mando puedes registrar sin boleta; la excepción queda en la bitácora."}
+        </span>
+      </label>
 
       <label className="block">
         <span className="label">Notas (opcional)</span>

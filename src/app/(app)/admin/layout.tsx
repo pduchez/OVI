@@ -9,6 +9,7 @@ const TABS = [
   { href: "/admin/proyectos", label: "Proyectos" },
   { href: "/admin/usuarios", label: "Usuarios y accesos" },
   { href: "/admin/vendedores", label: "Vendedores" },
+  { href: "/admin/seguridad", label: "Bitácora de seguridad" },
 ];
 
 export default async function AdminLayout({

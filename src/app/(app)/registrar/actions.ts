@@ -6,6 +6,8 @@ import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { getScope, canAccessProject } from "@/lib/permissions";
 import { ESTADOS_VENTA_VIVA } from "@/lib/constants";
+import { storeFile } from "@/lib/files";
+import { notifyAccounting } from "@/lib/integrations/accounting";
 
 function parseDate(v: FormDataEntryValue | null): Date {
   const s = String(v || "").trim();
@@ -91,15 +93,34 @@ export async function registrarNegocio(_prev: unknown, fd: FormData) {
   const tipo = String(fd.get("tipo") || "reserva"); // reserva | venta
   const user = await guard(projectId);
 
-  const precioLote = money(fd.get("precioLote"));
   const prima = money(fd.get("prima"));
   const fecha = parseDate(fd.get("fecha"));
   const esVenta = tipo === "venta";
+  const loteId = String(fd.get("loteId") || "") || null;
+
+  // Precio: si el negocio se asocia a un lote del inventario, el precio se toma
+  // del lote y queda BLOQUEADO (el vendedor/líder no lo puede alterar). Solo si
+  // el proyecto aún no tiene inventario se acepta un precio manual.
+  let precioLote = money(fd.get("precioLote"));
+  let loteRef = String(fd.get("loteRef") || "").trim();
+  let lote = null as Awaited<ReturnType<typeof prisma.lote.findUnique>> | null;
+  if (loteId) {
+    lote = await prisma.lote.findUnique({ where: { id: loteId } });
+    if (!lote || lote.projectId !== projectId) {
+      return { error: "El lote seleccionado no es válido." };
+    }
+    if (lote.estado !== "disponible") {
+      return { error: `El lote ${lote.numero} ya no está disponible.` };
+    }
+    precioLote = lote.precio; // precio bloqueado desde inventario
+    loteRef = lote.numero;
+  }
 
   const negocio = await prisma.negocio.create({
     data: {
       projectId,
-      loteRef: String(fd.get("loteRef") || "").trim(),
+      loteId: loteId || undefined,
+      loteRef,
       clienteNombre: cliente,
       clienteTelefono: String(fd.get("clienteTelefono") || "").trim(),
       vendedorId: String(fd.get("vendedorId") || "") || null,
@@ -113,6 +134,14 @@ export async function registrarNegocio(_prev: unknown, fd: FormData) {
       registradoPorId: user.id,
     },
   });
+
+  // Bloqueo de inventario: la reserva/venta marca el lote como no disponible.
+  if (lote) {
+    await prisma.lote.update({
+      where: { id: lote.id },
+      data: { estado: esVenta ? "vendido" : "reservado" },
+    });
+  }
 
   // Si registró prima al momento, crea el abono inicial.
   if (prima > 0) {
@@ -151,17 +180,46 @@ export async function registrarAbono(_prev: unknown, fd: FormData) {
   const user = await guard(negocio.projectId);
   const monto = money(fd.get("monto"));
   if (monto <= 0) return { error: "El monto debe ser mayor que cero." };
+  const metodo = String(fd.get("metodo") || "efectivo"); // efectivo | deposito
 
-  await prisma.abono.create({
+  // Si es depósito/transferencia, la foto de la boleta es OBLIGATORIA.
+  let boletaFileId: string | null = null;
+  if (metodo === "deposito") {
+    let stored: { id: string } | null = null;
+    try {
+      stored = await storeFile(fd.get("boleta") as File | null, "boleta", user.id);
+    } catch (e) {
+      return { error: (e as Error).message };
+    }
+    if (!stored) {
+      return { error: "Para un depósito debes adjuntar la foto de la boleta." };
+    }
+    boletaFileId = stored.id;
+  }
+
+  const abono = await prisma.abono.create({
     data: {
       negocioId,
       fecha: parseDate(fd.get("fecha")),
       monto,
       tipo: String(fd.get("tipo") || "cuota"),
-      metodo: String(fd.get("metodo") || "efectivo"),
+      metodo,
       referencia: String(fd.get("referencia") || "").trim(),
+      boletaFileId,
       registradoPorId: user.id,
     },
+  });
+
+  // Enlace con Contabilidad (integración futura; hoy no-op).
+  await notifyAccounting({
+    abonoId: abono.id,
+    negocioId,
+    projectId: negocio.projectId,
+    monto,
+    tipo: abono.tipo,
+    metodo,
+    fecha: abono.fecha,
+    boletaFileId,
   });
 
   // Si estaba en mora y abonó, vuelve a "vendido".
@@ -176,7 +234,7 @@ export async function registrarAbono(_prev: unknown, fd: FormData) {
     tipo: "abono",
     projectId: negocio.projectId,
     refId: negocioId,
-    resumen: `Abono de ${negocio.clienteNombre}`,
+    resumen: `Abono de ${negocio.clienteNombre}${metodo === "deposito" ? " (depósito)" : ""}`,
     monto,
     userId: user.id,
   });
@@ -202,6 +260,13 @@ export async function registrarCaida(_prev: unknown, fd: FormData) {
         : `[Caída] ${String(fd.get("detalle") || "")}`,
     },
   });
+  // Liberar el lote en el inventario (vuelve a disponible).
+  if (negocio.loteId) {
+    await prisma.lote.update({
+      where: { id: negocio.loteId },
+      data: { estado: "disponible" },
+    });
+  }
   await logRegistro({
     tipo: "caida",
     projectId: negocio.projectId,

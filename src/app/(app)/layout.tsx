@@ -23,6 +23,9 @@ export default async function AppLayout({
     { href: "/novedades", label: "Novedades", icon: "📌" },
     { href: "/reportes", label: "Reportes", icon: "📑" },
   ];
+  if (scope.canManageInventory) {
+    nav.push({ href: "/inventario", label: "Inventario", icon: "🏷️" });
+  }
   if (scope.canAdmin) {
     nav.push({ href: "/admin", label: "Administración", icon: "⚙️" });
   }

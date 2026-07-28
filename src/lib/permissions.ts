@@ -16,6 +16,9 @@ export interface Scope {
   fuerza: string | null;
   canRegister: boolean; // puede capturar movimientos
   canAdmin: boolean; // director: administrar usuarios/proyectos/vendedores
+  // Gerentes de ventas (Oficina/UCOES) + directores: gestionan inventario y
+  // precios de lote (el vendedor/líder NO puede alterar precios).
+  canManageInventory: boolean;
   isDirector: boolean;
   isGerente: boolean;
   isLider: boolean;
@@ -28,6 +31,7 @@ export async function getScope(user: SessionUser): Promise<Scope> {
       fuerza: null,
       canRegister: true,
       canAdmin: true,
+      canManageInventory: true,
       isDirector: true,
       isGerente: false,
       isLider: false,
@@ -41,6 +45,7 @@ export async function getScope(user: SessionUser): Promise<Scope> {
       fuerza,
       canRegister: true,
       canAdmin: false,
+      canManageInventory: true,
       isDirector: false,
       isGerente: true,
       isLider: false,
@@ -58,6 +63,7 @@ export async function getScope(user: SessionUser): Promise<Scope> {
     fuerza: null,
     canRegister: true,
     canAdmin: false,
+    canManageInventory: false,
     isDirector: false,
     isGerente: false,
     isLider: true,

@@ -184,13 +184,18 @@ model Abono {
   fecha          DateTime @default(now())
   monto          Float    @default(0)
   tipo           String   @default("cuota") // prima | cuota | contado
-  metodo         String   @default("efectivo") // efectivo | transferencia | cheque | tarjeta | otro
+  metodo         String   @default("efectivo") // efectivo | deposito
   referencia     String   @default("")
+  // Foto de la boleta/comprobante (obligatoria si método = deposito).
+  boletaFileId   String?
+  // Estado de sincronización con Contabilidad (integración futura).
+  contabilidadSync Boolean @default(false)
   registradoPorId String?
   createdAt      DateTime @default(now())
 
-  negocio        Negocio  @relation(fields: [negocioId], references: [id], onDelete: Cascade)
-  registradoPor  User?    @relation(fields: [registradoPorId], references: [id])
+  negocio        Negocio    @relation(fields: [negocioId], references: [id], onDelete: Cascade)
+  registradoPor  User?      @relation(fields: [registradoPorId], references: [id])
+  boleta         StoredFile? @relation(fields: [boletaFileId], references: [id])
 
   @@index([negocioId, fecha])
 }
@@ -234,5 +239,61 @@ model Registro {
   registradoPor  User?    @relation("RegistradoPor", fields: [registradoPorId], references: [id])
 
   @@index([createdAt])
+  @@index([projectId, createdAt])
+}
+
+// ---------------------------------------------------------------
+//  StoredFile — archivos guardados EN LA BASE (sin depender de un
+//  almacenamiento externo). Sirve para boletas de depósito (imágenes)
+//  y documentos de inventario (PDF / Excel). Se sirven vía /api/file/<id>.
+// ---------------------------------------------------------------
+model StoredFile {
+  id        String   @id @default(cuid())
+  nombre    String   @default("")
+  mimeType  String   @default("application/octet-stream")
+  kind      String   @default("otro") // boleta | inventario | otro
+  bytes     Bytes
+  size      Int      @default(0)
+  subidoPorId String?
+  createdAt DateTime @default(now())
+
+  abonos    Abono[]
+}
+
+// ---------------------------------------------------------------
+//  SecurityLog — bitácora de seguridad de acciones privilegiadas:
+//  carga/descarga de inventarios, cambios de precio de lote, etc.
+//  Toda acción sensible queda registrada con el usuario que la ejecutó.
+// ---------------------------------------------------------------
+model SecurityLog {
+  id         String   @id @default(cuid())
+  accion     String   // inventario_import | inventario_export | lote_precio | lote_alta | doc_upload | ...
+  detalle    String   @default("")
+  projectId  String   @default("")
+  userId     String   @default("")
+  userName   String   @default("")
+  userRole   String   @default("")
+  createdAt  DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([projectId, createdAt])
+}
+
+// ---------------------------------------------------------------
+//  InventoryImport — registro de cada carga de inventario de un
+//  proyecto (Excel / PDF), con el archivo fuente guardado.
+// ---------------------------------------------------------------
+model InventoryImport {
+  id         String   @id @default(cuid())
+  projectId  String
+  fileId     String?  // StoredFile con el documento fuente
+  formato    String   @default("excel") // excel | csv | pdf
+  filas      Int      @default(0)
+  creados    Int      @default(0)
+  actualizados Int    @default(0)
+  userId     String   @default("")
+  userName   String   @default("")
+  createdAt  DateTime @default(now())
+
   @@index([projectId, createdAt])
 }

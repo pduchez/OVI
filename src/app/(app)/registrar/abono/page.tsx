@@ -2,12 +2,8 @@ import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth";
 import { getScope } from "@/lib/permissions";
 import { negocioOptions } from "@/lib/options";
-import { TIPOS_ABONO, METODOS_PAGO } from "@/lib/constants";
-import { inputDate } from "@/lib/format";
 import { PageHeader, EmptyState } from "@/components/ui";
-import ActionForm from "@/components/ActionForm";
-import { Field, Select, Input } from "@/components/fields";
-import { registrarAbono } from "../actions";
+import AbonoForm from "@/components/AbonoForm";
 
 export const dynamic = "force-dynamic";
 
@@ -42,36 +38,7 @@ export default async function AbonoPage({
         }
       />
       <div className="card">
-        <ActionForm action={registrarAbono} submitLabel="Guardar abono">
-          <Field label="Negocio (cliente · proyecto · lote)">
-            <Select
-              name="negocioId"
-              options={negocios}
-              defaultValue={searchParams.negocio || ""}
-              placeholder="Selecciona el negocio"
-              required
-            />
-          </Field>
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="Fecha">
-              <Input type="date" name="fecha" defaultValue={inputDate(new Date())} />
-            </Field>
-            <Field label="Monto (US$)">
-              <Input name="monto" inputMode="decimal" placeholder="100" required />
-            </Field>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="Tipo">
-              <Select name="tipo" options={TIPOS_ABONO} defaultValue="cuota" />
-            </Field>
-            <Field label="Método">
-              <Select name="metodo" options={METODOS_PAGO} defaultValue="efectivo" />
-            </Field>
-          </div>
-          <Field label="Referencia (opcional)" hint="No. de recibo o transferencia">
-            <Input name="referencia" placeholder="Ej. Recibo 0012" />
-          </Field>
-        </ActionForm>
+        <AbonoForm negocios={negocios} negocioSel={searchParams.negocio} />
       </div>
     </div>
   );

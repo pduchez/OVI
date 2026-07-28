@@ -63,11 +63,8 @@ export const TIPOS_ABONO = [
 ] as const;
 
 export const METODOS_PAGO = [
-  { value: "efectivo", label: "Efectivo" },
-  { value: "transferencia", label: "Transferencia" },
-  { value: "cheque", label: "Cheque" },
-  { value: "tarjeta", label: "Tarjeta" },
-  { value: "otro", label: "Otro" },
+  { value: "efectivo", label: "Efectivo (cash)" },
+  { value: "deposito", label: "Depósito / Transferencia" },
 ] as const;
 
 export const MOTIVOS_CAIDA = [

@@ -33,7 +33,11 @@ export default async function NegocioDetalle({
     include: {
       project: true,
       vendedor: true,
-      abonos: { orderBy: { fecha: "desc" } },
+      registradoPor: { select: { displayName: true, username: true } },
+      abonos: {
+        orderBy: { fecha: "desc" },
+        include: { registradoPor: { select: { displayName: true, username: true } } },
+      },
     },
   });
   if (!n) notFound();
@@ -73,13 +77,22 @@ export default async function NegocioDetalle({
             <dt className="text-slate-500">Vendedor</dt>
             <dd className="font-medium">{n.vendedor?.nombre || "—"}</dd>
             <dt className="text-slate-500">Precio del lote</dt>
-            <dd className="font-medium">{money(n.precioLote)}</dd>
+            <dd className="font-medium">
+              {money(n.precioLote)}
+              {n.loteId ? (
+                <span className="ml-1 text-xs text-slate-400">🔒 inventario</span>
+              ) : null}
+            </dd>
             <dt className="text-slate-500">Prima pactada</dt>
             <dd className="font-medium">{money(n.prima)}</dd>
             <dt className="text-slate-500">Reserva</dt>
             <dd className="font-medium">{fecha(n.fechaReserva)}</dd>
             <dt className="text-slate-500">Venta</dt>
             <dd className="font-medium">{fecha(n.fechaVenta)}</dd>
+            <dt className="text-slate-500">Registrado por</dt>
+            <dd className="font-medium">
+              {n.registradoPor?.displayName || n.registradoPor?.username || "—"}
+            </dd>
             {n.estado === "caido" ? (
               <>
                 <dt className="text-slate-500">Motivo de caída</dt>
@@ -125,7 +138,8 @@ export default async function NegocioDetalle({
                   <th>Fecha</th>
                   <th>Tipo</th>
                   <th>Método</th>
-                  <th>Referencia</th>
+                  <th>Boleta</th>
+                  <th>Registró</th>
                   <th className="text-right">Monto</th>
                 </tr>
               </thead>
@@ -134,8 +148,28 @@ export default async function NegocioDetalle({
                   <tr key={a.id}>
                     <td>{fecha(a.fecha)}</td>
                     <td>{labelOf(TIPOS_ABONO, a.tipo)}</td>
-                    <td>{labelOf(METODOS_PAGO, a.metodo)}</td>
-                    <td className="text-slate-500">{a.referencia || "—"}</td>
+                    <td>
+                      {labelOf(METODOS_PAGO, a.metodo)}
+                      {a.referencia ? (
+                        <span className="block text-xs text-slate-400">{a.referencia}</span>
+                      ) : null}
+                    </td>
+                    <td>
+                      {a.boletaFileId ? (
+                        <a
+                          href={`/api/file/${a.boletaFileId}`}
+                          target="_blank"
+                          className="font-semibold text-ovi-primary"
+                        >
+                          📎 ver
+                        </a>
+                      ) : (
+                        <span className="text-slate-300">—</span>
+                      )}
+                    </td>
+                    <td className="text-xs text-slate-500">
+                      {a.registradoPor?.displayName || a.registradoPor?.username || "—"}
+                    </td>
                     <td className="text-right font-semibold">{money(a.monto)}</td>
                   </tr>
                 ))}

@@ -14,6 +14,10 @@ export const SEED_USERS = [
   { username: "director2", role: "director", displayName: "Director 2 (Pedro Pablo Duchez)", fuerza: "ambas" },
 ];
 
+/// Usuarios de prueba previos a la estructura organizacional real. Se
+/// DESACTIVAN automáticamente (no se borran: conservan historial/trazabilidad).
+export const USUARIOS_OBSOLETOS = ["claudia", "max", "central1", "sitio1", "dp1"];
+
 // Catálogo OFICIAL de proyectos del Grupo Inmobiliario Chacón (gichacon.com).
 // El inventario (lotes/precios) se carga aparte desde el módulo Inventario.
 export const SEED_PROJECTS = [
@@ -91,6 +95,13 @@ export async function ensureBootstrap(): Promise<void> {
 
   // Estructura organizacional (según el listado del Grupo Chacón).
   await ensureOrgUsers();
+
+  // Desactiva los usuarios de prueba antiguos (previos a la estructura real).
+  // No se borran: conservan su historial y trazabilidad, solo pierden acceso.
+  await prisma.user.updateMany({
+    where: { username: { in: USUARIOS_OBSOLETOS }, activo: true },
+    data: { activo: false },
+  });
 
   bootstrapped = true;
 }

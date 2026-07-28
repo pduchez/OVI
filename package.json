@@ -1,0 +1,35 @@
+{
+  "name": "ovi",
+  "version": "0.1.0",
+  "private": true,
+  "description": "OVI — plataforma central de administración de ventas de lotes del Grupo Inmobiliario Chacón. Centraliza visitas, reservas, ventas, abonos, caídas y novedades de todos los proyectos, con dashboard y reportes por rol.",
+  "scripts": {
+    "dev": "next dev",
+    "build": "prisma generate && next build",
+    "vercel-build": "prisma generate && (timeout 120 prisma db push --accept-data-loss --skip-generate || echo 'Esquema no aplicado (sin BD o timeout): el build continua igual') && next build",
+    "start": "next start",
+    "lint": "next lint",
+    "db:push": "prisma db push",
+    "db:seed": "tsx prisma/seed.ts",
+    "db:studio": "prisma studio",
+    "setup": "prisma generate && prisma db push && tsx prisma/seed.ts"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.2.0",
+    "next": "14.2.35",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.17.0",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.49",
+    "prisma": "^6.2.0",
+    "tailwindcss": "^3.4.17",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}

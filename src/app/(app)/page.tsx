@@ -1,0 +1,195 @@
+import Link from "next/link";
+import { getCurrentUser } from "@/lib/auth";
+import { getScope } from "@/lib/permissions";
+import {
+  dashboardKpis,
+  funnel,
+  ventasPorFuerza,
+  actividadReciente,
+} from "@/lib/analytics";
+import { rangoPreset } from "@/lib/format";
+import { money0, money, fechaHora, num } from "@/lib/format";
+import { PageHeader, StatCard, FunnelBars } from "@/components/ui";
+import { hasDatabase } from "@/lib/db";
+
+export const dynamic = "force-dynamic";
+
+const PRESETS = [
+  { value: "hoy", label: "Hoy" },
+  { value: "semana", label: "7 días" },
+  { value: "mes", label: "30 días" },
+  { value: "trimestre", label: "90 días" },
+];
+
+const TIPO_ICON: Record<string, string> = {
+  visita: "👀",
+  reserva: "📝",
+  venta: "✅",
+  abono: "💵",
+  caida: "❌",
+  novedad: "📌",
+  escritura: "📜",
+};
+
+export default async function Dashboard({
+  searchParams,
+}: {
+  searchParams: { r?: string };
+}) {
+  if (!hasDatabase()) {
+    return (
+      <div className="card">
+        <h1 className="text-xl font-bold">Falta conectar la base de datos</h1>
+        <p className="mt-2 text-slate-600">
+          Configura <code className="rounded bg-slate-100 px-1">DATABASE_URL</code> en las
+          variables de entorno (ver README de OVI). El resto se crea solo.
+        </p>
+      </div>
+    );
+  }
+
+  const user = (await getCurrentUser())!;
+  const scope = await getScope(user);
+  const preset = searchParams.r || "mes";
+  const { desde, hasta } = rangoPreset(preset);
+
+  const [kpis, f, fuerza, actividad] = await Promise.all([
+    dashboardKpis(scope, desde, hasta),
+    funnel(scope, desde, hasta),
+    ventasPorFuerza(scope, desde, hasta),
+    actividadReciente(scope, 12),
+  ]);
+
+  return (
+    <div>
+      <PageHeader
+        title={`Hola, ${user.displayName.split(" ")[0]}`}
+        subtitle="Resumen de la operación de ventas"
+        action={
+          <div className="flex flex-wrap gap-1.5 no-print">
+            {PRESETS.map((p) => (
+              <Link
+                key={p.value}
+                href={`/?r=${p.value}`}
+                className={`rounded-lg px-3 py-1.5 text-sm font-medium ring-1 ${
+                  preset === p.value
+                    ? "bg-ovi-primary text-white ring-ovi-primary"
+                    : "bg-white text-slate-600 ring-slate-300 hover:bg-slate-50"
+                }`}
+              >
+                {p.label}
+              </Link>
+            ))}
+          </div>
+        }
+      />
+
+      {/* KPIs */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+        <StatCard label="Visitas" value={num(kpis.visitas)} />
+        <StatCard label="Reservas" value={num(kpis.reservas)} tone="good" />
+        <StatCard
+          label="Ventas"
+          value={num(kpis.ventas)}
+          hint={money0(kpis.montoVendido)}
+          tone="good"
+        />
+        <StatCard
+          label="Caídas"
+          value={num(kpis.caidas)}
+          tone={kpis.caidas ? "bad" : "default"}
+        />
+        <StatCard label="Cobrado" value={money0(kpis.cobrado)} tone="good" />
+        <StatCard
+          label="Conversión"
+          value={`${kpis.conversion}%`}
+          hint="visita → venta"
+        />
+        <StatCard
+          label="Novedades abiertas"
+          value={num(kpis.novedadesAbiertas)}
+          tone={kpis.novedadesAbiertas ? "warn" : "default"}
+        />
+        <div className="card flex flex-col justify-center gap-2 no-print">
+          <Link href="/registrar" className="btn-primary w-full">
+            ➕ Registrar movimiento
+          </Link>
+          <Link href="/reportes" className="btn-ghost w-full">
+            📑 Ver reportes
+          </Link>
+        </div>
+      </div>
+
+      {/* Embudo + fuerzas */}
+      <div className="mt-6 grid gap-4 lg:grid-cols-2">
+        <div className="card">
+          <h2 className="mb-4 font-bold text-ovi-ink">Embudo del período</h2>
+          <FunnelBars
+            data={[
+              { label: "Visitas", value: f.visitas },
+              { label: "Reservas", value: f.reservas },
+              { label: "Ventas", value: f.ventas },
+              { label: "Escrituras", value: f.escrituras },
+            ]}
+          />
+        </div>
+        <div className="card">
+          <h2 className="mb-4 font-bold text-ovi-ink">Ventas por fuerza</h2>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="rounded-lg bg-blue-50 p-4">
+              <div className="text-sm font-semibold text-blue-700">Interna (Oficina)</div>
+              <div className="mt-1 text-2xl font-bold text-ovi-ink">
+                {fuerza.interna.ventas}
+              </div>
+              <div className="text-sm text-slate-500">{money(fuerza.interna.monto)}</div>
+            </div>
+            <div className="rounded-lg bg-fuchsia-50 p-4">
+              <div className="text-sm font-semibold text-fuchsia-700">UCOES (Externa)</div>
+              <div className="mt-1 text-2xl font-bold text-ovi-ink">
+                {fuerza.ucoes.ventas}
+              </div>
+              <div className="text-sm text-slate-500">{money(fuerza.ucoes.monto)}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Actividad reciente */}
+      <div className="mt-6 card">
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="font-bold text-ovi-ink">Actividad reciente</h2>
+          <Link href="/negocios" className="text-sm font-semibold text-ovi-primary">
+            Ver negocios →
+          </Link>
+        </div>
+        {actividad.length === 0 ? (
+          <p className="py-6 text-center text-sm text-slate-500">
+            Aún no hay movimientos registrados en tus proyectos.
+          </p>
+        ) : (
+          <ul className="divide-y divide-slate-100">
+            {actividad.map((a) => (
+              <li key={a.id} className="flex items-center gap-3 py-2.5">
+                <span className="text-xl">{TIPO_ICON[a.tipo] || "•"}</span>
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-sm font-medium text-slate-700">
+                    {a.resumen}
+                  </div>
+                  <div className="text-xs text-slate-400">
+                    {a.registradoPor?.displayName || "Sistema"} ·{" "}
+                    {fechaHora(a.createdAt)}
+                  </div>
+                </div>
+                {a.monto ? (
+                  <span className="text-sm font-semibold text-emerald-600">
+                    {money0(a.monto)}
+                  </span>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
+  );
+}

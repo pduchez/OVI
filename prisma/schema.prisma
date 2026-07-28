@@ -1,0 +1,238 @@
+// ============================================================
+//  OVI — Esquema de datos
+//  Plataforma central de ventas de lotes del Grupo Inmobiliario
+//  Chacón. Proyecto INDEPENDIENTE: base de datos exclusiva, sin
+//  relación con ninguna otra aplicación.
+// ============================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------
+//  Usuarios y accesos (4 niveles)
+//   director      → ve TODO, administra el sistema (Director 1 y 2)
+//   gerente       → ve su fuerza de venta (Oficina = Claudia, UCOES = Max)
+//   lider_central → ve/registra en VARIOS proyectos asignados (oficina)
+//   lider_sitio   → ve/registra en UN proyecto (en el sitio)
+// ---------------------------------------------------------------
+model User {
+  id           String   @id @default(cuid())
+  username     String   @unique
+  passwordHash String
+  role         String   @default("lider_sitio") // director | gerente | lider_central | lider_sitio
+  displayName  String   @default("")
+  phone        String   @default("")
+  // Fuerza de venta que gobierna (solo relevante para gerente): interna | ucoes | ambas
+  fuerza       String   @default("ambas")
+  activo       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  assignments ProjectAssignment[]
+  registros   Registro[]          @relation("RegistradoPor")
+  visitas     Visita[]
+  negocios    Negocio[]
+  abonos      Abono[]
+  novedades   Novedad[]
+}
+
+// Asignación líder ↔ proyecto (un líder de central puede tener varios).
+model ProjectAssignment {
+  id        String  @id @default(cuid())
+  userId    String
+  projectId String
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, projectId])
+}
+
+// ---------------------------------------------------------------
+//  Proyectos (los 15+ desarrollos de lotes)
+// ---------------------------------------------------------------
+model Project {
+  id          String   @id @default(cuid())
+  codigo      String   @unique // código corto, ej. "CHA-001"
+  nombre      String
+  departamento String  @default("")
+  municipio   String   @default("")
+  // Fuerza responsable principal: interna | ucoes | ambas
+  fuerza      String   @default("ambas")
+  totalLotes  Int      @default(0)
+  precioDesde Float    @default(0)
+  estado      String   @default("activo") // activo | pausado | cerrado
+  notas       String   @default("")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  assignments ProjectAssignment[]
+  lotes       Lote[]
+  visitas     Visita[]
+  negocios    Negocio[]
+  novedades   Novedad[]
+}
+
+// Inventario de lotes (opcional pero recomendado). Estado derivado de negocios.
+model Lote {
+  id        String   @id @default(cuid())
+  projectId String
+  numero    String   // "Lote 24", "A-12", etc.
+  area      Float    @default(0) // m² (vara² se puede anotar en notas)
+  precio    Float    @default(0)
+  estado    String   @default("disponible") // disponible | reservado | vendido | bloqueado
+  notas     String   @default("")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  negocios  Negocio[]
+
+  @@unique([projectId, numero])
+}
+
+// ---------------------------------------------------------------
+//  Vendedores (quien cierra el negocio; interno o UCOES)
+// ---------------------------------------------------------------
+model Vendedor {
+  id        String   @id @default(cuid())
+  nombre    String
+  fuerza    String   @default("interna") // interna | ucoes
+  telefono  String   @default("")
+  activo    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  visitas   Visita[]
+  negocios  Negocio[]
+}
+
+// ---------------------------------------------------------------
+//  Visita — tope del embudo (prospecto que visita el proyecto)
+// ---------------------------------------------------------------
+model Visita {
+  id             String   @id @default(cuid())
+  projectId      String
+  fecha          DateTime @default(now())
+  clienteNombre  String
+  clienteTelefono String  @default("")
+  vendedorId     String?
+  fuerza         String   @default("interna") // interna | ucoes
+  origen         String   @default("otro")    // redes | referido | valla | pasando | evento | otro
+  interesado     Boolean  @default(true)
+  notas          String   @default("")
+  registradoPorId String?
+  createdAt      DateTime @default(now())
+
+  project        Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  vendedor       Vendedor? @relation(fields: [vendedorId], references: [id])
+  registradoPor  User?     @relation(fields: [registradoPorId], references: [id])
+
+  @@index([projectId, fecha])
+}
+
+// ---------------------------------------------------------------
+//  Negocio — la venta de un lote a lo largo de su ciclo de vida
+//   estados: prospecto | reservado | vendido | en_mora | escriturado | caido
+// ---------------------------------------------------------------
+model Negocio {
+  id             String   @id @default(cuid())
+  projectId      String
+  loteId         String?
+  loteRef        String   @default("") // texto libre si no se usa inventario
+  clienteNombre  String
+  clienteTelefono String  @default("")
+  vendedorId     String?
+  fuerza         String   @default("interna") // interna | ucoes
+  estado         String   @default("reservado")
+
+  precioLote     Float    @default(0)
+  prima          Float    @default(0) // enganche pactado
+  // saldo se calcula: precioLote - sum(abonos). Se guarda cache opcional.
+
+  fechaReserva   DateTime?
+  fechaVenta     DateTime?
+  fechaEscritura DateTime?
+  fechaCaida     DateTime?
+  motivoCaida    String   @default("")
+
+  notas          String   @default("")
+  registradoPorId String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  project        Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  lote           Lote?     @relation(fields: [loteId], references: [id])
+  vendedor       Vendedor? @relation(fields: [vendedorId], references: [id])
+  registradoPor  User?     @relation(fields: [registradoPorId], references: [id])
+  abonos         Abono[]
+
+  @@index([projectId, estado])
+}
+
+// ---------------------------------------------------------------
+//  Abono — pago hecho hacia un negocio (prima, cuota o contado)
+// ---------------------------------------------------------------
+model Abono {
+  id             String   @id @default(cuid())
+  negocioId      String
+  fecha          DateTime @default(now())
+  monto          Float    @default(0)
+  tipo           String   @default("cuota") // prima | cuota | contado
+  metodo         String   @default("efectivo") // efectivo | transferencia | cheque | tarjeta | otro
+  referencia     String   @default("")
+  registradoPorId String?
+  createdAt      DateTime @default(now())
+
+  negocio        Negocio  @relation(fields: [negocioId], references: [id], onDelete: Cascade)
+  registradoPor  User?    @relation(fields: [registradoPorId], references: [id])
+
+  @@index([negocioId, fecha])
+}
+
+// ---------------------------------------------------------------
+//  Novedad — problemas / "nuevas" / notas operativas del proyecto
+// ---------------------------------------------------------------
+model Novedad {
+  id             String   @id @default(cuid())
+  projectId      String
+  fecha          DateTime @default(now())
+  categoria      String   @default("operativo") // operativo | legal | infraestructura | cliente | administrativo | otro
+  titulo         String
+  detalle        String   @default("")
+  prioridad      String   @default("media") // baja | media | alta
+  estado         String   @default("abierta") // abierta | en_proceso | resuelta
+  registradoPorId String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  project        Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  registradoPor  User?    @relation(fields: [registradoPorId], references: [id])
+
+  @@index([projectId, estado])
+}
+
+// ---------------------------------------------------------------
+//  Registro — bitácora unificada de auditoría (quién registró qué y cuándo).
+//  Alimenta el "feed de actividad" del dashboard sin tener que unir 4 tablas.
+// ---------------------------------------------------------------
+model Registro {
+  id             String   @id @default(cuid())
+  tipo           String   // visita | reserva | venta | abono | caida | novedad | escritura
+  projectId      String   @default("")
+  refId          String   @default("") // id del objeto relacionado
+  resumen        String   @default("")
+  monto          Float    @default(0)
+  registradoPorId String?
+  createdAt      DateTime @default(now())
+
+  registradoPor  User?    @relation("RegistradoPor", fields: [registradoPorId], references: [id])
+
+  @@index([createdAt])
+  @@index([projectId, createdAt])
+}

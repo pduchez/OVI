@@ -18,7 +18,7 @@ export default async function InventarioProyecto({
   searchParams,
 }: {
   params: Promise<{ projectId: string }>;
-  searchParams: Promise<{ edit?: string; ok?: string; c?: string; a?: string }>;
+  searchParams: Promise<{ edit?: string; ok?: string; c?: string; a?: string; h?: string; ig?: string }>;
 }) {
   const sp = await searchParams;
   const par = await params;
@@ -80,6 +80,12 @@ export default async function InventarioProyecto({
       {sp.ok === "import" ? (
         <p className="mb-4 rounded-lg bg-emerald-50 px-4 py-3 font-medium text-emerald-700">
           ✓ Importación completada: {sp.c} creados, {sp.a} actualizados.
+          {sp.h ? (
+            <span className="mt-1 block text-sm font-normal">
+              Se leyó la hoja <b>{sp.h}</b>
+              {sp.ig && sp.ig !== "0" ? ` · se ignoraron ${sp.ig} hoja(s) sin lotes` : ""}.
+            </span>
+          ) : null}
         </p>
       ) : sp.ok ? (
         <p className="mb-4 rounded-lg bg-emerald-50 px-4 py-3 font-medium text-emerald-700">

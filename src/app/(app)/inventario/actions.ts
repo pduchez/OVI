@@ -7,7 +7,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { getScope, canAccessProject } from "@/lib/permissions";
 import { storeFile } from "@/lib/files";
 import { logSecurity } from "@/lib/securityLog";
-import { parseInventory } from "@/lib/inventory";
+import { parseInventoryDetallado } from "@/lib/inventory";
 
 function money(v: FormDataEntryValue | null): number {
   const n = parseFloat(String(v || "0").replace(/[^0-9.]/g, ""));
@@ -80,15 +80,23 @@ export async function importarInventario(_prev: unknown, fd: FormData) {
 
   let rows;
   let stored;
+  let hoja = "";
+  let ignoradas: string[] = [];
   try {
     const buf = Buffer.from(await file.arrayBuffer());
-    rows = parseInventory(buf, nombre);
+    const lectura = parseInventoryDetallado(buf, nombre);
+    rows = lectura.filas;
+    hoja = lectura.hoja;
+    ignoradas = lectura.hojasIgnoradas;
     stored = await storeFile(file, "inventario", user.id);
   } catch (e) {
     return { error: "No se pudo leer el archivo: " + (e as Error).message };
   }
   if (!rows.length) {
-    return { error: "No se encontraron filas válidas. Revisa que exista una columna 'numero' y 'precio'." };
+    return {
+      error:
+        "No se encontraron lotes. El archivo debe tener una hoja con columnas de lote (o polígono + lote) y precio.",
+    };
   }
 
   let creados = 0;
@@ -128,12 +136,14 @@ export async function importarInventario(_prev: unknown, fd: FormData) {
   await logSecurity(
     user,
     "inventario_import",
-    `Importó ${nombre}: ${creados} creados, ${actualizados} actualizados`,
+    `Importó ${nombre} (hoja "${hoja}"): ${creados} creados, ${actualizados} actualizados`,
     projectId
   );
 
   revalidatePath(`/inventario/${projectId}`);
-  redirect(`/inventario/${projectId}?ok=import&c=${creados}&a=${actualizados}`);
+  redirect(
+    `/inventario/${projectId}?ok=import&c=${creados}&a=${actualizados}&h=${encodeURIComponent(hoja)}&ig=${ignoradas.length}`
+  );
 }
 
 // --- Subir un documento (PDF/Excel) como respaldo del inventario ----------

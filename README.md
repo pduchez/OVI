@@ -79,6 +79,27 @@ edita/reemplaza por los reales desde **Administración → Proyectos**.
 | `DATABASE_URL` | Cadena Postgres **exclusiva de OVI** (Neon, Supabase o Vercel Postgres). |
 | `AUTH_SECRET` | Secreto largo y aleatorio para firmar sesiones. |
 
+## Carga de inventario
+
+Desde **Inventario → (proyecto) → Importar**, con un Excel (.xlsx) o CSV.
+
+- Si el Excel trae **varias hojas**, OVI elige sola la que contiene los lotes y
+  te dice cuál usó e cuántas ignoró.
+- Los encabezados se reconocen de forma flexible (con o sin acentos):
+  - **Número**: `Lote` o `Número`. Si además hay `Polígono` (o manzana/bloque),
+    se combinan: polígono `A` + lote `12` → **A-12**.
+  - **Área**: prefiere **m²** sobre v² (vara²).
+  - **Precio**: prefiere el **precio de contado**; nunca toma el precio por
+    vara²/m² (que es unitario).
+  - **Estado**: reconoce vendido / reservado / bloqueado; lo que no reconoce
+    (p. ej. "No especificado") queda **disponible**.
+  - **Notas**: junta `Uso / categoría` y `Observaciones`.
+- Lo que **no** se importa por ser calculado o redundante: área en v² (es la
+  conversión de m²), prima y saldo a financiar (OVI los calcula con los abonos
+  reales) y el precio unitario por vara².
+- Un lote existente se **actualiza** por su número; si ya está reservado o
+  vendido, la importación **no le cambia el estado**.
+
 ## Seguridad
 
 Ver [`SEGURIDAD.md`](./SEGURIDAD.md): modelo de acceso por rol, protección de

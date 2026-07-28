@@ -79,10 +79,10 @@ export async function importarInventario(_prev: unknown, fd: FormData) {
         "El formato .xls (Excel 97-2003) no se puede leer. Ábrelo en Excel y usa \u201cGuardar como\u201d → Libro de Excel (.xlsx).",
     };
   }
-  if (!/\.(xlsx|xlsm|csv|txt|tsv)$/i.test(nombre)) {
+  if (!/\.(xlsx|xlsm|csv|txt|tsv|pdf)$/i.test(nombre)) {
     return {
       error:
-        "Formato no soportado para importar. Usa .xlsx, .xlsm, .csv o .txt (el PDF se guarda como documento adjunto).",
+        "Formato no soportado para importar. Usa .xlsx, .xlsm, .csv, .txt o .pdf.",
     };
   }
 

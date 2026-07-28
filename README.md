@@ -81,8 +81,8 @@ edita/reemplaza por los reales desde **Administración → Proyectos**.
 
 ## Carga de inventario
 
-Desde **Inventario → (proyecto) → Importar**, con Excel (.xlsx, .xlsm), CSV o texto
-tabulado. El lector acepta las distintas formas en que los programas generan un
+Desde **Inventario → (proyecto) → Importar**, con Excel (.xlsx, .xlsm), CSV, texto
+tabulado o **PDF**. El lector acepta las distintas formas en que los programas generan un
 Excel, así que no importa con qué herramienta se haya creado el archivo.
 
 - Si el Excel trae **varias hojas**, OVI elige sola la que contiene los lotes y
@@ -101,6 +101,18 @@ Excel, así que no importa con qué herramienta se haya creado el archivo.
   reales) y el precio unitario por vara².
 - Un lote existente se **actualiza** por su número; si ya está reservado o
   vendido, la importación **no le cambia el estado**.
+
+### PDF
+
+OVI lee **listas de precios en PDF que tengan texto** (los que se exportan desde
+Excel o Word). Reconoce el formato por polígono: detecta el encabezado
+"POLÍGONO X" y luego cada fila de lote, tomando número, área en m² y precio de
+contado.
+
+**PDF escaneado (una foto del papel):** no se puede leer porque no contiene
+texto. OVI lo detecta y lo dice claramente, en vez de adivinar cifras — un
+precio mal leído se convertiría en una venta con precio equivocado. En ese caso:
+pide la lista en Excel/CSV, o transcríbela (ver `docs/inventarios/`).
 
 ### Si un archivo no se puede leer
 

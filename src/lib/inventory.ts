@@ -1,4 +1,5 @@
 import { leerLibro, escribirXlsx, leerCsv } from "@/lib/xlsx";
+import { leerPdf } from "@/lib/pdf";
 
 export interface LoteRow {
   numero: string;
@@ -145,12 +146,92 @@ function filasALotes(matriz: string[][]): LoteRow[] {
   return out;
 }
 
+
 /**
- * Lee un archivo Excel (.xlsx) o CSV y devuelve las filas de lote.
+ * Interpreta una LISTA DE PRECIOS en PDF (con capa de texto).
+ *
+ * Formato típico del Grupo Chacón: tablas por polígono, con un encabezado
+ * "POLIGONO X" y luego filas "lote | m² | v² | precio v² | precio contado |
+ * prima | a financiar". Se toma el número de lote, el área en m² y el precio
+ * de contado; las filas de TOTAL se descartan.
+ */
+function lineasALotes(lineas: string[]): LoteRow[] {
+  const out: LoteRow[] = [];
+  const vistos = new Set<string>();
+  let poligono = "";
+
+  for (const cruda of lineas) {
+    const linea = cruda.replace(/\$/g, " ").replace(/\s+/g, " ").trim();
+    if (!linea) continue;
+
+    // ¿Cambia el polígono/manzana?
+    const pol = linea.match(/\b(?:pol[ií]gono|poligono|manzana|bloque)\s*[:\-]?\s*([A-Za-z0-9]{1,4})\b/i);
+    if (pol) {
+      poligono = pol[1].toUpperCase();
+      continue;
+    }
+    if (/^total\b/i.test(linea)) continue; // fila de totales
+
+    // Números de la línea (admite 1,234.56).
+    const nums = (linea.match(/\d[\d,]*\.?\d*/g) || []).map((n) => parseFloat(n.replace(/,/g, "")));
+    if (nums.length < 3) continue;
+
+    // El primer número es el lote (entero y pequeño); el resto, medidas y precios.
+    const loteNum = nums[0];
+    if (!Number.isInteger(loteNum) || loteNum <= 0 || loteNum > 9999) continue;
+    const resto = nums.slice(1).filter((n) => n > 0);
+    if (resto.length < 2) continue;
+
+    // Área: el primer valor razonable de superficie (m²).
+    const area = resto[0] >= 20 && resto[0] <= 100000 ? resto[0] : 0;
+    // Precio de contado: el mayor valor "de venta" descartando el precio
+    // unitario por v² (suele ser el menor) y el "a financiar" (menor que el
+    // contado). Se toma el máximo, que en estas listas es el precio contado
+    // salvo que exista "a financiar"; por eso se usa el segundo mayor cuando
+    // hay 4+ importes (v², contado, prima, a financiar).
+    const importes = resto.slice(1).filter((n) => n >= 100);
+    let precio = 0;
+    if (importes.length >= 3) {
+      const orden = [...importes].sort((a, b) => b - a);
+      precio = orden[0]; // contado suele ser el mayor
+    } else if (importes.length) {
+      precio = Math.max(...importes);
+    }
+    if (!precio) continue;
+
+    const numero = (poligono ? `${poligono}-${loteNum}` : String(loteNum)).slice(0, 60);
+    if (vistos.has(numero.toLowerCase())) continue;
+    vistos.add(numero.toLowerCase());
+    out.push({ numero, area, precio, estado: "disponible", notas: "" });
+  }
+  return out;
+}
+
+/**
+ * Lee un archivo Excel (.xlsx), CSV o PDF y devuelve las filas de lote.
  * Si el Excel tiene varias hojas, elige AUTOMÁTICAMENTE la que contiene los
  * lotes (la que produce más registros válidos) e informa cuáles se ignoraron.
  */
 export function parseInventoryDetallado(buf: Buffer, nombre = ""): ResultadoLectura {
+  if (/\.pdf$/i.test(nombre) || buf.subarray(0, 4).toString("ascii") === "%PDF") {
+    const pdf = leerPdf(buf);
+    if (pdf.esEscaneado) {
+      throw new Error(
+        "Este PDF es una imagen escaneada (no tiene texto que leer), por lo que no se " +
+          "pueden extraer los lotes de forma confiable. Pide la lista en Excel o CSV: " +
+          "un precio mal leído de una foto se convertiría en una venta con precio equivocado."
+      );
+    }
+    const lotesPdf = lineasALotes(pdf.lineas);
+    return {
+      filas: lotesPdf,
+      hoja: `PDF (${pdf.paginas} pág.)`,
+      hojasIgnoradas: [],
+      diagnostico: [
+        { hoja: "PDF", columnas: pdf.lineas.slice(0, 3), lotes: lotesPdf.length },
+      ],
+    };
+  }
   if (/\.csv$/i.test(nombre)) {
     const filasCsv = leerCsv(buf.toString("utf8"));
     const lotesCsv = filasALotes(filasCsv);

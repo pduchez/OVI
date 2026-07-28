@@ -104,9 +104,10 @@ export default async function InventarioProyecto({
       {canManage ? (
       <div className="mb-6 grid gap-4 lg:grid-cols-2">
         <div className="card">
-          <h2 className="font-bold text-ovi-ink">Importar inventario (Excel / CSV)</h2>
+          <h2 className="font-bold text-ovi-ink">Importar inventario (Excel · CSV · PDF)</h2>
           <p className="mt-1 mb-3 text-sm text-slate-500">
-            Columnas: <b>numero</b>, <b>area</b>, <b>precio</b>, estado, notas. Los lotes
+            Columnas: <b>numero</b> (o polígono + lote), <b>area</b>, <b>precio</b>, estado y
+            notas. También lee <b>listas de precios en PDF</b> que tengan texto. Los lotes
             existentes se actualizan por su número. Queda registrado en la bitácora.
           </p>
           <ActionForm action={importarInventario} submitLabel="Importar archivo">
@@ -114,7 +115,7 @@ export default async function InventarioProyecto({
             <input
               type="file"
               name="archivo"
-              accept=".xlsx,.xlsm,.csv,.txt,.tsv"
+              accept=".xlsx,.xlsm,.csv,.txt,.tsv,.pdf"
               className="field bg-white"
               required
             />

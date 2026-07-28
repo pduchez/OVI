@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>OVI — Guía de Dirección</title>
+<link rel="stylesheet" href="_base.css">
+</head>
+<body>
+
+<h1>OVI — Guía de Dirección</h1>
+<p class="subtitulo">Vista de águila: qué resuelve la plataforma y qué se puede exigir con ella</p>
+<p class="meta">Grupo Inmobiliario Chacón · Central de ventas de lotes · Documento para Dirección</p>
+
+<h2>1. Qué problema resuelve</h2>
+
+<p>Hasta hoy la información de venta viaja por WhatsApp, llamadas y hojas sueltas.
+Eso tiene tres costos que no se ven en ningún estado financiero: <b>no se sabe qué
+está realmente disponible</b>, <b>no se sabe quién dijo qué</b>, y <b>la decisión
+llega tarde</b>.</p>
+
+<p>OVI reemplaza eso por una sola fuente de verdad en línea. Cada movimiento
+—visita, reserva, venta, abono, caída, novedad— se registra una vez, en el
+momento, por una persona con nombre y apellido. La Dirección lo ve al instante
+sin perseguir a nadie.</p>
+
+<div class="recuadro">
+<p class="titulo">La idea central</p>
+<p>Un lote reservado o vendido queda <b>bloqueado para todos al instante</b>. Esa
+sola regla elimina la doble venta y las promesas cruzadas entre fuerzas.</p>
+</div>
+
+<h2>2. Qué se puede ver desde Dirección</h2>
+
+<p>El usuario de Director ve <b>todo</b>: los 20 proyectos, las tres fuerzas de
+venta y todos los movimientos, sin filtro alguno.</p>
+
+<table>
+<tr><th>Módulo</th><th>Qué responde</th></tr>
+<tr><td>Tablero</td><td>Cómo va el mes: visitas, reservas, ventas, monto colocado, embudo de conversión y actividad reciente.</td></tr>
+<tr><td>Inventario</td><td>Cuántos lotes hay por proyecto y en qué estado está cada uno: disponible, reservado, vendido o bloqueado.</td></tr>
+<tr><td>Negocios</td><td>Cada venta con su ciclo de vida completo y su historial de pagos.</td></tr>
+<tr><td>Novedades</td><td>Bitácora de problemas por proyecto, con prioridad y estado.</td></tr>
+<tr><td>Reportes</td><td>Resumen ejecutivo, por proyecto, por vendedor, por fuerza, análisis de caídas, y cartera y cobranza.</td></tr>
+<tr><td>Administración</td><td>Proyectos, usuarios y bitácora de seguridad.</td></tr>
+</table>
+
+<p>Todos los reportes se exportan a CSV y se imprimen a PDF.</p>
+
+<h2>3. Las tres fuerzas de venta y cómo conviven</h2>
+
+<p>OVI maneja tres fuerzas en una sola aplicación, con visibilidad separada por
+rol —<i>juntos pero no revueltos</i>—:</p>
+
+<table>
+<tr><th>Fuerza</th><th>Alcance</th><th>Visibilidad de su actividad</th></tr>
+<tr><td><b>Interna</b> (ventas de sitio)</td><td>Cada vendedor atiende su proyecto.</td><td>Ve solo su fuerza y su proyecto.</td></tr>
+<tr><td><b>UCOES</b></td><td>Itinerante: vende en cualquier proyecto.</td><td>Ve solo la actividad de UCOES.</td></tr>
+<tr><td><b>Destinopropiedades.com</b></td><td>Itinerante: vende en cualquier proyecto.</td><td>Su actividad <b>no</b> es visible para los vendedores de Chacón.</td></tr>
+</table>
+
+<p>La separación aplica a nivel de <b>vendedor</b>. La capa de mando —Dirección,
+gerentes y asistentes ejecutivas— ve <b>toda</b> la actividad de todos los
+proyectos y de las tres fuerzas, por la regla de transparencia del Grupo.</p>
+
+<h2>4. Los controles que protegen el negocio</h2>
+
+<p>Estos no son ajustes: están cableados en la plataforma y no dependen de que
+alguien recuerde aplicarlos.</p>
+
+<h3>4.1 El precio no lo toca el vendedor</h3>
+<p>El precio de cada lote vive en el inventario y solo lo fijan los gerentes de
+ventas y la Dirección. Cuando se reserva o se vende, el precio se toma del
+inventario y queda <b>bloqueado en el negocio</b>. Ningún vendedor puede
+alterarlo, ni al momento ni después. Todo cambio de precio queda registrado con
+el valor anterior, el nuevo, quién y cuándo.</p>
+
+<h3>4.2 Sin boleta no hay reserva</h3>
+<p>Toda reserva o venta hecha por una fuerza de venta exige un depósito con la
+<b>foto de la boleta</b> adjunta. Sin ese respaldo la plataforma no permite
+marcar el lote. La capa de mando puede registrar sin boleta para casos
+excepcionales, y <b>esa excepción queda anotada en la bitácora de seguridad</b>
+con el nombre de quien la hizo.</p>
+
+<h3>4.3 Todo movimiento tiene huella</h3>
+<p>Cada registro guarda quién lo hizo y cuándo. Cada usuario corresponde a una
+persona real con nombre, correo y celular, y está supeditado a un superior. No
+existen usuarios genéricos ni compartidos.</p>
+
+<h3>4.4 Solo el mando revierte</h3>
+<p>Liberar un lote —devolverlo a disponible— deshace una reserva o una venta.
+Por eso solo lo puede hacer la Dirección, los gerentes o las asistentes, y exige
+escribir el motivo.</p>
+
+<h2 class="salto">5. Preguntas que la Dirección puede exigir que se respondan</h2>
+
+<p>Con la información que OVI captura, estas preguntas dejan de requerir una
+reunión:</p>
+
+<ul>
+<li>¿Cuántos lotes disponibles quedan hoy en cada uno de los 20 proyectos?</li>
+<li>¿Cuánto se colocó este mes, y cuánto de eso lo trajo cada fuerza?</li>
+<li>¿Cuántas visitas se necesitan para cerrar una venta, y en qué proyecto es peor esa relación?</li>
+<li>¿Cuáles son los tres motivos de caída más frecuentes y en qué proyecto se concentran?</li>
+<li>¿Cuánto hay en cartera, cuánto está por cobrar y quién está en mora?</li>
+<li>¿Qué vendedor no ha registrado un solo movimiento esta semana?</li>
+<li>¿Qué proyecto acumula novedades sin resolver?</li>
+</ul>
+
+<h2>6. Independencia tecnológica</h2>
+
+<p>Tres decisiones deliberadas para que el Grupo no quede amarrado a nadie:</p>
+
+<ul>
+<li><b>Base de datos propia y exclusiva.</b> OVI no comparte datos ni código con
+ninguna otra aplicación del Grupo.</li>
+<li><b>Sin servicios externos de login.</b> La autenticación es propia; no
+depende de Google, Microsoft ni de ningún proveedor que pueda cortar el acceso.</li>
+<li><b>Migrable.</b> Hoy corre en Vercel con base de datos en Supabase. Se puede
+mover a cualquier servidor con Node y PostgreSQL <b>sin cambiar el código</b>.</li>
+</ul>
+
+<p>Está pensada además para el mundo real de los proyectos: computadoras viejas,
+internet lento y trabajo desde el celular. La aplicación se instala en el
+teléfono y funciona con todas sus funciones desde ahí.</p>
+
+<h2>7. Qué depende de la Dirección</h2>
+
+<p>La plataforma resuelve el mecanismo. Estas cuatro cosas siguen siendo decisión
+del Grupo y ninguna herramienta las puede sustituir:</p>
+
+<table>
+<tr><th>Decisión</th><th>Por qué importa</th></tr>
+<tr><td><b>Validar el inventario real</b></td><td>Las listas de precios cargadas no dicen qué lotes ya están vendidos. Mientras no se validen, todo aparece como disponible.</td></tr>
+<tr><td><b>Exigir el uso diario</b></td><td>OVI es tan buena como la disciplina de registro. Un vendedor que registra el viernes lo de toda la semana destruye el valor de tiempo real.</td></tr>
+<tr><td><b>Definir la excepción</b></td><td>El mando puede saltarse la boleta. Conviene que quede claro cuándo es aceptable hacerlo, porque queda registrado.</td></tr>
+<tr><td><b>Revisar la bitácora</b></td><td>Cambios de precio, cargas de inventario y excepciones sin boleta quedan anotados. Sirven si alguien los lee.</td></tr>
+</table>
+
+<div class="recuadro">
+<p class="titulo">Una advertencia honesta</p>
+<p>OVI no impide que alguien registre información falsa. Lo que hace es dejar
+<b>huella de quién la registró</b> y volver el dato comparable y auditable. El
+control no es la plataforma: es que exista consecuencia cuando la huella no
+cuadra.</p>
+</div>
+
+</body>
+</html>

@@ -134,6 +134,36 @@ instante qué corregir. Casos conocidos:
 - **Falta la columna de lote o de precio**: revisa que la hoja tenga al menos
   una columna de lote (o polígono + lote) y una de precio o área.
 
+## Aplicación en el celular
+
+OVI se instala en el teléfono como una aplicación (PWA): al abrirla desde el
+navegador aparece **“Instalar OVI”**; en iPhone, con “Compartir → Agregar a
+inicio”. Queda con su ícono, a pantalla completa y sin barra del navegador.
+
+**Los datos siempre se leen en vivo.** El caché guarda únicamente el “casco” de
+la aplicación —íconos, logos y los archivos con hash de Next— nunca páginas ni
+respuestas de `/api/`, donde viajan las boletas. Sin señal, OVI **avisa** en vez
+de mostrar información vieja: un lote que apareciera disponible sin serlo
+causaría una doble venta.
+
+**Actualización automática:** cada día a las **8:00 AM hora de El Salvador** la
+aplicación revisa si hay versión nueva y la aplica sola, de modo que todos los
+usuarios corran la misma. Si el teléfono estuvo apagado a esa hora, se pone al
+día la próxima vez que se abre. Esto actualiza la *aplicación*, no los datos:
+esos ya son en tiempo real.
+
+## Guías de uso
+
+En [`docs/guias/`](./docs/guias) hay tres guías en PDF, con su fuente en HTML:
+
+| Archivo | Para quién |
+|---|---|
+| `OVI-direccion.pdf` | Dirección — vista estratégica de las capacidades y los controles. |
+| `OVI-mandos.pdf` | Gerentes y asistentes — todo lo que configuran y lo que requiere su autorización. |
+| `OVI-vendedores.pdf` | Vendedores — paso a paso práctico del uso diario. |
+
+Para regenerarlas después de editar el HTML: `npm run guias`.
+
 ## Seguridad
 
 Ver [`SEGURIDAD.md`](./SEGURIDAD.md): modelo de acceso por rol, protección de

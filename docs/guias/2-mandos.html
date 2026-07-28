@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>OVI — Guía de Mandos</title>
+<link rel="stylesheet" href="_base.css">
+</head>
+<body>
+
+<h1>OVI — Guía de Mandos</h1>
+<p class="subtitulo">Gerentes de ventas y asistentes ejecutivas: qué pueden hacer, qué configuran para su equipo y qué requiere su autorización</p>
+<p class="meta">Grupo Inmobiliario Chacón · Central de ventas de lotes · Documento para gerentes y asistentes</p>
+
+<h2>1. Su lugar en la estructura</h2>
+
+<p>Usted es la capa de mando. Por la regla de transparencia del Grupo,
+<b>ve toda la actividad de todos los proyectos y de las tres fuerzas de venta</b>,
+no solo la suya. Eso es deliberado: la información debe fluir.</p>
+
+<p>Lo que sí está acotado a su fuerza es la <b>administración de usuarios</b>:
+usted administra a los colaboradores de su propia fuerza, no a los de otra.</p>
+
+<table>
+<tr><th>Rol</th><th>Ve actividad</th><th>Fija precios</th><th>Administra usuarios</th></tr>
+<tr><td>Gerente de ventas</td><td>Todo</td><td><b>Sí</b></td><td>De su fuerza</td></tr>
+<tr><td>Asistente ejecutiva</td><td>Todo</td><td>No</td><td>De su fuerza</td></tr>
+</table>
+
+<div class="recuadro">
+<p class="titulo">La diferencia entre gerente y asistente</p>
+<p>Es una sola y es importante: <b>el precio del lote solo lo fija el gerente
+de ventas</b> (y la Dirección). La asistente ejecutiva hace todo lo demás
+—incluido administrar usuarios, cargar documentos y marcar lotes— pero no puede
+alterar un precio.</p>
+</div>
+
+<h2>2. Lo que usted puede hacer y el vendedor no</h2>
+
+<table>
+<tr><th>Acción</th><th>Vendedor</th><th>Usted</th></tr>
+<tr><td>Ver la actividad de todos los proyectos y fuerzas</td><td>No</td><td>Sí</td></tr>
+<tr><td>Cargar inventario desde Excel, CSV o PDF</td><td>No</td><td>Sí</td></tr>
+<tr><td>Fijar o cambiar el precio de un lote</td><td>No</td><td>Solo gerente</td></tr>
+<tr><td>Agregar o editar un lote a mano</td><td>No</td><td>Solo gerente</td></tr>
+<tr><td>Descargar el inventario completo a Excel</td><td>No</td><td>Sí</td></tr>
+<tr><td>Reservar o vender <b>sin</b> boleta de depósito</td><td>No</td><td>Sí (queda en bitácora)</td></tr>
+<tr><td>Liberar un lote (devolverlo a disponible)</td><td>No</td><td>Sí</td></tr>
+<tr><td>Crear, editar, reasignar y desactivar usuarios</td><td>No</td><td>Sí, de su fuerza</td></tr>
+<tr><td>Ver la bitácora de seguridad</td><td>No</td><td>Sí</td></tr>
+</table>
+
+<h2>3. Administración de usuarios</h2>
+
+<p>Está en el menú <b>Usuarios</b>. Es el panel que usted usa cuando entra o sale
+un colaborador.</p>
+
+<h3>3.1 Cómo están armados los usuarios</h3>
+
+<table>
+<tr><th>Tipo</th><th>Nombre de usuario</th><th>Qué ve</th></tr>
+<tr><td>Ventas de sitio</td><td><code>ventas</code> + nombre del proyecto<br><span class="nota">ventasBypass, ventasCondadovillalourdes…</span></td><td>Solo su proyecto</td></tr>
+<tr><td>UCOES</td><td><code>vucoes1</code> … <code>vucoes10</code></td><td>El inventario de todos los proyectos</td></tr>
+<tr><td>Destinopropiedades.com</td><td><code>vdp1</code> … <code>vdp10</code></td><td>El inventario de todos los proyectos</td></tr>
+</table>
+
+<p class="nota">El ingreso no distingue mayúsculas: <code>ventasbypass</code>
+entra igual que <code>ventasBypass</code>.</p>
+
+<h3>3.2 Cuando entra un colaborador nuevo</h3>
+<ol>
+<li>Busque el usuario que va a ocupar (por ejemplo <code>ventasSantiagocity</code>).</li>
+<li>Escriba el <b>nombre real</b>, el <b>correo</b> y el <b>celular</b> de la persona.</li>
+<li>Confirme que el <b>superior</b> sea el correcto.</li>
+<li>Reinicie la contraseña a <code>password</code>.</li>
+<li>Entrégueselo. La plataforma le va a exigir cambiarla en el primer ingreso.</li>
+</ol>
+
+<h3>3.3 Cuando se retira un colaborador</h3>
+<ol>
+<li><b>Desactive</b> el usuario. No lo borre: si lo borra pierde la trazabilidad
+de todo lo que esa persona registró.</li>
+<li>Cuando llegue el reemplazo, reactívelo, cambie el nombre, correo y celular,
+y reinicie la contraseña.</li>
+</ol>
+
+<div class="recuadro">
+<p class="titulo">Regla que no se debe romper</p>
+<p>Un usuario = una persona. Nunca comparta un usuario entre dos vendedores.
+El día que haya un reclamo, la huella tiene que apuntar a alguien.</p>
+</div>
+
+<h3>3.4 Reasignar un proyecto</h3>
+<p>Los usuarios de ventas de sitio nacen amarrados a su proyecto. Si necesita
+mover a alguien a otro proyecto, cámbiele la asignación desde el panel. La
+plataforma <b>respeta</b> esa reasignación: no se la va a revertir sola.</p>
+
+<h2 class="salto">4. Inventario: cargarlo y mantenerlo</h2>
+
+<h3>4.1 Formatos que lee</h3>
+<p>Desde <b>Inventario → (proyecto) → Importar</b>: Excel (<code>.xlsx</code>,
+<code>.xlsm</code>), CSV, texto tabulado y <b>PDF con texto</b>.</p>
+
+<ul>
+<li>Si el Excel trae varias hojas, OVI escoge sola la que tiene los lotes y le
+dice cuál usó y cuántas ignoró.</li>
+<li>Reconoce las columnas de forma flexible, con o sin acentos. Si hay polígono
+y lote, los combina: polígono A + lote 12 da <b>A-12</b>.</li>
+<li>Prefiere el área en m² sobre la vara², y el precio de contado sobre el
+precio unitario.</li>
+<li>Un lote que ya existe se <b>actualiza</b> por su número. Si ya estaba
+reservado o vendido, la importación <b>no le cambia el estado</b>.</li>
+</ul>
+
+<h3>4.2 Los dos casos que no puede leer</h3>
+<table>
+<tr><th>Caso</th><th>Qué hacer</th></tr>
+<tr><td><b>PDF escaneado</b> (una foto del papel)</td><td>No tiene texto que leer. Pida la lista en Excel o CSV. OVI se lo dice claramente en vez de adivinar cifras: un precio mal leído se convierte en una venta con precio equivocado.</td></tr>
+<tr><td><b>.xls</b> (Excel 97-2003)</td><td>Ábralo en Excel y guárdelo como <code>.xlsx</code>.</td></tr>
+</table>
+
+<p>Si un archivo no se puede leer, OVI le dice <b>qué hojas encontró y qué
+columnas tenía cada una</b>. Con eso se sabe al instante qué corregir.</p>
+
+<h3>4.3 Lo que debe validar antes de dar por bueno un inventario</h3>
+<p>Las listas de precios <b>no traen el estado real</b> de cada lote. Todos
+entran como <b>disponibles</b>. Antes de que el equipo lo use en firme, valide
+con el desarrollador cuáles lotes ya están vendidos y márquelos.</p>
+
+<h3>4.4 Precios</h3>
+<p>Solo el gerente. Todo cambio queda en la bitácora con el precio anterior, el
+nuevo, quién y cuándo. El precio que se copia a un negocio queda congelado ahí:
+cambiar el precio del inventario <b>no</b> altera negocios ya cerrados.</p>
+
+<h2>5. Lo que requiere su intervención o autorización</h2>
+
+<table>
+<tr><th>Situación</th><th>Qué se necesita de usted</th></tr>
+<tr><td>Un cliente quiere apartar sin depositar todavía</td><td>Solo usted puede registrarlo sin boleta. Queda en la bitácora a su nombre. Piénselo antes: es la excepción, no la salida fácil.</td></tr>
+<tr><td>El cliente desistió y hay que soltar el lote</td><td>Solo usted puede liberarlo. Exige escribir el motivo.</td></tr>
+<tr><td>El vendedor dice que el precio está mal</td><td>Verifique contra la lista oficial. Si procede, el gerente lo corrige en Inventario.</td></tr>
+<tr><td>Falta un lote o sobra en el inventario</td><td>Cárguelo o corríjalo desde Inventario. El vendedor no puede.</td></tr>
+<tr><td>Entra o sale un colaborador</td><td>Panel de Usuarios. Ver la sección 3.</td></tr>
+<tr><td>Un vendedor perdió su contraseña</td><td>Reiníciela a <code>password</code> desde el panel de Usuarios.</td></tr>
+<tr><td>Se registró algo equivocado</td><td>Un negocio mal registrado se da de baja como caída con su motivo. No se borra: se corrige dejando rastro.</td></tr>
+</table>
+
+<h2>6. Su rutina recomendada</h2>
+
+<table>
+<tr><th>Cuándo</th><th>Qué revisar</th></tr>
+<tr><td><b>Diario</b></td><td>Tablero: movimientos del día. Novedades nuevas de prioridad alta.</td></tr>
+<tr><td><b>Diario</b></td><td>Que cada proyecto activo haya registrado algo. El silencio de un proyecto es un dato.</td></tr>
+<tr><td><b>Semanal</b></td><td>Reporte por vendedor y por fuerza. Cartera y cobranza: quién va en mora.</td></tr>
+<tr><td><b>Semanal</b></td><td>Análisis de caídas: si un motivo se repite, es un problema de producto o de precio, no del vendedor.</td></tr>
+<tr><td><b>Mensual</b></td><td>Bitácora de seguridad: cambios de precio, cargas de inventario y reservas registradas sin boleta.</td></tr>
+<tr><td><b>Mensual</b></td><td>Que el inventario en OVI cuadre con el inventario real del desarrollador.</td></tr>
+</table>
+
+<h2>7. Errores que cuestan caro</h2>
+
+<ul>
+<li><b>Borrar un usuario en vez de desactivarlo.</b> Se pierde la trazabilidad de
+todo lo que registró.</li>
+<li><b>Compartir un usuario entre dos personas.</b> Anula el propósito de la
+huella.</li>
+<li><b>Cargar un inventario sin validar qué está vendido.</b> El equipo va a
+ofrecer lotes que ya no existen.</li>
+<li><b>Usar la excepción de la boleta como costumbre.</b> Está pensada para
+casos puntuales; si se vuelve rutina, el control desaparece.</li>
+<li><b>No revisar la bitácora.</b> Registrar sin que nadie lea es solo generar
+datos.</li>
+</ul>
+
+</body>
+</html>

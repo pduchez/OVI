@@ -16,14 +16,16 @@ export default async function InventarioProyecto({
   params,
   searchParams,
 }: {
-  params: { projectId: string };
-  searchParams: { edit?: string; ok?: string; c?: string; a?: string };
+  params: Promise<{ projectId: string }>;
+  searchParams: Promise<{ edit?: string; ok?: string; c?: string; a?: string }>;
 }) {
+  const sp = await searchParams;
+  const par = await params;
   const user = (await getCurrentUser())!;
   const scope = await getScope(user);
-  if (!canAccessProject(scope, params.projectId)) redirect("/inventario");
+  if (!canAccessProject(scope, par.projectId)) redirect("/inventario");
 
-  const project = await prisma.project.findUnique({ where: { id: params.projectId } });
+  const project = await prisma.project.findUnique({ where: { id: par.projectId } });
   if (!project) notFound();
 
   const [lotes, porEstado, imports] = await Promise.all([
@@ -40,7 +42,7 @@ export default async function InventarioProyecto({
     }),
   ]);
   const cnt = (e: string) => porEstado.find((g) => g.estado === e)?._count._all || 0;
-  const editing = searchParams.edit ? lotes.find((l) => l.id === searchParams.edit) : null;
+  const editing = sp.edit ? lotes.find((l) => l.id === sp.edit) : null;
   const canManage = scope.canManageInventory; // DP entra en solo-lectura
 
   return (
@@ -66,11 +68,11 @@ export default async function InventarioProyecto({
         </p>
       ) : null}
 
-      {searchParams.ok === "import" ? (
+      {sp.ok === "import" ? (
         <p className="mb-4 rounded-lg bg-emerald-50 px-4 py-3 font-medium text-emerald-700">
-          ✓ Importación completada: {searchParams.c} creados, {searchParams.a} actualizados.
+          ✓ Importación completada: {sp.c} creados, {sp.a} actualizados.
         </p>
-      ) : searchParams.ok ? (
+      ) : sp.ok ? (
         <p className="mb-4 rounded-lg bg-emerald-50 px-4 py-3 font-medium text-emerald-700">
           ✓ Guardado correctamente.
         </p>

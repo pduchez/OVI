@@ -13,8 +13,8 @@ import { ensureBootstrap } from "@/lib/bootstrap";
 import { bloqueoRestante, registrarFallo, limpiar } from "@/lib/rateLimit";
 
 /** IP del cliente (a través del proxy de Vercel). */
-function clientIp(): string {
-  const h = headers();
+async function clientIp(): Promise<string> {
+  const h = await headers();
   const fwd = h.get("x-forwarded-for") || "";
   return fwd.split(",")[0].trim() || h.get("x-real-ip") || "desconocida";
 }
@@ -27,7 +27,7 @@ export async function loginAction(_prev: unknown, formData: FormData) {
   }
 
   // Anti fuerza bruta: bloquea tras varios intentos fallidos.
-  const key = `${username.toLowerCase()}|${clientIp()}`;
+  const key = `${username.toLowerCase()}|${await clientIp()}`;
   const espera = bloqueoRestante(key);
   if (espera > 0) {
     const min = Math.ceil(espera / 60);
@@ -53,12 +53,12 @@ export async function loginAction(_prev: unknown, formData: FormData) {
   }
 
   limpiar(key);
-  cookies().set(AUTH_COOKIE, signSession(user.id), sessionCookieOptions());
+  (await cookies()).set(AUTH_COOKIE, signSession(user.id), sessionCookieOptions());
   // Si tiene contraseña inicial, va directo a cambiarla.
   redirect(user.mustChangePassword ? "/cuenta" : "/");
 }
 
 export async function logoutAction() {
-  cookies().delete(AUTH_COOKIE);
+  (await cookies()).delete(AUTH_COOKIE);
   redirect("/login");
 }

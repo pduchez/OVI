@@ -41,12 +41,13 @@ const PRESETS = [
 export default async function ReportesPage({
   searchParams,
 }: {
-  searchParams: { tipo?: string; r?: string };
+  searchParams: Promise<{ tipo?: string; r?: string }>;
 }) {
+  const sp = await searchParams;
   const user = (await getCurrentUser())!;
   const scope = await getScope(user);
-  const tipo = searchParams.tipo || "resumen";
-  const preset = searchParams.r || "mes";
+  const tipo = sp.tipo || "resumen";
+  const preset = sp.r || "mes";
   const { desde, hasta } = rangoPreset(preset);
 
   const csvHref = `/api/reportes/csv?tipo=${tipo}&r=${preset}`;

@@ -11,17 +11,18 @@ export const dynamic = "force-dynamic";
 export default async function AdminVendedores({
   searchParams,
 }: {
-  searchParams: { edit?: string; ok?: string };
+  searchParams: Promise<{ edit?: string; ok?: string }>;
 }) {
+  const sp = await searchParams;
   const vendedores = await prisma.vendedor.findMany({ orderBy: { nombre: "asc" } });
-  const editing = searchParams.edit
-    ? vendedores.find((v) => v.id === searchParams.edit)
+  const editing = sp.edit
+    ? vendedores.find((v) => v.id === sp.edit)
     : null;
 
   return (
     <div>
       <PageHeader title="Vendedores" subtitle={`${vendedores.length} vendedor(es)`} />
-      {searchParams.ok ? (
+      {sp.ok ? (
         <p className="mb-4 rounded-lg bg-emerald-50 px-4 py-3 font-medium text-emerald-700">
           ✓ Vendedor guardado.
         </p>

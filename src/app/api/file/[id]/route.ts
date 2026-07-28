@@ -18,13 +18,14 @@ const INLINE_OK = ["image/jpeg", "image/png", "image/webp", "image/heic", "appli
  */
 export async function GET(
   _req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   const user = await getCurrentUser().catch(() => null);
   if (!user) return new Response("No autorizado", { status: 401 });
   const scope = await getScope(user);
 
-  const file = await prisma.storedFile.findUnique({ where: { id: params.id } });
+  const file = await prisma.storedFile.findUnique({ where: { id } });
   if (!file) return new Response("No encontrado", { status: 404 });
 
   // --- Autorización por objeto ------------------------------------------

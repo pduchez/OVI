@@ -38,17 +38,18 @@ const OK: Record<string, string> = {
   visita: "Visita registrada correctamente.",
 };
 
-export default function RegistrarHub({
+export default async function RegistrarHub({
   searchParams,
 }: {
-  searchParams: { ok?: string };
+  searchParams: Promise<{ ok?: string }>;
 }) {
+  const sp = await searchParams;
   return (
     <div>
       <PageHeader title="Registrar" subtitle="¿Qué quieres anotar?" />
-      {searchParams.ok && OK[searchParams.ok] ? (
+      {sp.ok && OK[sp.ok] ? (
         <p className="mb-4 rounded-lg bg-emerald-50 px-4 py-3 font-medium text-emerald-700">
-          ✓ {OK[searchParams.ok]}
+          ✓ {OK[sp.ok]}
         </p>
       ) : null}
       <div className="grid gap-4 sm:grid-cols-2">

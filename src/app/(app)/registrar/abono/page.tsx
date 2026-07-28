@@ -10,8 +10,9 @@ export const dynamic = "force-dynamic";
 export default async function AbonoPage({
   searchParams,
 }: {
-  searchParams: { negocio?: string };
+  searchParams: Promise<{ negocio?: string }>;
 }) {
+  const sp = await searchParams;
   const user = (await getCurrentUser())!;
   const scope = await getScope(user);
   const negocios = await negocioOptions(scope);
@@ -38,7 +39,7 @@ export default async function AbonoPage({
         }
       />
       <div className="card">
-        <AbonoForm negocios={negocios} negocioSel={searchParams.negocio} />
+        <AbonoForm negocios={negocios} negocioSel={sp.negocio} />
       </div>
     </div>
   );

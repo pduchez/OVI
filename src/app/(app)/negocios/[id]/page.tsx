@@ -24,13 +24,15 @@ export default async function NegocioDetalle({
   params,
   searchParams,
 }: {
-  params: { id: string };
-  searchParams: { ok?: string };
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ ok?: string }>;
 }) {
+  const sp = await searchParams;
+  const par = await params;
   const user = (await getCurrentUser())!;
   const scope = await getScope(user);
   const n = await prisma.negocio.findUnique({
-    where: { id: params.id },
+    where: { id: par.id },
     include: {
       project: true,
       vendedor: true,
@@ -60,7 +62,7 @@ export default async function NegocioDetalle({
         }
       />
 
-      {searchParams.ok ? (
+      {sp.ok ? (
         <p className="mb-4 rounded-lg bg-emerald-50 px-4 py-3 font-medium text-emerald-700">
           ✓ Guardado correctamente.
         </p>

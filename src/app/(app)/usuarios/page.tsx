@@ -17,8 +17,9 @@ export const dynamic = "force-dynamic";
 export default async function UsuariosPage({
   searchParams,
 }: {
-  searchParams: { edit?: string; ok?: string };
+  searchParams: Promise<{ edit?: string; ok?: string }>;
 }) {
+  const sp = await searchParams;
   const me = (await getCurrentUser())!;
   const scope = await getScope(me);
   const esDirector = scope.manageFuerza === null;
@@ -37,7 +38,7 @@ export default async function UsuariosPage({
     }),
     visibleProjects(scope),
   ]);
-  const editing = searchParams.edit ? usuarios.find((u) => u.id === searchParams.edit) : null;
+  const editing = sp.edit ? usuarios.find((u) => u.id === sp.edit) : null;
   const editProjectIds = new Set(editing?.assignments.map((a) => a.projectId));
 
   // Roles permitidos según quién administra.
@@ -68,7 +69,7 @@ export default async function UsuariosPage({
             : `${usuarios.length} usuario(s) · fuerza ${fuerzaCorta(scope.manageFuerza || "")}`
         }
       />
-      {searchParams.ok ? (
+      {sp.ok ? (
         <p className="mb-4 rounded-lg bg-emerald-50 px-4 py-3 font-medium text-emerald-700">
           ✓ Usuario guardado. Contraseña inicial: <b>password</b> (deberá cambiarla al ingresar).
         </p>

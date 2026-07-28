@@ -16,11 +16,12 @@ export const dynamic = "force-dynamic";
 export default async function NovedadesPage({
   searchParams,
 }: {
-  searchParams: { estado?: string };
+  searchParams: Promise<{ estado?: string }>;
 }) {
+  const sp = await searchParams;
   const user = (await getCurrentUser())!;
   const scope = await getScope(user);
-  const estado = searchParams.estado || "";
+  const estado = sp.estado || "";
 
   const where: Record<string, unknown> = {};
   if (scope.projectIds) where.projectId = { in: scope.projectIds };

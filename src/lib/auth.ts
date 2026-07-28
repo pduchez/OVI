@@ -102,7 +102,7 @@ export function verifySession(token: string | undefined): string | null {
 // --- Usuario actual ------------------------------------------------------
 
 export async function getCurrentUser(): Promise<SessionUser | null> {
-  const token = cookies().get(AUTH_COOKIE)?.value;
+  const token = (await cookies()).get(AUTH_COOKIE)?.value;
   const id = verifySession(token);
   if (!id) return null;
   const user = await prisma.user.findUnique({ where: { id } });

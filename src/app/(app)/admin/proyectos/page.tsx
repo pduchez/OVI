@@ -18,11 +18,12 @@ const ESTADOS = [
 export default async function AdminProyectos({
   searchParams,
 }: {
-  searchParams: { edit?: string; ok?: string; c?: string; a?: string; e?: string };
+  searchParams: Promise<{ edit?: string; ok?: string; c?: string; a?: string; e?: string }>;
 }) {
+  const sp = await searchParams;
   const proyectos = await prisma.project.findMany({ orderBy: { codigo: "asc" } });
-  const editing = searchParams.edit
-    ? proyectos.find((p) => p.id === searchParams.edit)
+  const editing = sp.edit
+    ? proyectos.find((p) => p.id === sp.edit)
     : null;
 
   return (
@@ -36,12 +37,12 @@ export default async function AdminProyectos({
           </form>
         }
       />
-      {searchParams.ok === "oficiales" ? (
+      {sp.ok === "oficiales" ? (
         <p className="mb-4 rounded-lg bg-emerald-50 px-4 py-3 font-medium text-emerald-700">
-          ✓ Catálogo oficial cargado: {searchParams.c} creados, {searchParams.a} actualizados
-          {searchParams.e && searchParams.e !== "0" ? `, ${searchParams.e} placeholders eliminados` : ""}.
+          ✓ Catálogo oficial cargado: {sp.c} creados, {sp.a} actualizados
+          {sp.e && sp.e !== "0" ? `, ${sp.e} placeholders eliminados` : ""}.
         </p>
-      ) : searchParams.ok ? (
+      ) : sp.ok ? (
         <p className="mb-4 rounded-lg bg-emerald-50 px-4 py-3 font-medium text-emerald-700">
           ✓ Proyecto guardado.
         </p>

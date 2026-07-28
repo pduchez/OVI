@@ -10,8 +10,9 @@ export const dynamic = "force-dynamic";
 export default async function CuentaPage({
   searchParams,
 }: {
-  searchParams: { ok?: string };
+  searchParams: Promise<{ ok?: string }>;
 }) {
+  const sp = await searchParams;
   const user = (await getCurrentUser())!;
   return (
     <div className="mx-auto max-w-lg">
@@ -33,7 +34,7 @@ export default async function CuentaPage({
           Por seguridad, cambia tu contraseña inicial.
         </p>
       ) : null}
-      {searchParams.ok ? (
+      {sp.ok ? (
         <p className="mb-4 rounded-lg bg-emerald-50 px-4 py-3 font-medium text-emerald-700">
           ✓ Contraseña actualizada.
         </p>

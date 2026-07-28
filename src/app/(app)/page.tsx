@@ -34,8 +34,9 @@ const TIPO_ICON: Record<string, string> = {
 export default async function Dashboard({
   searchParams,
 }: {
-  searchParams: { r?: string };
+  searchParams: Promise<{ r?: string }>;
 }) {
+  const sp = await searchParams;
   if (!hasDatabase()) {
     return (
       <div className="card">
@@ -50,7 +51,7 @@ export default async function Dashboard({
 
   const user = (await getCurrentUser())!;
   const scope = await getScope(user);
-  const preset = searchParams.r || "mes";
+  const preset = sp.r || "mes";
   const { desde, hasta } = rangoPreset(preset);
 
   const [kpis, f, fuerza, actividad] = await Promise.all([

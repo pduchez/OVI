@@ -5,6 +5,8 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { getCurrentUser, hashPassword } from "@/lib/auth";
 import { getScope } from "@/lib/permissions";
+import { SEED_PROJECTS } from "@/lib/bootstrap";
+import { logSecurity } from "@/lib/securityLog";
 
 async function guardAdmin() {
   const user = await getCurrentUser();
@@ -12,6 +14,53 @@ async function guardAdmin() {
   const scope = await getScope(user);
   if (!scope.canAdmin) throw new Error("Solo el Director puede administrar.");
   return user;
+}
+
+// --- Cargar el catálogo OFICIAL de proyectos del Grupo Chacón -------------
+export async function cargarProyectosOficiales() {
+  const user = await guardAdmin();
+  let creados = 0;
+  let actualizados = 0;
+  for (const p of SEED_PROJECTS) {
+    const existing = await prisma.project.findUnique({ where: { codigo: p.codigo } });
+    if (existing) {
+      await prisma.project.update({
+        where: { codigo: p.codigo },
+        data: { nombre: p.nombre, departamento: p.departamento, municipio: p.municipio },
+      });
+      actualizados++;
+    } else {
+      await prisma.project.create({ data: { ...p, estado: "activo" } });
+      creados++;
+    }
+  }
+
+  // Elimina proyectos placeholder viejos (código CHA-*) si no tienen datos
+  // operativos. Las asignaciones de líder no cuentan (se recrean al reasignar
+  // y se borran en cascada).
+  let eliminados = 0;
+  const viejos = await prisma.project.findMany({
+    where: { codigo: { startsWith: "CHA-" } },
+    include: {
+      _count: { select: { lotes: true, negocios: true, visitas: true, novedades: true } },
+    },
+  });
+  for (const v of viejos) {
+    const c = v._count;
+    if (!c.lotes && !c.negocios && !c.visitas && !c.novedades) {
+      await prisma.projectAssignment.deleteMany({ where: { projectId: v.id } });
+      await prisma.project.delete({ where: { id: v.id } });
+      eliminados++;
+    }
+  }
+
+  await logSecurity(
+    user,
+    "proyectos_oficiales",
+    `Catálogo oficial: ${creados} creados, ${actualizados} actualizados, ${eliminados} placeholders eliminados`
+  );
+  revalidatePath("/admin/proyectos");
+  redirect(`/admin/proyectos?ok=oficiales&c=${creados}&a=${actualizados}&e=${eliminados}`);
 }
 
 function num(v: FormDataEntryValue | null): number {

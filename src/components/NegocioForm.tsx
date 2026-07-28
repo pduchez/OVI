@@ -168,6 +168,7 @@ export default function NegocioForm({
         <select name="fuerza" className="field" defaultValue="interna">
           <option value="interna">Interna (Oficina)</option>
           <option value="ucoes">UCOES (Externa)</option>
+          <option value="destino">Destinopropiedades.com</option>
         </select>
       </label>
 

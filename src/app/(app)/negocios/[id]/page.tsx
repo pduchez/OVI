@@ -8,6 +8,7 @@ import {
   ESTADOS_VENTA_VIVA,
   MOTIVOS_CAIDA,
   labelOf,
+  fuerzaCorta,
   TIPOS_ABONO,
   METODOS_PAGO,
 } from "@/lib/constants";
@@ -69,7 +70,7 @@ export default async function NegocioDetalle({
         <div className="card md:col-span-2">
           <div className="mb-3 flex items-center justify-between">
             <Badge value={n.estado} label={ESTADO_NEGOCIO_LABEL[n.estado]} />
-            <Badge value={n.fuerza} label={n.fuerza === "ucoes" ? "UCOES" : "Interna"} />
+            <Badge value={n.fuerza} label={fuerzaCorta(n.fuerza)} />
           </div>
           <dl className="grid grid-cols-2 gap-y-3 text-sm">
             <dt className="text-slate-500">Teléfono</dt>

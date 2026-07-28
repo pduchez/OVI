@@ -7,7 +7,7 @@ import {
   cobranza,
 } from "@/lib/analytics";
 import { rangoPreset } from "@/lib/format";
-import { MOTIVOS_CAIDA, ESTADO_NEGOCIO_LABEL, labelOf } from "@/lib/constants";
+import { MOTIVOS_CAIDA, ESTADO_NEGOCIO_LABEL, labelOf, fuerzaCorta } from "@/lib/constants";
 
 export const dynamic = "force-dynamic";
 
@@ -47,7 +47,7 @@ export async function GET(req: Request) {
     const data = await ventasPorVendedor(scope, desde, hasta);
     rows = [["Vendedor", "Fuerza", "Ventas", "Monto"]];
     data.forEach((d) =>
-      rows.push([d.nombre, d.fuerza === "ucoes" ? "UCOES" : "Interna", d.ventas, d.monto])
+      rows.push([d.nombre, fuerzaCorta(d.fuerza), d.ventas, d.monto])
     );
   } else if (tipo === "caidas") {
     nombre = "analisis_caidas";

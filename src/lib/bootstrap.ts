@@ -18,23 +18,28 @@ export const SEED_USERS = [
   { username: "sitio1", role: "lider_sitio", displayName: "Líder Sitio 1", fuerza: "ambas" },
 ];
 
-// 15 proyectos de arranque (placeholders realistas; reemplazar por los reales).
+// Catálogo OFICIAL de proyectos del Grupo Inmobiliario Chacón (gichacon.com).
+// El inventario (lotes/precios) se carga aparte desde el módulo Inventario.
 export const SEED_PROJECTS = [
-  { codigo: "CHA-01", nombre: "Valle Verde", departamento: "La Libertad", municipio: "Zaragoza", fuerza: "interna", totalLotes: 120, precioDesde: 6500 },
-  { codigo: "CHA-02", nombre: "Altos del Lago", departamento: "San Salvador", municipio: "Panchimalco", fuerza: "interna", totalLotes: 90, precioDesde: 8900 },
-  { codigo: "CHA-03", nombre: "Prados de Santa Ana", departamento: "Santa Ana", municipio: "Santa Ana", fuerza: "ucoes", totalLotes: 200, precioDesde: 5200 },
-  { codigo: "CHA-04", nombre: "Mirador del Volcán", departamento: "Sonsonate", municipio: "Izalco", fuerza: "ucoes", totalLotes: 150, precioDesde: 4800 },
-  { codigo: "CHA-05", nombre: "Villas del Este", departamento: "San Miguel", municipio: "San Miguel", fuerza: "ambas", totalLotes: 180, precioDesde: 5500 },
-  { codigo: "CHA-06", nombre: "Brisas de Usulután", departamento: "Usulután", municipio: "Usulután", fuerza: "ucoes", totalLotes: 110, precioDesde: 4200 },
-  { codigo: "CHA-07", nombre: "Colinas de La Paz", departamento: "La Paz", municipio: "Zacatecoluca", fuerza: "interna", totalLotes: 130, precioDesde: 4900 },
-  { codigo: "CHA-08", nombre: "Jardines de Ahuachapán", departamento: "Ahuachapán", municipio: "Ahuachapán", fuerza: "ucoes", totalLotes: 95, precioDesde: 4300 },
-  { codigo: "CHA-09", nombre: "Paseo Cuscatlán", departamento: "Cuscatlán", municipio: "Cojutepeque", fuerza: "interna", totalLotes: 140, precioDesde: 5100 },
-  { codigo: "CHA-10", nombre: "Bosques de Chalatenango", departamento: "Chalatenango", municipio: "Chalatenango", fuerza: "ucoes", totalLotes: 100, precioDesde: 3900 },
-  { codigo: "CHA-11", nombre: "Vista Hermosa", departamento: "La Unión", municipio: "La Unión", fuerza: "ambas", totalLotes: 160, precioDesde: 4600 },
-  { codigo: "CHA-12", nombre: "Portal de Morazán", departamento: "Morazán", municipio: "San Francisco Gotera", fuerza: "ucoes", totalLotes: 80, precioDesde: 3700 },
-  { codigo: "CHA-13", nombre: "Lomas de San Vicente", departamento: "San Vicente", municipio: "San Vicente", fuerza: "interna", totalLotes: 115, precioDesde: 4400 },
-  { codigo: "CHA-14", nombre: "Cumbres de Cabañas", departamento: "Cabañas", municipio: "Sensuntepeque", fuerza: "ucoes", totalLotes: 90, precioDesde: 3800 },
-  { codigo: "CHA-15", nombre: "Rivera del Mar", departamento: "La Libertad", municipio: "La Libertad", fuerza: "ambas", totalLotes: 210, precioDesde: 9900 },
+  { codigo: "GIC-01", nombre: "Riviera del Pacífico", departamento: "La Libertad", municipio: "Playa Suncita", fuerza: "ambas", totalLotes: 0, precioDesde: 0 },
+  { codigo: "GIC-02", nombre: "Salitrillo City", departamento: "Santa Ana", municipio: "Santa Ana", fuerza: "ambas", totalLotes: 0, precioDesde: 0 },
+  { codigo: "GIC-03", nombre: "Adelaida City", departamento: "Sonsonate", municipio: "Izalco", fuerza: "ambas", totalLotes: 0, precioDesde: 0 },
+  { codigo: "GIC-04", nombre: "Vista al Mar", departamento: "Sonsonate", municipio: "Acajutla", fuerza: "ambas", totalLotes: 0, precioDesde: 0 },
+  { codigo: "GIC-05", nombre: "Tecomapa City", departamento: "Santa Ana", municipio: "Metapán", fuerza: "ambas", totalLotes: 0, precioDesde: 0 },
+  { codigo: "GIC-06", nombre: "Nuevo San Vicente", departamento: "San Vicente", municipio: "San Vicente", fuerza: "ambas", totalLotes: 0, precioDesde: 0 },
+  { codigo: "GIC-07", nombre: "Condado Hilo de Oro", departamento: "Cabañas", municipio: "Ilobasco", fuerza: "ambas", totalLotes: 0, precioDesde: 0 },
+  { codigo: "GIC-08", nombre: "Portal Las Luces", departamento: "Chalatenango", municipio: "Chalatenango", fuerza: "ambas", totalLotes: 0, precioDesde: 0 },
+  { codigo: "GIC-09", nombre: "La Estancia", departamento: "La Libertad", municipio: "Colón", fuerza: "ambas", totalLotes: 0, precioDesde: 0 },
+  { codigo: "GIC-10", nombre: "Colina City", departamento: "Cabañas", municipio: "Ilobasco", fuerza: "ambas", totalLotes: 0, precioDesde: 0 },
+  { codigo: "GIC-11", nombre: "Helen City", departamento: "Cabañas", municipio: "Ilobasco", fuerza: "ambas", totalLotes: 0, precioDesde: 0 },
+  { codigo: "GIC-12", nombre: "El Porvenir", departamento: "La Libertad", municipio: "Colón", fuerza: "ambas", totalLotes: 0, precioDesde: 0 },
+  { codigo: "GIC-13", nombre: "Condado del Golfo", departamento: "La Unión", municipio: "La Unión", fuerza: "ambas", totalLotes: 0, precioDesde: 0 },
+  { codigo: "GIC-14", nombre: "Vía Bypass", departamento: "Usulután", municipio: "Usulután", fuerza: "ambas", totalLotes: 0, precioDesde: 0 },
+  { codigo: "GIC-15", nombre: "Santiago City", departamento: "Usulután", municipio: "Usulután", fuerza: "ambas", totalLotes: 0, precioDesde: 0 },
+  { codigo: "GIC-16", nombre: "Villa Santiago", departamento: "Usulután", municipio: "Usulután", fuerza: "ambas", totalLotes: 0, precioDesde: 0 },
+  { codigo: "GIC-17", nombre: "Cumbres de Santiago", departamento: "Usulután", municipio: "Santiago de María", fuerza: "ambas", totalLotes: 0, precioDesde: 0 },
+  { codigo: "GIC-18", nombre: "Panamerican City", departamento: "Usulután", municipio: "Usulután", fuerza: "ambas", totalLotes: 0, precioDesde: 0 },
+  { codigo: "GIC-19", nombre: "Condado El Triunfo", departamento: "Usulután", municipio: "Jiquilisco", fuerza: "ambas", totalLotes: 0, precioDesde: 0 },
 ];
 
 export const SEED_VENDEDORES = [

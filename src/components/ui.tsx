@@ -93,6 +93,8 @@ const BADGE_TONES: Record<string, string> = {
   baja: "bg-slate-100 text-slate-600",
   interna: "bg-blue-100 text-blue-700",
   ucoes: "bg-fuchsia-100 text-fuchsia-700",
+  destino: "bg-orange-100 text-orange-700",
+  ambas: "bg-slate-100 text-slate-600",
 };
 
 export function Badge({ value, label }: { value: string; label?: string }) {

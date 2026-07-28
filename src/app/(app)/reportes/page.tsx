@@ -15,6 +15,7 @@ import {
   MOTIVOS_CAIDA,
   ESTADO_NEGOCIO_LABEL,
   labelOf,
+  fuerzaCorta,
 } from "@/lib/constants";
 import { PageHeader, StatCard, FunnelBars, Badge } from "@/components/ui";
 import PrintButton from "@/components/PrintButton";
@@ -166,7 +167,7 @@ async function renderReporte(
         cols={["Vendedor", "Fuerza", "Ventas", "Monto"]}
         rows={rows.map((r) => [
           r.nombre,
-          r.fuerza === "ucoes" ? "UCOES" : "Interna",
+          fuerzaCorta(r.fuerza),
           num(r.ventas),
           money(r.monto),
         ])}
@@ -178,21 +179,25 @@ async function renderReporte(
 
   if (tipo === "por_fuerza") {
     const f = await ventasPorFuerza(scope, desde, hasta);
-    const totMonto = f.interna.monto + f.ucoes.monto;
+    const totMonto = f.interna.monto + f.ucoes.monto + f.destino.monto;
+    const cards = [
+      { key: "interna", titulo: "Interna (Oficina — Lic. Claudia)", tx: "text-blue-700" },
+      { key: "ucoes", titulo: "UCOES (Externa — Lic. Max)", tx: "text-fuchsia-700" },
+      { key: "destino", titulo: "Destinopropiedades.com", tx: "text-orange-700" },
+    ];
     return (
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div className="card">
-          <div className="text-sm font-semibold text-blue-700">Interna (Oficina — Lic. Claudia)</div>
-          <div className="mt-1 text-3xl font-bold">{f.interna.ventas}</div>
-          <div className="text-slate-500">{money(f.interna.monto)}</div>
-          <div className="mt-2 text-sm text-slate-400">{pct(f.interna.monto, totMonto)} del monto</div>
-        </div>
-        <div className="card">
-          <div className="text-sm font-semibold text-fuchsia-700">UCOES (Externa — Lic. Max)</div>
-          <div className="mt-1 text-3xl font-bold">{f.ucoes.ventas}</div>
-          <div className="text-slate-500">{money(f.ucoes.monto)}</div>
-          <div className="mt-2 text-sm text-slate-400">{pct(f.ucoes.monto, totMonto)} del monto</div>
-        </div>
+      <div className="grid gap-4 sm:grid-cols-3">
+        {cards.map((c) => {
+          const d = (f as Record<string, { ventas: number; monto: number }>)[c.key];
+          return (
+            <div key={c.key} className="card">
+              <div className={`text-sm font-semibold ${c.tx}`}>{c.titulo}</div>
+              <div className="mt-1 text-3xl font-bold">{d.ventas}</div>
+              <div className="text-slate-500">{money(d.monto)}</div>
+              <div className="mt-2 text-sm text-slate-400">{pct(d.monto, totMonto)} del monto</div>
+            </div>
+          );
+        })}
       </div>
     );
   }

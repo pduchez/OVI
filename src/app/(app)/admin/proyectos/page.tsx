@@ -5,7 +5,7 @@ import { money0, num } from "@/lib/format";
 import { PageHeader, Badge } from "@/components/ui";
 import ActionForm from "@/components/ActionForm";
 import { Field, Select, Input, Textarea } from "@/components/fields";
-import { guardarProyecto } from "../actions";
+import { guardarProyecto, cargarProyectosOficiales } from "../actions";
 
 export const dynamic = "force-dynamic";
 
@@ -18,7 +18,7 @@ const ESTADOS = [
 export default async function AdminProyectos({
   searchParams,
 }: {
-  searchParams: { edit?: string; ok?: string };
+  searchParams: { edit?: string; ok?: string; c?: string; a?: string; e?: string };
 }) {
   const proyectos = await prisma.project.findMany({ orderBy: { codigo: "asc" } });
   const editing = searchParams.edit
@@ -27,8 +27,21 @@ export default async function AdminProyectos({
 
   return (
     <div>
-      <PageHeader title="Proyectos" subtitle={`${proyectos.length} proyecto(s)`} />
-      {searchParams.ok ? (
+      <PageHeader
+        title="Proyectos"
+        subtitle={`${proyectos.length} proyecto(s)`}
+        action={
+          <form action={cargarProyectosOficiales} className="no-print">
+            <button className="btn-ghost">🏢 Cargar proyectos oficiales</button>
+          </form>
+        }
+      />
+      {searchParams.ok === "oficiales" ? (
+        <p className="mb-4 rounded-lg bg-emerald-50 px-4 py-3 font-medium text-emerald-700">
+          ✓ Catálogo oficial cargado: {searchParams.c} creados, {searchParams.a} actualizados
+          {searchParams.e && searchParams.e !== "0" ? `, ${searchParams.e} placeholders eliminados` : ""}.
+        </p>
+      ) : searchParams.ok ? (
         <p className="mb-4 rounded-lg bg-emerald-50 px-4 py-3 font-medium text-emerald-700">
           ✓ Proyecto guardado.
         </p>

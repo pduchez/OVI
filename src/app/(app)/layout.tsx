@@ -19,7 +19,6 @@ export default async function AppLayout({
     { href: "/", label: "Tablero", icon: "📊" },
     { href: "/registrar", label: "Registrar", icon: "➕" },
     { href: "/negocios", label: "Negocios", icon: "🤝" },
-    { href: "/proyectos", label: "Proyectos", icon: "📍" },
     { href: "/novedades", label: "Novedades", icon: "📌" },
     { href: "/reportes", label: "Reportes", icon: "📑" },
   ];

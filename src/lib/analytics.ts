@@ -157,7 +157,7 @@ export async function ventasPorVendedor(scope: Scope, desde: Date, hasta: Date) 
   return [...map.values()].sort((a, b) => b.monto - a.monto);
 }
 
-/** Ventas por fuerza (Interna vs UCOES). */
+/** Ventas por fuerza (Interna / UCOES / Destinopropiedades.com). */
 export async function ventasPorFuerza(scope: Scope, desde: Date, hasta: Date) {
   const base = movimientoWhere(scope);
   const rango = rangeWhere(desde, hasta);
@@ -168,9 +168,10 @@ export async function ventasPorFuerza(scope: Scope, desde: Date, hasta: Date) {
   const acc: Record<string, { ventas: number; monto: number }> = {
     interna: { ventas: 0, monto: 0 },
     ucoes: { ventas: 0, monto: 0 },
+    destino: { ventas: 0, monto: 0 },
   };
   for (const n of negocios) {
-    const k = n.fuerza === "ucoes" ? "ucoes" : "interna";
+    const k = acc[n.fuerza] ? n.fuerza : "interna";
     acc[k].ventas += 1;
     acc[k].monto += n.precioLote || 0;
   }

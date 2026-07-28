@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/db";
-import { FUERZAS } from "@/lib/constants";
+import { FUERZAS, fuerzaCorta } from "@/lib/constants";
 import { PageHeader, Badge } from "@/components/ui";
 import ActionForm from "@/components/ActionForm";
 import { Field, Select, Input } from "@/components/fields";
@@ -43,7 +43,7 @@ export default async function AdminVendedores({
               {vendedores.map((v) => (
                 <tr key={v.id} className="hover:bg-slate-50">
                   <td className="font-medium">{v.nombre}</td>
-                  <td><Badge value={v.fuerza} label={v.fuerza === "ucoes" ? "UCOES" : "Interna"} /></td>
+                  <td><Badge value={v.fuerza} label={fuerzaCorta(v.fuerza)} /></td>
                   <td className="text-slate-500">{v.telefono || "—"}</td>
                   <td>{v.activo ? <Badge value="activo" label="Activo" /> : <Badge value="cerrado" label="Inactivo" />}</td>
                   <td>

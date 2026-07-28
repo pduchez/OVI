@@ -18,18 +18,34 @@ export const ROLE_LABEL: Record<string, string> = Object.fromEntries(
 export const FUERZAS = [
   { value: "interna", label: "Interna (Oficina)" },
   { value: "ucoes", label: "UCOES (Externa)" },
+  { value: "destino", label: "Destinopropiedades.com" },
 ] as const;
 
 export const FUERZAS_CON_AMBAS = [
   ...FUERZAS,
-  { value: "ambas", label: "Ambas fuerzas" },
+  { value: "ambas", label: "Todas las fuerzas" },
 ] as const;
 
 export const FUERZA_LABEL: Record<string, string> = {
   interna: "Interna (Oficina)",
   ucoes: "UCOES (Externa)",
-  ambas: "Ambas fuerzas",
+  destino: "Destinopropiedades.com",
+  ambas: "Todas las fuerzas",
 };
+
+// Fuerzas de venta "reales" (excluye el comodín "ambas"), para reportes.
+export const FUERZAS_LISTA = ["interna", "ucoes", "destino"] as const;
+
+// Etiqueta corta de la fuerza (para tablas/badges compactos).
+export const FUERZA_CORTA: Record<string, string> = {
+  interna: "Oficina",
+  ucoes: "UCOES",
+  destino: "Destino.com",
+  ambas: "Todas",
+};
+export function fuerzaCorta(f: string): string {
+  return FUERZA_CORTA[f] || f;
+}
 
 export const ORIGENES_VISITA = [
   { value: "redes", label: "Redes sociales" },

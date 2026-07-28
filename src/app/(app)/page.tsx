@@ -135,21 +135,22 @@ export default async function Dashboard({
         </div>
         <div className="card">
           <h2 className="mb-4 font-bold text-ovi-ink">Ventas por fuerza</h2>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="rounded-lg bg-blue-50 p-4">
-              <div className="text-sm font-semibold text-blue-700">Interna (Oficina)</div>
-              <div className="mt-1 text-2xl font-bold text-ovi-ink">
-                {fuerza.interna.ventas}
+          <div className="grid grid-cols-3 gap-3">
+            {[
+              { key: "interna", label: "Interna", bg: "bg-blue-50", tx: "text-blue-700" },
+              { key: "ucoes", label: "UCOES", bg: "bg-fuchsia-50", tx: "text-fuchsia-700" },
+              { key: "destino", label: "Destino.com", bg: "bg-orange-50", tx: "text-orange-700" },
+            ].map((f) => (
+              <div key={f.key} className={`rounded-lg ${f.bg} p-4`}>
+                <div className={`text-sm font-semibold ${f.tx}`}>{f.label}</div>
+                <div className="mt-1 text-2xl font-bold text-ovi-ink">
+                  {(fuerza as Record<string, { ventas: number; monto: number }>)[f.key].ventas}
+                </div>
+                <div className="text-xs text-slate-500">
+                  {money0((fuerza as Record<string, { ventas: number; monto: number }>)[f.key].monto)}
+                </div>
               </div>
-              <div className="text-sm text-slate-500">{money(fuerza.interna.monto)}</div>
-            </div>
-            <div className="rounded-lg bg-fuchsia-50 p-4">
-              <div className="text-sm font-semibold text-fuchsia-700">UCOES (Externa)</div>
-              <div className="mt-1 text-2xl font-bold text-ovi-ink">
-                {fuerza.ucoes.ventas}
-              </div>
-              <div className="text-sm text-slate-500">{money(fuerza.ucoes.monto)}</div>
-            </div>
+            ))}
           </div>
         </div>
       </div>

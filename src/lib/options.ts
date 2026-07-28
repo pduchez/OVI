@@ -3,7 +3,7 @@
 import { prisma } from "@/lib/db";
 import type { Scope } from "@/lib/permissions";
 import { visibleProjects, movimientoWhere } from "@/lib/permissions";
-import { ESTADOS_VENTA_VIVA } from "@/lib/constants";
+import { ESTADOS_VENTA_VIVA, fuerzaCorta } from "@/lib/constants";
 
 export async function projectOptions(scope: Scope) {
   const projects = await visibleProjects(scope);
@@ -23,7 +23,7 @@ export async function vendedorOptions(scope: Scope) {
   });
   return vendedores.map((v) => ({
     value: v.id,
-    label: `${v.nombre} (${v.fuerza === "ucoes" ? "UCOES" : "Oficina"})`,
+    label: `${v.nombre} (${fuerzaCorta(v.fuerza)})`,
   }));
 }
 

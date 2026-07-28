@@ -40,6 +40,7 @@ export const SEED_PROJECTS = [
   { codigo: "GIC-17", nombre: "Cumbres de Santiago", departamento: "Usulután", municipio: "Santiago de María", fuerza: "ambas", totalLotes: 0, precioDesde: 0 },
   { codigo: "GIC-18", nombre: "Panamerican City", departamento: "Usulután", municipio: "Usulután", fuerza: "ambas", totalLotes: 0, precioDesde: 0 },
   { codigo: "GIC-19", nombre: "Condado El Triunfo", departamento: "Usulután", municipio: "Jiquilisco", fuerza: "ambas", totalLotes: 0, precioDesde: 0 },
+  { codigo: "GIC-20", nombre: "Condado Villa Lourdes", departamento: "La Libertad", municipio: "Lourdes, Colón", fuerza: "ambas", totalLotes: 0, precioDesde: 0 },
 ];
 
 export const SEED_VENDEDORES = [
@@ -68,7 +69,7 @@ export async function ensureBootstrap(): Promise<void> {
       await prisma.user.create({ data: { ...u, passwordHash: hashPassword("password") } });
     }
   }
-  // Asegura que los 19 proyectos OFICIALES existan (crea los que falten por
+  // Asegura que los proyectos OFICIALES existan (crea los que falten por
   // código; no sobreescribe ediciones del director en los existentes).
   for (const p of SEED_PROJECTS) {
     const ex = await prisma.project.findUnique({ where: { codigo: p.codigo } });

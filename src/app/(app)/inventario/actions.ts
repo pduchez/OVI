@@ -82,7 +82,7 @@ export async function importarInventario(_prev: unknown, fd: FormData) {
   let stored;
   try {
     const buf = Buffer.from(await file.arrayBuffer());
-    rows = parseInventory(buf);
+    rows = parseInventory(buf, nombre);
     stored = await storeFile(file, "inventario", user.id);
   } catch (e) {
     return { error: "No se pudo leer el archivo: " + (e as Error).message };

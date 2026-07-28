@@ -8,6 +8,7 @@ import {
 } from "@/lib/analytics";
 import { rangoPreset } from "@/lib/format";
 import { MOTIVOS_CAIDA, ESTADO_NEGOCIO_LABEL, labelOf, fuerzaCorta } from "@/lib/constants";
+import { sanitizarCelda } from "@/lib/xlsx";
 
 export const dynamic = "force-dynamic";
 
@@ -16,7 +17,9 @@ function toCsv(rows: (string | number)[][]): string {
     .map((r) =>
       r
         .map((c) => {
-          const s = String(c ?? "");
+          // Neutraliza inyección de fórmulas (Excel ejecuta celdas que
+          // empiezan con = + - @). Se antepone un apóstrofo.
+          const s = String(sanitizarCelda(c ?? "") ?? "");
           return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
         })
         .join(",")

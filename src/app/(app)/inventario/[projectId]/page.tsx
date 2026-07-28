@@ -164,7 +164,7 @@ export default async function InventarioProyecto({
               Aún no hay lotes cargados en este proyecto.
             </p>
           ) : (
-            <table className="table">
+            <table className="table table-cards">
               <thead>
                 <tr>
                   <th>Lote</th>
@@ -177,12 +177,12 @@ export default async function InventarioProyecto({
               <tbody>
                 {lotes.map((l) => (
                   <tr key={l.id} className="hover:bg-slate-50">
-                    <td className="font-medium">{l.numero}</td>
-                    <td className="text-right">{num(l.area)}</td>
-                    <td className="text-right font-semibold">{money(l.precio)}</td>
-                    <td><Badge value={l.estado} /></td>
+                    <td data-label="Lote" className="font-medium">{l.numero}</td>
+                    <td data-label="Área m²" className="text-right">{num(l.area)}</td>
+                    <td data-label="Precio" className="text-right font-semibold">{money(l.precio)}</td>
+                    <td data-label="Estado"><Badge value={l.estado} /></td>
                     {canManage ? (
-                      <td>
+                      <td data-label="">
                         <Link
                           href={`/inventario/${project.id}?edit=${l.id}`}
                           className="text-sm font-semibold text-ovi-primary"
@@ -220,7 +220,7 @@ export default async function InventarioProyecto({
             <Field label="Número de lote">
               <Input name="numero" defaultValue={editing?.numero} placeholder="Ej. Lote 24" required />
             </Field>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <Field label="Área (m²)">
                 <Input name="area" inputMode="decimal" defaultValue={editing?.area || ""} />
               </Field>

@@ -50,7 +50,7 @@ export default function AbonoForm({
         </select>
       </label>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <label className="block">
           <span className="label">Fecha</span>
           <input type="date" name="fecha" className="field" defaultValue={hoyStr} />
@@ -61,7 +61,7 @@ export default function AbonoForm({
         </label>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <label className="block">
           <span className="label">Tipo de abono</span>
           <select name="tipo" className="field" defaultValue="cuota">

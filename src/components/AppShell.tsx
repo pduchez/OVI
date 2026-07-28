@@ -33,7 +33,7 @@ export default function AppShell({
       <header className="sticky top-0 z-30 flex items-center justify-between bg-ovi-bg px-4 py-3 text-white shadow no-print">
         <div className="flex items-center gap-3">
           <button
-            className="rounded-lg p-2 hover:bg-white/10 md:hidden"
+            className="flex min-h-[44px] min-w-[44px] flex-col items-center justify-center rounded-lg p-2 hover:bg-white/10 md:hidden"
             onClick={() => setOpen((v) => !v)}
             aria-label="Menú"
           >
@@ -56,7 +56,7 @@ export default function AppShell({
             <div className="text-xs text-slate-300">{roleLabel}</div>
           </div>
           <form action="/api/logout" method="post">
-            <button className="rounded-lg bg-white/10 px-3 py-1.5 text-sm hover:bg-white/20">
+            <button className="min-h-[44px] rounded-lg bg-white/10 px-4 py-2 text-sm font-medium hover:bg-white/20">
               Salir
             </button>
           </form>
@@ -76,7 +76,7 @@ export default function AppShell({
                 key={item.href}
                 href={item.href}
                 onClick={() => setOpen(false)}
-                className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-[15px] font-medium ${
+                className={`flex min-h-[48px] items-center gap-3 rounded-lg px-3 py-2.5 text-[15px] font-medium ${
                   isActive(item.href)
                     ? "bg-ovi-soft text-ovi-primaryDark"
                     : "text-slate-700 hover:bg-slate-100"

@@ -1,4 +1,4 @@
-import * as XLSX from "xlsx";
+import { leerXlsx, escribirXlsx, leerCsv } from "@/lib/xlsx";
 
 export interface LoteRow {
   numero: string;
@@ -19,74 +19,63 @@ function norm(s: string): string {
 
 const ESTADOS_VALIDOS = ["disponible", "reservado", "vendido", "bloqueado"];
 
+function toNum(v: unknown): number {
+  if (typeof v === "number") return v;
+  const n = parseFloat(String(v ?? "0").replace(/[^0-9.]/g, ""));
+  return isNaN(n) ? 0 : n;
+}
+
 /**
- * Lee un archivo Excel (.xlsx/.xls) o CSV y devuelve las filas de lote.
- * Encabezados aceptados (flexibles): numero/lote, area/m2/vara, precio/valor,
- * estado, notas/observaciones.
+ * Convierte una matriz (primera fila = encabezados) en filas de lote.
+ * Encabezados aceptados de forma flexible: numero/lote, area/m2/vara,
+ * precio/valor/monto, estado, notas/observaciones.
  */
-export function parseInventory(buf: Buffer): LoteRow[] {
-  const wb = XLSX.read(buf, { type: "buffer" });
-  const sheet = wb.Sheets[wb.SheetNames[0]];
-  if (!sheet) return [];
-  const rows: Record<string, unknown>[] = XLSX.utils.sheet_to_json(sheet, {
-    defval: "",
-  });
+function filasALotes(matriz: string[][]): LoteRow[] {
+  if (!matriz.length) return [];
+  const encabezados = (matriz[0] || []).map(norm);
+  const idxDe = (pred: (k: string) => boolean) => encabezados.findIndex(pred);
+
+  const iNum = idxDe((k) => k === "numero" || k === "lote" || k === "nolote" || k.startsWith("numero"));
+  const iArea = idxDe((k) => k.startsWith("area") || k === "m2" || k.startsWith("vara"));
+  const iPrecio = idxDe((k) => k.startsWith("precio") || k === "valor" || k === "monto");
+  const iEstado = idxDe((k) => k.startsWith("estado"));
+  const iNotas = idxDe((k) => k.startsWith("nota") || k.startsWith("observ"));
+
+  if (iNum < 0) return []; // sin columna de número no se puede importar
 
   const out: LoteRow[] = [];
-  for (const raw of rows) {
-    // Mapear claves por encabezado normalizado.
-    const m: Record<string, unknown> = {};
-    for (const k of Object.keys(raw)) m[norm(k)] = raw[k];
-    const keys = Object.keys(m);
-    // Busca el valor de la primera clave que cumpla el predicado.
-    const pick = (pred: (k: string) => boolean) => {
-      const k = keys.find(pred);
-      return k ? m[k] : undefined;
-    };
-
-    const numero = String(
-      pick((k) => k === "numero" || k === "lote" || k === "nolote" || k.startsWith("numero")) ?? ""
-    ).trim();
+  for (const fila of matriz.slice(1)) {
+    const numero = String(fila[iNum] ?? "").trim();
     if (!numero) continue;
-
-    const area = toNum(
-      pick((k) => k.startsWith("area") || k === "m2" || k.startsWith("vara"))
-    );
-    const precio = toNum(
-      pick((k) => k.startsWith("precio") || k === "valor" || k === "monto")
-    );
-    let estado = norm(String(pick((k) => k.startsWith("estado")) ?? "disponible"));
+    let estado = norm(String(iEstado >= 0 ? fila[iEstado] ?? "" : ""));
     if (!ESTADOS_VALIDOS.includes(estado)) estado = "disponible";
-    const notas = String(
-      pick((k) => k.startsWith("nota") || k.startsWith("observ")) ?? ""
-    ).trim();
-
-    out.push({ numero, area, precio, estado, notas });
+    out.push({
+      numero: numero.slice(0, 60),
+      area: iArea >= 0 ? toNum(fila[iArea]) : 0,
+      precio: iPrecio >= 0 ? toNum(fila[iPrecio]) : 0,
+      estado,
+      notas: String(iNotas >= 0 ? fila[iNotas] ?? "" : "").trim().slice(0, 300),
+    });
   }
   return out;
 }
 
-function toNum(v: unknown): number {
-  if (typeof v === "number") return v;
-  const n = parseFloat(String(v || "0").replace(/[^0-9.]/g, ""));
-  return isNaN(n) ? 0 : n;
+/** Lee un archivo Excel (.xlsx) o CSV y devuelve las filas de lote. */
+export function parseInventory(buf: Buffer, nombre = ""): LoteRow[] {
+  if (/\.csv$/i.test(nombre)) {
+    return filasALotes(leerCsv(buf.toString("utf8")));
+  }
+  return filasALotes(leerXlsx(buf));
 }
 
 /** Genera un archivo Excel (buffer) con los lotes dados. */
 export function buildInventoryXlsx(
   lotes: { numero: string; area: number; precio: number; estado: string; notas: string }[]
 ): Buffer {
-  const data = lotes.map((l) => ({
-    numero: l.numero,
-    area: l.area,
-    precio: l.precio,
-    estado: l.estado,
-    notas: l.notas,
-  }));
-  const ws = XLSX.utils.json_to_sheet(
-    data.length ? data : [{ numero: "", area: 0, precio: 0, estado: "disponible", notas: "" }]
-  );
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Inventario");
-  return XLSX.write(wb, { type: "buffer", bookType: "xlsx" }) as Buffer;
+  const filas: (string | number)[][] = [["numero", "area", "precio", "estado", "notas"]];
+  for (const l of lotes) {
+    filas.push([l.numero, l.area, l.precio, l.estado, l.notas]);
+  }
+  if (lotes.length === 0) filas.push(["", 0, 0, "disponible", ""]);
+  return escribirXlsx(filas);
 }

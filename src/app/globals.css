@@ -58,6 +58,72 @@ body {
   }
 }
 
+/* ============================================================
+   MÓVIL — la app se usa en el sitio, desde el teléfono.
+   ============================================================ */
+
+/* 1) Objetivos táctiles cómodos (mínimo ~44px) para usar con el dedo. */
+@media (max-width: 767px) {
+  .btn,
+  .btn-primary,
+  .btn-ghost,
+  .btn-danger {
+    @apply min-h-[48px] w-full text-base;
+  }
+  /* Los chips/filtros también deben poder tocarse sin precisión. */
+  .chip {
+    @apply min-h-[40px] px-3.5 text-sm;
+  }
+  /* Enlaces de acción dentro de tablas y formularios. */
+  .table a,
+  .table button {
+    @apply inline-flex min-h-[40px] items-center;
+  }
+  /* Campos: 16px evita que el iPhone haga zoom al enfocar. */
+  .field {
+    @apply min-h-[48px] text-base;
+    font-size: 16px;
+  }
+  input[type="checkbox"] {
+    @apply h-5 w-5;
+  }
+}
+
+/* 2) Tablas como TARJETAS en móvil: nada se corta ni exige scroll lateral.
+      Cada celda muestra su encabezado (definido con data-label). */
+@media (max-width: 767px) {
+  .table-cards thead {
+    @apply hidden;
+  }
+  .table-cards,
+  .table-cards tbody,
+  .table-cards tr,
+  .table-cards td {
+    @apply block w-full;
+  }
+  .table-cards tr {
+    @apply mb-3 rounded-xl border border-slate-200 bg-white p-1;
+  }
+  .table-cards td {
+    @apply flex items-center justify-between gap-3 border-0 border-b border-slate-100 px-3 py-2.5 text-right;
+  }
+  .table-cards tr td:last-child {
+    @apply border-b-0;
+  }
+  /* Etiqueta de la columna a la izquierda de cada valor. */
+  .table-cards td::before {
+    content: attr(data-label);
+    @apply text-left text-xs font-semibold uppercase tracking-wide text-slate-500;
+  }
+  /* Celdas sin etiqueta (acciones) ocupan el ancho completo. */
+  .table-cards td[data-label=""]::before {
+    content: none;
+  }
+  .table-cards td[data-label=""] {
+    @apply justify-end;
+  }
+}
+
 /* Impresión limpia de reportes */
 @media print {
   .no-print {

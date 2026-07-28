@@ -50,7 +50,7 @@ export default async function AdminProyectos({
       <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
         {/* Lista */}
         <div className="card overflow-x-auto">
-          <table className="table">
+          <table className="table table-cards">
             <thead>
               <tr>
                 <th>Código</th>
@@ -65,13 +65,13 @@ export default async function AdminProyectos({
             <tbody>
               {proyectos.map((p) => (
                 <tr key={p.id} className="hover:bg-slate-50">
-                  <td className="font-mono text-xs">{p.codigo}</td>
-                  <td className="font-medium">{p.nombre}</td>
-                  <td className="text-slate-500">{p.municipio}, {p.departamento}</td>
-                  <td><Badge value={p.fuerza} label={FUERZA_LABEL[p.fuerza]} /></td>
-                  <td className="text-right">{num(p.totalLotes)}</td>
-                  <td><Badge value={p.estado} /></td>
-                  <td>
+                  <td data-label="Código" className="font-mono text-xs">{p.codigo}</td>
+                  <td data-label="Nombre" className="font-medium">{p.nombre}</td>
+                  <td data-label="Ubicación" className="text-slate-500">{p.municipio}, {p.departamento}</td>
+                  <td data-label="Fuerza"><Badge value={p.fuerza} label={FUERZA_LABEL[p.fuerza]} /></td>
+                  <td data-label="Lotes" className="text-right">{num(p.totalLotes)}</td>
+                  <td data-label="Estado"><Badge value={p.estado} /></td>
+                  <td data-label="">
                     <Link href={`/admin/proyectos?edit=${p.id}`} className="text-sm font-semibold text-ovi-primary">
                       Editar
                     </Link>
@@ -100,7 +100,7 @@ export default async function AdminProyectos({
             submitLabel={editing ? "Guardar cambios" : "Crear proyecto"}
           >
             {editing ? <input type="hidden" name="id" value={editing.id} /> : null}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <Field label="Código">
                 <Input name="codigo" defaultValue={editing?.codigo} placeholder="CHA-16" required />
               </Field>
@@ -111,7 +111,7 @@ export default async function AdminProyectos({
             <Field label="Nombre">
               <Input name="nombre" defaultValue={editing?.nombre} placeholder="Nombre del proyecto" required />
             </Field>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <Field label="Departamento">
                 <Select
                   name="departamento"
@@ -126,7 +126,7 @@ export default async function AdminProyectos({
             <Field label="Fuerza responsable">
               <Select name="fuerza" options={FUERZAS_CON_AMBAS} defaultValue={editing?.fuerza || "ambas"} />
             </Field>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <Field label="Total de lotes">
                 <Input name="totalLotes" inputMode="numeric" defaultValue={editing?.totalLotes || ""} />
               </Field>

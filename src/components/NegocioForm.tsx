@@ -64,7 +64,7 @@ export default function NegocioForm({
 
   return (
     <form action={action} className="space-y-4">
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <label className="block">
           <span className="label">Tipo</span>
           <select name="tipo" className="field" defaultValue="reserva">
@@ -154,7 +154,7 @@ export default function NegocioForm({
         )
       ) : null}
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <label className="block">
           <span className="label">Nombre del cliente</span>
           <input name="clienteNombre" className="field" placeholder="Ej. Juan Pérez" required />
@@ -192,7 +192,7 @@ export default function NegocioForm({
         </label>
       ) : null}
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <label className="block">
           <span className="label">Prima recibida (US$)</span>
           <input name="prima" inputMode="decimal" className="field" placeholder="0" />

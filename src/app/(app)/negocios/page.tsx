@@ -69,7 +69,7 @@ export default async function NegociosPage({
         />
       ) : (
         <div className="card overflow-x-auto">
-          <table className="table">
+          <table className="table table-cards">
             <thead>
               <tr>
                 <th>Cliente</th>
@@ -87,7 +87,7 @@ export default async function NegociosPage({
                 const saldo = (n.precioLote || 0) - cobrado;
                 return (
                   <tr key={n.id} className="hover:bg-slate-50">
-                    <td>
+                    <td data-label="Cliente">
                       <Link
                         href={`/negocios/${n.id}`}
                         className="font-semibold text-ovi-primary hover:underline"
@@ -95,14 +95,14 @@ export default async function NegociosPage({
                         {n.clienteNombre}
                       </Link>
                     </td>
-                    <td className="text-slate-600">{n.project?.codigo}</td>
-                    <td className="text-slate-600">{n.loteRef || "—"}</td>
-                    <td>
+                    <td data-label="Proyecto" className="text-slate-600">{n.project?.codigo}</td>
+                    <td data-label="Lote" className="text-slate-600">{n.loteRef || "—"}</td>
+                    <td data-label="Estado">
                       <Badge value={n.estado} label={ESTADO_NEGOCIO_LABEL[n.estado]} />
                     </td>
-                    <td className="text-right">{money(n.precioLote)}</td>
-                    <td className="text-right font-medium">{money(saldo)}</td>
-                    <td className="text-slate-500">{fecha(n.fechaVenta || n.fechaReserva)}</td>
+                    <td data-label="Precio" className="text-right">{money(n.precioLote)}</td>
+                    <td data-label="Saldo" className="text-right font-medium">{money(saldo)}</td>
+                    <td data-label="Fecha" className="text-slate-500">{fecha(n.fechaVenta || n.fechaReserva)}</td>
                   </tr>
                 );
               })}

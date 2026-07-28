@@ -270,7 +270,7 @@ function Tabla({
   }
   return (
     <div className="card overflow-x-auto">
-      <table className="table">
+      <table className="table table-cards">
         <thead>
           <tr>
             {cols.map((c, i) => (
@@ -284,7 +284,7 @@ function Tabla({
           {rows.map((r, i) => (
             <tr key={i}>
               {r.map((cell, j) => (
-                <td key={j} className={j === 0 ? "font-medium" : "text-right"}>
+                <td key={j} data-label={cols[j]} className={j === 0 ? "font-medium" : "text-right"}>
                   {cell}
                 </td>
               ))}
@@ -293,7 +293,7 @@ function Tabla({
           {totalRow ? (
             <tr className="font-bold">
               {totalRow.map((cell, j) => (
-                <td key={j} className={j === 0 ? "" : "text-right"}>
+                <td key={j} data-label={cols[j]} className={j === 0 ? "" : "text-right"}>
                   {cell}
                 </td>
               ))}

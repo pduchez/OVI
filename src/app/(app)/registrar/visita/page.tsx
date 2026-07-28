@@ -65,7 +65,7 @@ export default async function VisitaPage() {
           <Field label="Nombre del cliente">
             <Input name="clienteNombre" placeholder="Ej. Juan Pérez" required />
           </Field>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <Field label="Teléfono">
               <Input name="clienteTelefono" inputMode="tel" placeholder="7000-0000" />
             </Field>

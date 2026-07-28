@@ -22,6 +22,42 @@ function puedeSobreFuerza(scope: { manageFuerza: string | null }, fuerza: string
   return fuerza === scope.manageFuerza;
 }
 
+/** Rango jerárquico: solo se administra a usuarios de rango INFERIOR. */
+const RANGO: Record<string, number> = {
+  director: 3,
+  gerente: 2,
+  asistente: 1,
+  vendedor: 0,
+  lider_central: 0,
+  lider_sitio: 0,
+};
+function rango(role: string): number {
+  return RANGO[role] ?? 0;
+}
+
+/**
+ * Verifica que quien administra tenga autoridad sobre el usuario objetivo:
+ * misma fuerza (salvo director) y rango estrictamente superior. Impide, por
+ * ejemplo, que una asistente edite o desactive a su propio gerente, o que
+ * alguien se auto-ascienda.
+ */
+function puedeSobreUsuario(
+  actor: { role: string; id: string },
+  scope: { manageFuerza: string | null },
+  objetivo: { role: string; fuerza: string; id: string }
+): string | null {
+  if (!puedeSobreFuerza(scope, objetivo.fuerza)) {
+    return "No puedes administrar usuarios de otra fuerza de ventas.";
+  }
+  if (actor.id === objetivo.id) {
+    return "No puedes modificar tu propio usuario aquí; usa 'Mi cuenta'.";
+  }
+  if (rango(actor.role) <= rango(objetivo.role)) {
+    return "No puedes administrar a un usuario de tu mismo nivel o superior.";
+  }
+  return null;
+}
+
 export async function guardarUsuarioGestion(_prev: unknown, fd: FormData) {
   const { user, scope } = await guardUsers();
   const id = String(fd.get("id") || "");
@@ -46,15 +82,18 @@ export async function guardarUsuarioGestion(_prev: unknown, fd: FormData) {
   if (!puedeSobreFuerza(scope, fuerza)) {
     return { error: "No puedes administrar usuarios de otra fuerza de ventas." };
   }
+  // No se puede crear/asignar un rol de rango igual o superior al propio.
+  if (rango(role) >= rango(user.role)) {
+    return { error: "No puedes asignar un nivel igual o superior al tuyo." };
+  }
 
   try {
     let targetId = id;
     if (id) {
       const prev = await prisma.user.findUnique({ where: { id } });
       if (!prev) return { error: "Usuario no encontrado." };
-      if (!puedeSobreFuerza(scope, prev.fuerza)) {
-        return { error: "No puedes editar a un usuario de otra fuerza." };
-      }
+      const veto = puedeSobreUsuario(user, scope, prev);
+      if (veto) return { error: veto };
       await prisma.user.update({
         where: { id },
         data: {
@@ -96,7 +135,7 @@ export async function resetPasswordUsuario(fd: FormData) {
   const { user, scope } = await guardUsers();
   const id = String(fd.get("id") || "");
   const target = await prisma.user.findUnique({ where: { id } });
-  if (!target || !puedeSobreFuerza(scope, target.fuerza)) return;
+  if (!target || puedeSobreUsuario(user, scope, target)) return; // sin autoridad
   await prisma.user.update({
     where: { id },
     data: { passwordHash: hashPassword("password"), mustChangePassword: true },
@@ -109,7 +148,7 @@ export async function toggleActivoUsuario(fd: FormData) {
   const { user, scope } = await guardUsers();
   const id = String(fd.get("id") || "");
   const target = await prisma.user.findUnique({ where: { id } });
-  if (!target || !puedeSobreFuerza(scope, target.fuerza)) return;
+  if (!target || puedeSobreUsuario(user, scope, target)) return; // sin autoridad
   await prisma.user.update({ where: { id }, data: { activo: !target.activo } });
   await logSecurity(
     user,

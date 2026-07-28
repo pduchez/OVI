@@ -41,11 +41,39 @@ export function verifyPassword(password: string, stored: string): boolean {
 
 // --- Sesión firmada ------------------------------------------------------
 
+/**
+ * Secreto de firma de sesión. En PRODUCCIÓN es obligatorio y debe ser largo:
+ * si faltara, cualquiera que conociera el valor por defecto podría FORJAR una
+ * sesión de director. Por eso aquí se falla cerrado (no se degrada a un valor
+ * conocido) y solo se permite un secreto de desarrollo fuera de producción.
+ */
 function sessionSecret(): string {
-  return process.env.AUTH_SECRET || "ovi-dev-secret-cambiar-en-produccion";
+  const s = process.env.AUTH_SECRET;
+  if (s && s.length >= 32) return s;
+  if (process.env.NODE_ENV === "production") {
+    throw new Error(
+      "AUTH_SECRET no configurado (o menor a 32 caracteres). Defínelo en las variables de entorno."
+    );
+  }
+  return "ovi-dev-secret-solo-para-desarrollo-local-0123456789";
 }
 
 const SESSION_TTL_MS = 12 * 60 * 60 * 1000; // 12 h
+
+/**
+ * Opciones de la cookie de sesión. `secure` en producción (solo viaja por
+ * HTTPS), httpOnly (JavaScript no puede leerla → mitiga robo por XSS) y
+ * sameSite lax (mitiga CSRF). Sin `maxAge`: se borra al cerrar el navegador;
+ * la vigencia real va firmada dentro del token.
+ */
+export function sessionCookieOptions() {
+  return {
+    httpOnly: true,
+    sameSite: "lax" as const,
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+  };
+}
 
 export function signSession(userId: string, ttlMs = SESSION_TTL_MS): string {
   const exp = Date.now() + ttlMs;

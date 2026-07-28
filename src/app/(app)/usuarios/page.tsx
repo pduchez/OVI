@@ -77,7 +77,7 @@ export default async function UsuariosPage({
       <div className="grid gap-6 lg:grid-cols-[1fr_400px]">
         {/* Lista */}
         <div className="card overflow-x-auto">
-          <table className="table">
+          <table className="table table-cards">
             <thead>
               <tr>
                 <th>Persona</th>
@@ -91,17 +91,17 @@ export default async function UsuariosPage({
             <tbody>
               {usuarios.map((u) => (
                 <tr key={u.id} className={`hover:bg-slate-50 ${!u.activo ? "opacity-50" : ""}`}>
-                  <td className="font-medium">
+                  <td data-label="Persona" className="font-medium">
                     {u.displayName || "—"}
                     {u.email ? <span className="block text-xs text-slate-400">{u.email}</span> : null}
                   </td>
-                  <td className="font-mono text-xs">{u.username}</td>
-                  <td><Badge value={u.role} label={ROLE_LABEL[u.role] || u.role} /></td>
-                  <td className="text-slate-500">{fuerzaCorta(u.fuerza)}</td>
-                  <td className="text-xs text-slate-500">
+                  <td data-label="Usuario" className="font-mono text-xs">{u.username}</td>
+                  <td data-label="Rol"><Badge value={u.role} label={ROLE_LABEL[u.role] || u.role} /></td>
+                  <td data-label="Fuerza" className="text-slate-500">{fuerzaCorta(u.fuerza)}</td>
+                  <td data-label="Superior" className="text-xs text-slate-500">
                     {u.supervisor?.displayName || u.supervisor?.username || "—"}
                   </td>
-                  <td className="whitespace-nowrap">
+                  <td data-label="" className="whitespace-nowrap">
                     <Link href={`/usuarios?edit=${u.id}`} className="text-sm font-semibold text-ovi-primary">
                       Editar
                     </Link>
@@ -143,7 +143,7 @@ export default async function UsuariosPage({
             <Field label="Nombre de la persona (real)">
               <Input name="displayName" defaultValue={editing?.displayName} placeholder="Nombre y apellido" required />
             </Field>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <Field label="Correo">
                 <Input name="email" type="email" defaultValue={editing?.email} placeholder="correo@ejemplo.com" />
               </Field>
@@ -154,7 +154,7 @@ export default async function UsuariosPage({
             <Field label="Usuario (para ingresar)">
               <Input name="username" defaultValue={editing?.username} placeholder="ej. jperez" required />
             </Field>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <Field label="Rol">
                 <Select name="role" options={rolesDisponibles} defaultValue={editing?.role || "vendedor"} />
               </Field>

@@ -148,20 +148,38 @@ export async function ensureOrgUsers(): Promise<void> {
 
   // --- Vendedores (cupos) ---
   const pad = (n: number) => String(n).padStart(2, "0");
-  // Interna: 19 (uno por proyecto).
-  for (let i = 1; i <= 19; i++) {
-    const uid = await upsertUser({ username: `v_interna_${pad(i)}`, role: "vendedor", displayName: `Vendedor Interna ${pad(i)}`, fuerza: "interna", supervisorId: aInterna });
-    const proj = projects[i - 1];
-    if (proj && (await prisma.projectAssignment.count({ where: { userId: uid } })) === 0)
-      await prisma.projectAssignment.create({ data: { userId: uid, projectId: proj.id } });
+
+  // Un cupo de vendedor por proyecto, en cada fuerza de Chacón (Interna y
+  // UCOES). El número del cupo sale del CÓDIGO del proyecto —GIC-20 genera
+  // v_interna_20 y v_ucoes_20—, no de un contador: así el mapeo cupo↔proyecto
+  // es siempre el mismo aunque cambie el orden o se agreguen proyectos, y cada
+  // proyecto nuevo trae su cupo solo, sin tocar el código.
+  const FUERZAS_CHACON = [
+    { prefijo: "v_interna", fuerza: "interna", etiqueta: "Interna", jefe: aInterna },
+    { prefijo: "v_ucoes", fuerza: "ucoes", etiqueta: "UCOES", jefe: aUcoes },
+  ];
+  for (const proj of projects) {
+    const n = proj.codigo.trim().toUpperCase().replace(/^GIC-/, "");
+    // Un proyecto con código fuera del estándar GIC-NN no genera cupo
+    // automático: lo asigna a mano el gerente o la asistente.
+    if (!/^\d+$/.test(n)) continue;
+    const num = pad(parseInt(n, 10));
+    for (const f of FUERZAS_CHACON) {
+      const uid = await upsertUser({
+        username: `${f.prefijo}_${num}`,
+        role: "vendedor",
+        displayName: `Vendedor ${f.etiqueta} ${num}`,
+        fuerza: f.fuerza,
+        supervisorId: f.jefe,
+      });
+      // Solo se asigna si el cupo no tiene ya proyecto: nunca se pisa una
+      // reasignación hecha por la asistente desde el panel de usuarios.
+      if ((await prisma.projectAssignment.count({ where: { userId: uid } })) === 0) {
+        await prisma.projectAssignment.create({ data: { userId: uid, projectId: proj.id } });
+      }
+    }
   }
-  // UCOES: 10 (uno por proyecto).
-  for (let i = 1; i <= 10; i++) {
-    const uid = await upsertUser({ username: `v_ucoes_${pad(i)}`, role: "vendedor", displayName: `Vendedor UCOES ${pad(i)}`, fuerza: "ucoes", supervisorId: aUcoes });
-    const proj = projects[i - 1];
-    if (proj && (await prisma.projectAssignment.count({ where: { userId: uid } })) === 0)
-      await prisma.projectAssignment.create({ data: { userId: uid, projectId: proj.id } });
-  }
+
   // Destinopropiedades.com: 10 (ven todo el inventario; sin proyecto fijo).
   for (let i = 1; i <= 10; i++) {
     await upsertUser({ username: `v_dp_${pad(i)}`, role: "vendedor", displayName: `Vendedor DP ${pad(i)}`, fuerza: "destino", supervisorId: aDp });

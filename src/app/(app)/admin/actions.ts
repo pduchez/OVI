@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { getCurrentUser, hashPassword } from "@/lib/auth";
 import { getScope } from "@/lib/permissions";
-import { SEED_PROJECTS } from "@/lib/bootstrap";
+import { SEED_PROJECTS, ensureOrgUsers } from "@/lib/bootstrap";
 import { logSecurity } from "@/lib/securityLog";
 
 async function guardAdmin() {
@@ -53,6 +53,10 @@ export async function cargarProyectosOficiales() {
       eliminados++;
     }
   }
+
+  // Cada proyecto necesita su cupo de vendedor por fuerza; si el catálogo
+  // acaba de crear proyectos nuevos, aquí nacen sus cupos.
+  await ensureOrgUsers();
 
   await logSecurity(
     user,

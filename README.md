@@ -79,6 +79,11 @@ edita/reemplaza por los reales desde **Administración → Proyectos**.
 | `DATABASE_URL` | Cadena Postgres **exclusiva de OVI** (Neon, Supabase o Vercel Postgres). |
 | `AUTH_SECRET` | Secreto largo y aleatorio para firmar sesiones. |
 
+## Seguridad
+
+Ver [`SEGURIDAD.md`](./SEGURIDAD.md): modelo de acceso por rol, protección de
+archivos subidos, cabeceras, y recomendaciones de operación.
+
 ## Despliegue y migración
 
 Ver [`DEPLOY.md`](./DEPLOY.md). OVI es un repositorio autónomo, listo para

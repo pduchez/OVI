@@ -21,7 +21,7 @@ export async function loginAction(_prev: unknown, formData: FormData) {
   } catch {
     return {
       error:
-        "No hay base de datos conectada. Configura DATABASE_URL (ver README).",
+        "No se pudo conectar a la base de datos. Abre /api/health para ver el detalle y revisa DATABASE_URL en Vercel (usa la cadena del 'Session pooler' de Supabase).",
     };
   }
   const user = await findUserByUsername(username);

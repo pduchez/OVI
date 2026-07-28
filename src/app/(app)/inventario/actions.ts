@@ -73,29 +73,46 @@ export async function importarInventario(_prev: unknown, fd: FormData) {
   if (!file || !file.size) return { error: "Selecciona un archivo Excel o CSV." };
 
   const nombre = file.name || "inventario";
-  const esExcelCsv = /\.(xlsx|xls|csv)$/i.test(nombre);
-  if (!esExcelCsv) {
-    return { error: "Formato no soportado para importar. Usa .xlsx, .xls o .csv (el PDF se guarda como documento adjunto)." };
+  if (/\.xls$/i.test(nombre)) {
+    return {
+      error:
+        "El formato .xls (Excel 97-2003) no se puede leer. Ábrelo en Excel y usa \u201cGuardar como\u201d → Libro de Excel (.xlsx).",
+    };
+  }
+  if (!/\.(xlsx|xlsm|csv|txt|tsv)$/i.test(nombre)) {
+    return {
+      error:
+        "Formato no soportado para importar. Usa .xlsx, .xlsm, .csv o .txt (el PDF se guarda como documento adjunto).",
+    };
   }
 
   let rows;
   let stored;
   let hoja = "";
   let ignoradas: string[] = [];
+  let diagnostico: { hoja: string; columnas: string[]; lotes: number }[] = [];
   try {
     const buf = Buffer.from(await file.arrayBuffer());
     const lectura = parseInventoryDetallado(buf, nombre);
     rows = lectura.filas;
     hoja = lectura.hoja;
     ignoradas = lectura.hojasIgnoradas;
+    diagnostico = lectura.diagnostico;
     stored = await storeFile(file, "inventario", user.id);
   } catch (e) {
     return { error: "No se pudo leer el archivo: " + (e as Error).message };
   }
   if (!rows.length) {
+    // Mensaje que explica QUÉ se vio, para no dejar al usuario adivinando.
+    const detalle = diagnostico
+      .slice(0, 6)
+      .map((d) => `· "${d.hoja}": ${d.columnas.length ? d.columnas.join(", ") : "(vacía)"}`)
+      .join("\n");
     return {
       error:
-        "No se encontraron lotes. El archivo debe tener una hoja con columnas de lote (o polígono + lote) y precio.",
+        "No se encontraron lotes en el archivo. Se necesita una hoja con una columna de " +
+        "lote (o polígono + lote) y una de precio o área.\n\nEsto es lo que se leyó:\n" +
+        detalle,
     };
   }
 

@@ -98,7 +98,7 @@ export async function storeFile(
   let tipoReal = detectarTipo(buf);
   // CSV no tiene firma binaria: se acepta solo si el contenido es texto seguro
   // y el nombre termina en .csv.
-  if (!tipoReal && /\.csv$/i.test(nombreOriginal) && esCsvSeguro(buf)) {
+  if (!tipoReal && /\.(csv|txt|tsv)$/i.test(nombreOriginal) && esCsvSeguro(buf)) {
     tipoReal = "text/csv";
   }
 

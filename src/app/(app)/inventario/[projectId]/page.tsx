@@ -114,7 +114,7 @@ export default async function InventarioProyecto({
             <input
               type="file"
               name="archivo"
-              accept=".xlsx,.xls,.csv"
+              accept=".xlsx,.xlsm,.csv,.txt,.tsv"
               className="field bg-white"
               required
             />

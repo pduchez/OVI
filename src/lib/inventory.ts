@@ -12,6 +12,8 @@ export interface ResultadoLectura {
   filas: LoteRow[];
   hoja: string; // nombre de la hoja de la que se tomaron los lotes
   hojasIgnoradas: string[];
+  /** Qué se encontró en cada hoja. Sirve para explicar por qué falló. */
+  diagnostico: { hoja: string; columnas: string[]; lotes: number }[];
 }
 
 /** Normaliza encabezados: minúsculas, sin acentos ni signos. */
@@ -67,6 +69,14 @@ function idx(encabezados: string[], pred: (k: string) => boolean): number {
  *  - Estado: "estado comercial" / "estado".
  *  - Notas: "uso" / "categoría" / "notas" / "observaciones".
  */
+function encabezadosDe(matriz: string[][]): string[] {
+  for (let i = 0; i < Math.min(matriz.length, 8); i++) {
+    const fila = (matriz[i] || []).filter((c) => String(c || "").trim());
+    if (fila.length >= 2) return fila.map((c) => String(c).trim()).slice(0, 14);
+  }
+  return [];
+}
+
 function filasALotes(matriz: string[][]): LoteRow[] {
   if (!matriz.length) return [];
   // Busca la fila de encabezados en las primeras filas (a veces hay título).
@@ -142,21 +152,31 @@ function filasALotes(matriz: string[][]): LoteRow[] {
  */
 export function parseInventoryDetallado(buf: Buffer, nombre = ""): ResultadoLectura {
   if (/\.csv$/i.test(nombre)) {
-    return { filas: filasALotes(leerCsv(buf.toString("utf8"))), hoja: "CSV", hojasIgnoradas: [] };
+    const filasCsv = leerCsv(buf.toString("utf8"));
+    const lotesCsv = filasALotes(filasCsv);
+    return {
+      filas: lotesCsv,
+      hoja: "CSV",
+      hojasIgnoradas: [],
+      diagnostico: [{ hoja: "CSV", columnas: encabezadosDe(filasCsv), lotes: lotesCsv.length }],
+    };
   }
   const hojas = leerLibro(buf);
-  let mejor: ResultadoLectura = { filas: [], hoja: "", hojasIgnoradas: [] };
+  let mejor: ResultadoLectura = { filas: [], hoja: "", hojasIgnoradas: [], diagnostico: [] };
   const otras: string[] = [];
+  const diag: { hoja: string; columnas: string[]; lotes: number }[] = [];
   for (const h of hojas) {
     const filas = filasALotes(h.filas);
+    diag.push({ hoja: h.nombre, columnas: encabezadosDe(h.filas), lotes: filas.length });
     if (filas.length > mejor.filas.length) {
       if (mejor.hoja) otras.push(mejor.hoja);
-      mejor = { filas, hoja: h.nombre, hojasIgnoradas: [] };
+      mejor = { filas, hoja: h.nombre, hojasIgnoradas: [], diagnostico: [] };
     } else {
       otras.push(h.nombre);
     }
   }
   mejor.hojasIgnoradas = otras;
+  mejor.diagnostico = diag;
   return mejor;
 }
 

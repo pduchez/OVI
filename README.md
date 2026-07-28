@@ -81,7 +81,9 @@ edita/reemplaza por los reales desde **Administración → Proyectos**.
 
 ## Carga de inventario
 
-Desde **Inventario → (proyecto) → Importar**, con un Excel (.xlsx) o CSV.
+Desde **Inventario → (proyecto) → Importar**, con Excel (.xlsx, .xlsm), CSV o texto
+tabulado. El lector acepta las distintas formas en que los programas generan un
+Excel, así que no importa con qué herramienta se haya creado el archivo.
 
 - Si el Excel trae **varias hojas**, OVI elige sola la que contiene los lotes y
   te dice cuál usó e cuántas ignoró.
@@ -99,6 +101,16 @@ Desde **Inventario → (proyecto) → Importar**, con un Excel (.xlsx) o CSV.
   reales) y el precio unitario por vara².
 - Un lote existente se **actualiza** por su número; si ya está reservado o
   vendido, la importación **no le cambia el estado**.
+
+### Si un archivo no se puede leer
+
+OVI dice **qué hojas encontró y qué columnas tenía cada una**, para saber al
+instante qué corregir. Casos conocidos:
+
+- **.xls (Excel 97-2003)**: no se puede leer. Ábrelo en Excel y guárdalo como
+  **.xlsx**.
+- **Falta la columna de lote o de precio**: revisa que la hoja tenga al menos
+  una columna de lote (o polígono + lote) y una de precio o área.
 
 ## Seguridad
 

@@ -187,9 +187,9 @@ async function renderReporte(
     ];
     const cards = scope.isDP
       ? cardsAll.filter((c) => c.key === "destino")
-      : scope.isDirector
-      ? cardsAll
-      : cardsAll.filter((c) => c.key !== "destino");
+      : scope.fuerza
+      ? cardsAll.filter((c) => c.key === scope.fuerza)
+      : cardsAll;
     return (
       <div className="grid gap-4 sm:grid-cols-3">
         {cards.map((c) => {

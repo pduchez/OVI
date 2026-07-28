@@ -11,13 +11,7 @@ import { hashPassword } from "@/lib/auth";
 
 export const SEED_USERS = [
   { username: "director1", role: "director", displayName: "Director 1", fuerza: "ambas" },
-  { username: "director2", role: "director", displayName: "Director 2", fuerza: "ambas" },
-  { username: "claudia", role: "gerente", displayName: "Lic. Claudia (Oficina)", fuerza: "interna" },
-  { username: "max", role: "gerente", displayName: "Lic. Max (UCOES)", fuerza: "ucoes" },
-  { username: "central1", role: "lider_central", displayName: "Líder Central 1", fuerza: "ambas" },
-  { username: "sitio1", role: "lider_sitio", displayName: "Líder Sitio 1", fuerza: "ambas" },
-  // Fuerza externa Destinopropiedades.com (ve todo el inventario, invisible a Chacón).
-  { username: "dp1", role: "gerente", displayName: "Destinopropiedades.com", fuerza: "destino" },
+  { username: "director2", role: "director", displayName: "Director 2 (Pedro Pablo Duchez)", fuerza: "ambas" },
 ];
 
 // Catálogo OFICIAL de proyectos del Grupo Inmobiliario Chacón (gichacon.com).
@@ -95,28 +89,69 @@ export async function ensureBootstrap(): Promise<void> {
     if (!ex) await prisma.vendedor.create({ data: { ...v, activo: true } });
   }
 
-  // Asigna proyectos a los líderes de ejemplo si no tienen ninguno.
-  const central = await prisma.user.findFirst({ where: { username: "central1" } });
-  const sitio = await prisma.user.findFirst({ where: { username: "sitio1" } });
-  const projects = await prisma.project.findMany({ orderBy: { codigo: "asc" } });
-  if (central) {
-    const has = await prisma.projectAssignment.count({ where: { userId: central.id } });
-    if (has === 0 && projects.length >= 3) {
-      for (const p of projects.slice(0, 3)) {
-        await prisma.projectAssignment.create({
-          data: { userId: central.id, projectId: p.id },
-        });
-      }
-    }
-  }
-  if (sitio) {
-    const has = await prisma.projectAssignment.count({ where: { userId: sitio.id } });
-    if (has === 0 && projects.length >= 1) {
-      await prisma.projectAssignment.create({
-        data: { userId: sitio.id, projectId: projects[0].id },
-      });
-    }
-  }
+  // Estructura organizacional (según el listado del Grupo Chacón).
+  await ensureOrgUsers();
 
   bootstrapped = true;
+}
+
+// ---------------------------------------------------------------
+//  Estructura organizacional: gerentes, asistentes y vendedores con jerarquía.
+//  Cada usuario es un "cupo" que la asistente/gerente completa con la persona
+//  real (nombre, correo, celular). Contraseña inicial "password" (a cambiar).
+// ---------------------------------------------------------------
+async function upsertUser(u: {
+  username: string; role: string; displayName: string; fuerza: string;
+  supervisorId?: string | null;
+}): Promise<string> {
+  const ex = await prisma.user.findFirst({
+    where: { username: { equals: u.username, mode: "insensitive" } },
+  });
+  if (ex) return ex.id;
+  const created = await prisma.user.create({
+    data: {
+      username: u.username,
+      role: u.role,
+      displayName: u.displayName,
+      fuerza: u.fuerza,
+      supervisorId: u.supervisorId || null,
+      passwordHash: hashPassword("password"),
+      mustChangePassword: true,
+    },
+  });
+  return created.id;
+}
+
+export async function ensureOrgUsers(): Promise<void> {
+  const dir1 = await prisma.user.findFirst({ where: { username: "director1" } });
+  const dir2 = await prisma.user.findFirst({ where: { username: "director2" } });
+  const projects = await prisma.project.findMany({ orderBy: { codigo: "asc" } });
+
+  // --- Capa de mando por fuerza ---
+  const gInterna = await upsertUser({ username: "gerente_interna", role: "gerente", displayName: "Gerente de Ventas — Interna", fuerza: "interna", supervisorId: dir1?.id });
+  const aInterna = await upsertUser({ username: "asist_interna", role: "asistente", displayName: "Asistente Ejecutiva — Interna", fuerza: "interna", supervisorId: gInterna });
+  const gUcoes = await upsertUser({ username: "gerente_ucoes", role: "gerente", displayName: "Gerente de Ventas — UCOES", fuerza: "ucoes", supervisorId: dir1?.id });
+  const aUcoes = await upsertUser({ username: "asist_ucoes", role: "asistente", displayName: "Asistente Ejecutiva — UCOES", fuerza: "ucoes", supervisorId: gUcoes });
+  const aDp = await upsertUser({ username: "asist_dp", role: "asistente", displayName: "Asistente Ejecutiva — Destinopropiedades.com", fuerza: "destino", supervisorId: dir2?.id });
+
+  // --- Vendedores (cupos) ---
+  const pad = (n: number) => String(n).padStart(2, "0");
+  // Interna: 19 (uno por proyecto).
+  for (let i = 1; i <= 19; i++) {
+    const uid = await upsertUser({ username: `v_interna_${pad(i)}`, role: "vendedor", displayName: `Vendedor Interna ${pad(i)}`, fuerza: "interna", supervisorId: aInterna });
+    const proj = projects[i - 1];
+    if (proj && (await prisma.projectAssignment.count({ where: { userId: uid } })) === 0)
+      await prisma.projectAssignment.create({ data: { userId: uid, projectId: proj.id } });
+  }
+  // UCOES: 10 (uno por proyecto).
+  for (let i = 1; i <= 10; i++) {
+    const uid = await upsertUser({ username: `v_ucoes_${pad(i)}`, role: "vendedor", displayName: `Vendedor UCOES ${pad(i)}`, fuerza: "ucoes", supervisorId: aUcoes });
+    const proj = projects[i - 1];
+    if (proj && (await prisma.projectAssignment.count({ where: { userId: uid } })) === 0)
+      await prisma.projectAssignment.create({ data: { userId: uid, projectId: proj.id } });
+  }
+  // Destinopropiedades.com: 10 (ven todo el inventario; sin proyecto fijo).
+  for (let i = 1; i <= 10; i++) {
+    await upsertUser({ username: `v_dp_${pad(i)}`, role: "vendedor", displayName: `Vendedor DP ${pad(i)}`, fuerza: "destino", supervisorId: aDp });
+  }
 }

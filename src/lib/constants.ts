@@ -7,13 +7,20 @@
 export const ROLES = [
   { value: "director", label: "Director" },
   { value: "gerente", label: "Gerente de ventas" },
-  { value: "lider_central", label: "Líder de central (varios proyectos)" },
-  { value: "lider_sitio", label: "Líder de proyecto (en sitio)" },
+  { value: "asistente", label: "Asistente ejecutiva/administrativa" },
+  { value: "vendedor", label: "Vendedor de proyecto" },
 ] as const;
 
-export const ROLE_LABEL: Record<string, string> = Object.fromEntries(
-  ROLES.map((r) => [r.value, r.label])
-);
+// Roles válidos para el selector de creación de usuarios (por rol de quien crea).
+export const ROLE_LABEL: Record<string, string> = {
+  director: "Director",
+  gerente: "Gerente de ventas",
+  asistente: "Asistente ejecutiva/administrativa",
+  vendedor: "Vendedor de proyecto",
+  // Compatibilidad con datos existentes:
+  lider_central: "Vendedor (central)",
+  lider_sitio: "Vendedor (sitio)",
+};
 
 export const FUERZAS = [
   { value: "interna", label: "Interna (Oficina)" },

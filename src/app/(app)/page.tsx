@@ -67,11 +67,12 @@ export default async function Dashboard({
     { key: "ucoes", label: "UCOES", bg: "bg-fuchsia-50", tx: "text-fuchsia-700" },
     { key: "destino", label: "Destino.com", bg: "bg-orange-50", tx: "text-orange-700" },
   ];
+  // Mando y dirección ven las 3 fuerzas (transparencia); un vendedor solo la suya.
   const fuerzasVisibles = scope.isDP
     ? CARDS_FUERZA.filter((c) => c.key === "destino")
-    : scope.isDirector
-    ? CARDS_FUERZA
-    : CARDS_FUERZA.filter((c) => c.key !== "destino");
+    : scope.fuerza
+    ? CARDS_FUERZA.filter((c) => c.key === scope.fuerza)
+    : CARDS_FUERZA;
 
   return (
     <div>

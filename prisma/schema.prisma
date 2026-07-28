@@ -15,21 +15,34 @@ datasource db {
 }
 
 // ---------------------------------------------------------------
-//  Usuarios y accesos (4 niveles)
-//   director      → ve TODO, administra el sistema (Director 1 y 2)
-//   gerente       → ve su fuerza de venta (Oficina = Claudia, UCOES = Max)
-//   lider_central → ve/registra en VARIOS proyectos asignados (oficina)
-//   lider_sitio   → ve/registra en UN proyecto (en el sitio)
+//  Usuarios y accesos. Roles:
+//   director   → ve TODO, administra el sistema (Director 1 y 2).
+//   gerente    → gerente de ventas de una fuerza. Ve TODA la actividad
+//                (transparencia) y administra a los usuarios de su fuerza.
+//   asistente  → asistente ejecutiva/administrativa de una fuerza. Ve TODA la
+//                actividad y administra usuarios de su fuerza (altas/bajas/reasignación).
+//   vendedor   → vendedor de proyecto. Ve solo SU fuerza, en sus proyectos.
+//   (lider_central / lider_sitio se conservan y se tratan como vendedor.)
+//
+//  Cada usuario corresponde a una PERSONA REAL (nombre, correo, celular) para
+//  responsabilidad y trazabilidad, y queda supeditado a su superior (supervisor).
 // ---------------------------------------------------------------
 model User {
   id           String   @id @default(cuid())
   username     String   @unique
   passwordHash String
-  role         String   @default("lider_sitio") // director | gerente | lider_central | lider_sitio
-  displayName  String   @default("")
-  phone        String   @default("")
-  // Fuerza de venta que gobierna (solo relevante para gerente): interna | ucoes | ambas
+  role         String   @default("vendedor") // director | gerente | asistente | vendedor | lider_central | lider_sitio
+  displayName  String   @default("") // nombre de la persona real
+  email        String   @default("")
+  phone        String   @default("") // celular
+  // Fuerza de venta: interna | ucoes | destino | ambas
   fuerza       String   @default("ambas")
+  // Debe cambiar la contraseña en el próximo ingreso (alta con "password").
+  mustChangePassword Boolean @default(false)
+  // Jerarquía: superior directo (para trazabilidad).
+  supervisorId String?
+  supervisor   User?    @relation("Supervisa", fields: [supervisorId], references: [id])
+  subordinados User[]   @relation("Supervisa")
   activo       Boolean  @default(true)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt

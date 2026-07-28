@@ -10,14 +10,15 @@ import { prisma } from "@/lib/db";
 
 export const AUTH_COOKIE = "ovi_auth";
 
-export type Role = "director" | "gerente" | "lider_central" | "lider_sitio";
+export type Role = string;
 
 export interface SessionUser {
   id: string;
   username: string;
   displayName: string;
-  role: Role;
-  fuerza: string; // interna | ucoes | ambas
+  role: string;
+  fuerza: string; // interna | ucoes | destino | ambas
+  mustChangePassword: boolean;
 }
 
 // --- Hash de contraseñas -------------------------------------------------
@@ -82,8 +83,9 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
     id: user.id,
     username: user.username,
     displayName: user.displayName || user.username,
-    role: user.role as Role,
+    role: user.role,
     fuerza: user.fuerza,
+    mustChangePassword: user.mustChangePassword,
   };
 }
 

@@ -33,7 +33,8 @@ export async function loginAction(_prev: unknown, formData: FormData) {
     sameSite: "lax",
     path: "/",
   });
-  redirect("/");
+  // Si tiene contraseña inicial, va directo a cambiarla.
+  redirect(user.mustChangePassword ? "/cuenta" : "/");
 }
 
 export async function logoutAction() {

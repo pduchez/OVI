@@ -17,96 +17,84 @@ export interface Scope {
   // Oculta la actividad de la fuerza Destinopropiedades.com (para Chacón).
   excludeDestino: boolean;
   canRegister: boolean; // puede capturar movimientos
-  canAdmin: boolean; // director: administrar usuarios/proyectos/vendedores
-  // Gerentes de ventas (Oficina/UCOES) + directores: gestionan inventario y
-  // precios de lote (el vendedor/líder NO puede alterar precios).
+  canAdmin: boolean; // director: configuración global (proyectos, seguridad)
+  // Gerentes de ventas + directores: gestionan inventario y precios de lote.
   canManageInventory: boolean;
   // Puede VER el inventario (managers, dirección y la fuerza DP en solo-lectura).
   canViewInventory: boolean;
+  // Puede administrar USUARIOS (director, gerente, asistente).
+  canManageUsers: boolean;
+  // Fuerza de usuarios que puede administrar (null = todas; director).
+  manageFuerza: string | null;
   // Fuerza fija con la que registra (DP siempre registra como "destino").
   fuerzaFija: string | null;
   isDirector: boolean;
   isGerente: boolean;
-  isLider: boolean;
+  isAsistente: boolean;
+  isVendedor: boolean;
   isDP: boolean; // pertenece a la fuerza Destinopropiedades.com
 }
 
+const ROLES_MANDO = ["director", "gerente", "asistente"];
+const ROLES_VENDEDOR = ["vendedor", "lider_central", "lider_sitio"];
+
 export async function getScope(user: SessionUser): Promise<Scope> {
+  const isDP = user.fuerza === "destino";
+  const manageFuerza = user.fuerza === "ambas" ? null : user.fuerza;
+
   if (user.role === "director") {
     return {
-      projectIds: null,
-      fuerza: null,
-      excludeDestino: false,
-      canRegister: true,
-      canAdmin: true,
-      canManageInventory: true,
-      canViewInventory: true,
+      projectIds: null, fuerza: null, excludeDestino: false,
+      canRegister: true, canAdmin: true, canManageInventory: true,
+      canViewInventory: true, canManageUsers: true, manageFuerza: null,
       fuerzaFija: null,
-      isDirector: true,
-      isGerente: false,
-      isLider: false,
-      isDP: false,
+      isDirector: true, isGerente: false, isAsistente: false, isVendedor: false, isDP,
     };
   }
 
-  // Fuerza Destinopropiedades.com (externa): ve TODOS los proyectos y su
-  // inventario (solo-lectura), registra como "destino" y su actividad es
-  // invisible para las fuerzas internas de Chacón. No edita precios.
-  if (user.fuerza === "destino") {
+  // Capa de mando (gerentes y asistentes): TRANSPARENCIA — ven toda la
+  // actividad de todos los proyectos y fuerzas. Administran a los usuarios de
+  // su fuerza. El gerente gestiona inventario; la asistente no edita precios.
+  if (ROLES_MANDO.includes(user.role)) {
+    const esGerente = user.role === "gerente";
     return {
-      projectIds: null,
-      fuerza: "destino",
-      excludeDestino: false,
-      canRegister: true,
-      canAdmin: false,
-      canManageInventory: false,
+      projectIds: null, fuerza: null, excludeDestino: false,
+      canRegister: true, canAdmin: false,
+      canManageInventory: esGerente,
       canViewInventory: true,
+      canManageUsers: true, manageFuerza,
+      fuerzaFija: isDP ? "destino" : manageFuerza,
+      isDirector: false, isGerente: esGerente, isAsistente: !esGerente,
+      isVendedor: false, isDP,
+    };
+  }
+
+  // Vendedor de la fuerza DP: ve TODO el inventario (solo-lectura), registra
+  // como "destino" y ve solo la actividad de DP.
+  if (isDP) {
+    return {
+      projectIds: null, fuerza: "destino", excludeDestino: false,
+      canRegister: true, canAdmin: false, canManageInventory: false,
+      canViewInventory: true, canManageUsers: false, manageFuerza: null,
       fuerzaFija: "destino",
-      isDirector: false,
-      isGerente: user.role === "gerente",
-      isLider: user.role !== "gerente",
-      isDP: true,
+      isDirector: false, isGerente: false, isAsistente: false, isVendedor: true, isDP: true,
     };
   }
 
-  if (user.role === "gerente") {
-    // Gerente interno: ve su fuerza (interna/ucoes) o ambas internas, nunca DP.
-    const fuerza = user.fuerza === "ambas" ? null : user.fuerza;
-    return {
-      projectIds: null,
-      fuerza,
-      excludeDestino: fuerza === null,
-      canRegister: true,
-      canAdmin: false,
-      canManageInventory: true,
-      canViewInventory: true,
-      fuerzaFija: fuerza && fuerza !== "ambas" ? fuerza : null,
-      isDirector: false,
-      isGerente: true,
-      isLider: false,
-      isDP: false,
-    };
-  }
-
-  // Líderes internos: proyectos asignados; NO ven la actividad de DP.
+  // Vendedor interno (Chacón): proyectos asignados y SOLO su fuerza (no ve la
+  // actividad de las otras fuerzas — evita fricción entre equipos).
   const assignments = await prisma.projectAssignment.findMany({
     where: { userId: user.id },
     select: { projectId: true },
   });
   const projectIds = assignments.map((a) => a.projectId);
+  const fuerzaVend = user.fuerza && user.fuerza !== "ambas" ? user.fuerza : "interna";
   return {
-    projectIds,
-    fuerza: null,
-    excludeDestino: true,
-    canRegister: true,
-    canAdmin: false,
-    canManageInventory: false,
-    canViewInventory: false,
-    fuerzaFija: null,
-    isDirector: false,
-    isGerente: false,
-    isLider: true,
-    isDP: false,
+    projectIds, fuerza: fuerzaVend, excludeDestino: true,
+    canRegister: true, canAdmin: false, canManageInventory: false,
+    canViewInventory: false, canManageUsers: false, manageFuerza: null,
+    fuerzaFija: fuerzaVend,
+    isDirector: false, isGerente: false, isAsistente: false, isVendedor: true, isDP: false,
   };
 }
 

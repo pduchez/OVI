@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { getCurrentUser } from "@/lib/auth";
+import { requireUser } from "@/lib/auth";
 import { getScope, canAccessProject } from "@/lib/permissions";
 import { prisma } from "@/lib/db";
 import {
@@ -29,7 +29,7 @@ export default async function NegocioDetalle({
 }) {
   const sp = await searchParams;
   const par = await params;
-  const user = (await getCurrentUser())!;
+  const user = await requireUser();
   const scope = await getScope(user);
   const n = await prisma.negocio.findUnique({
     where: { id: par.id },

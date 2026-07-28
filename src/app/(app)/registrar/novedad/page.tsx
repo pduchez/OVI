@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getCurrentUser } from "@/lib/auth";
+import { requireUser } from "@/lib/auth";
 import { getScope } from "@/lib/permissions";
 import { projectOptions } from "@/lib/options";
 import { CATEGORIAS_NOVEDAD, PRIORIDADES } from "@/lib/constants";
@@ -12,7 +12,7 @@ import { registrarNovedad } from "../actions";
 export const dynamic = "force-dynamic";
 
 export default async function NovedadPage() {
-  const user = (await getCurrentUser())!;
+  const user = await requireUser();
   const scope = await getScope(user);
   const proyectos = await projectOptions(scope);
 

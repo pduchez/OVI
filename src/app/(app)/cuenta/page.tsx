@@ -1,4 +1,4 @@
-import { getCurrentUser } from "@/lib/auth";
+import { requireUser } from "@/lib/auth";
 import { ROLE_LABEL, fuerzaCorta } from "@/lib/constants";
 import { PageHeader } from "@/components/ui";
 import ActionForm from "@/components/ActionForm";
@@ -13,7 +13,7 @@ export default async function CuentaPage({
   searchParams: Promise<{ ok?: string }>;
 }) {
   const sp = await searchParams;
-  const user = (await getCurrentUser())!;
+  const user = await requireUser();
   return (
     <div className="mx-auto max-w-lg">
       <PageHeader title="Mi cuenta" subtitle={user.displayName} />

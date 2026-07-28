@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { getCurrentUser } from "@/lib/auth";
+import { requireUser } from "@/lib/auth";
 import { getScope, canAccessProject } from "@/lib/permissions";
 import { prisma } from "@/lib/db";
 import { ESTADOS_LOTE } from "@/lib/constants";
 import { money, num, fechaHora } from "@/lib/format";
 import { PageHeader, Badge, StatCard } from "@/components/ui";
+import LogoProyecto from "@/components/LogoProyecto";
 import ActionForm from "@/components/ActionForm";
 import { Field, Select, Input, Textarea } from "@/components/fields";
 import { guardarLote, importarInventario, subirDocumento } from "../actions";
@@ -21,7 +22,7 @@ export default async function InventarioProyecto({
 }) {
   const sp = await searchParams;
   const par = await params;
-  const user = (await getCurrentUser())!;
+  const user = await requireUser();
   const scope = await getScope(user);
   if (!canAccessProject(scope, par.projectId)) redirect("/inventario");
 
@@ -47,9 +48,17 @@ export default async function InventarioProyecto({
 
   return (
     <div>
+      <div className="mb-4 flex items-center gap-4">
+        <LogoProyecto codigo={project.codigo} nombre={project.nombre} size={72} />
+        <div className="min-w-0">
+          <div className="text-xs font-semibold text-slate-400">{project.codigo}</div>
+          <div className="truncate text-xl font-bold text-ovi-ink">{project.nombre}</div>
+          <div className="text-sm text-slate-500">{project.municipio}, {project.departamento}</div>
+        </div>
+      </div>
       <PageHeader
-        title={`Inventario · ${project.nombre}`}
-        subtitle={`${project.codigo} · ${num(lotes.length)} lotes`}
+        title="Inventario"
+        subtitle={`${num(lotes.length)} lote(s) cargado(s)`}
         action={
           <div className="flex gap-2 no-print">
             {canManage ? (

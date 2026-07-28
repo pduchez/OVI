@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getCurrentUser } from "@/lib/auth";
+import { requireUser } from "@/lib/auth";
 import { getScope } from "@/lib/permissions";
 import {
   dashboardKpis,
@@ -49,7 +49,7 @@ export default async function Dashboard({
     );
   }
 
-  const user = (await getCurrentUser())!;
+  const user = await requireUser();
   const scope = await getScope(user);
   const preset = sp.r || "mes";
   const { desde, hasta } = rangoPreset(preset);

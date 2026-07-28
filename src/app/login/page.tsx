@@ -20,10 +20,17 @@ export default function LoginPage() {
     <main className="flex min-h-screen items-center justify-center bg-ovi-bg px-4">
       <div className="w-full max-w-sm">
         <div className="mb-6 text-center text-white">
-          <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-2xl bg-ovi-primary text-3xl font-black tracking-tight">
-            OVI
-          </div>
-          <h1 className="text-xl font-bold">Grupo Inmobiliario Chacón</h1>
+          {/* Árbol del Grupo Chacón (archivo estático liviano) */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/logos/_arbol.png"
+            alt="Grupo Inmobiliario Chacón"
+            width={96}
+            height={96}
+            className="mx-auto mb-3 h-24 w-24 rounded-2xl bg-white object-contain p-2 shadow-lg"
+          />
+          <h1 className="text-2xl font-black tracking-tight">OVI</h1>
+          <h2 className="text-base font-semibold text-white/90">Grupo Inmobiliario Chacón</h2>
           <p className="text-sm text-slate-300">Central de ventas de lotes</p>
         </div>
         <form action={action} className="card space-y-4">

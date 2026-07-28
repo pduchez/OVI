@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getCurrentUser } from "@/lib/auth";
+import { requireUser } from "@/lib/auth";
 import { getScope } from "@/lib/permissions";
 import { negocioOptions } from "@/lib/options";
 import { PageHeader, EmptyState } from "@/components/ui";
@@ -13,7 +13,7 @@ export default async function AbonoPage({
   searchParams: Promise<{ negocio?: string }>;
 }) {
   const sp = await searchParams;
-  const user = (await getCurrentUser())!;
+  const user = await requireUser();
   const scope = await getScope(user);
   const negocios = await negocioOptions(scope);
 

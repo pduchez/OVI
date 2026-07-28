@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getCurrentUser } from "@/lib/auth";
+import { requireUser } from "@/lib/auth";
 import { getScope } from "@/lib/permissions";
 import { projectOptions, vendedorOptions } from "@/lib/options";
 import { PageHeader, EmptyState } from "@/components/ui";
@@ -8,7 +8,7 @@ import NegocioForm from "@/components/NegocioForm";
 export const dynamic = "force-dynamic";
 
 export default async function NegocioPage() {
-  const user = (await getCurrentUser())!;
+  const user = await requireUser();
   const scope = await getScope(user);
   const [proyectos, vendedores] = await Promise.all([
     projectOptions(scope),

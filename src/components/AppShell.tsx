@@ -42,11 +42,17 @@ export default function AppShell({
             <span className="mt-1.5 block h-0.5 w-6 bg-white" />
           </button>
           <Link href="/" className="flex items-center gap-2">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-ovi-primary text-sm font-black">
-              OVI
-            </span>
-            <span className="hidden text-sm font-semibold sm:block">
-              Grupo Chacón
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/logos/_arbol.png"
+              alt=""
+              width={36}
+              height={36}
+              className="h-9 w-9 rounded-lg bg-white object-contain p-0.5"
+            />
+            <span className="text-base font-black tracking-tight">OVI</span>
+            <span className="hidden text-sm font-medium text-white/80 sm:block">
+              · Grupo Chacón
             </span>
           </Link>
         </div>

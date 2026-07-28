@@ -5,6 +5,7 @@
  * - 4 roles: director | gerente | lider_central | lider_sitio.
  */
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import { scryptSync, randomBytes, timingSafeEqual, createHmac } from "crypto";
 import { prisma } from "@/lib/db";
 
@@ -121,4 +122,15 @@ export async function findUserByUsername(username: string) {
   return prisma.user.findFirst({
     where: { username: { equals: username.trim(), mode: "insensitive" } },
   });
+}
+
+/**
+ * Usuario de la sesión, o redirige al login. Se usa en las páginas privadas
+ * para no asumir nunca que la sesión existe: si la sesión caducó o la base no
+ * respondió, el usuario ve el login en vez de una pantalla de error.
+ */
+export async function requireUser(): Promise<SessionUser> {
+  const user = await getCurrentUser().catch(() => null);
+  if (!user) redirect("/login");
+  return user;
 }

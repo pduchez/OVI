@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getCurrentUser } from "@/lib/auth";
+import { requireUser } from "@/lib/auth";
 import { getScope } from "@/lib/permissions";
 import { projectOptions, vendedorOptions } from "@/lib/options";
 import { FUERZAS, ORIGENES_VISITA } from "@/lib/constants";
@@ -12,7 +12,7 @@ import { registrarVisita } from "../actions";
 export const dynamic = "force-dynamic";
 
 export default async function VisitaPage() {
-  const user = (await getCurrentUser())!;
+  const user = await requireUser();
   const scope = await getScope(user);
   const [proyectos, vendedores] = await Promise.all([
     projectOptions(scope),

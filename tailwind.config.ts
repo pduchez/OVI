@@ -1,19 +1,22 @@
 import type { Config } from "tailwindcss";
 
-// Paleta OVI: azul profundo institucional + acentos claros. Alto contraste,
-// pensado para pantallas viejas y lectura rápida.
+// Paleta OVI con la identidad del Grupo Inmobiliario Chacón: azul
+// institucional, verde hoja y café del tronco (tomados de su marca).
+// Alto contraste, pensado para pantallas viejas y lectura rápida.
 const config: Config = {
   content: ["./src/**/*.{ts,tsx}"],
   theme: {
     extend: {
       colors: {
         ovi: {
-          bg: "#0f172a", // fondo oscuro de barras
-          primary: "#1d4ed8", // azul principal
-          primaryDark: "#1e3a8a",
-          accent: "#0ea5e9",
-          soft: "#eff6ff",
-          ink: "#0f172a",
+          bg: "#1b2657", // barra superior (azul institucional oscuro)
+          primary: "#243372", // azul principal de la marca
+          primaryDark: "#18224e",
+          accent: "#b9ce33", // verde hoja del árbol
+          accentDark: "#8fa024",
+          brown: "#9a4320", // café del tronco
+          soft: "#eef1f9",
+          ink: "#1b2340",
           muted: "#64748b",
         },
       },

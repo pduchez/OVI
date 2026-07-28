@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getCurrentUser } from "@/lib/auth";
+import { requireUser } from "@/lib/auth";
 import { getScope } from "@/lib/permissions";
 import {
   dashboardKpis,
@@ -44,7 +44,7 @@ export default async function ReportesPage({
   searchParams: Promise<{ tipo?: string; r?: string }>;
 }) {
   const sp = await searchParams;
-  const user = (await getCurrentUser())!;
+  const user = await requireUser();
   const scope = await getScope(user);
   const tipo = sp.tipo || "resumen";
   const preset = sp.r || "mes";

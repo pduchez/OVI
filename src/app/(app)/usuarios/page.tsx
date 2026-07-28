@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getCurrentUser } from "@/lib/auth";
+import { requireUser } from "@/lib/auth";
 import { getScope, visibleProjects } from "@/lib/permissions";
 import { prisma } from "@/lib/db";
 import { ROLE_LABEL, FUERZAS, FUERZAS_CON_AMBAS, fuerzaCorta } from "@/lib/constants";
@@ -20,7 +20,7 @@ export default async function UsuariosPage({
   searchParams: Promise<{ edit?: string; ok?: string }>;
 }) {
   const sp = await searchParams;
-  const me = (await getCurrentUser())!;
+  const me = await requireUser();
   const scope = await getScope(me);
   const esDirector = scope.manageFuerza === null;
 

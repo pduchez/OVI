@@ -1,14 +1,15 @@
 import Link from "next/link";
-import { getCurrentUser } from "@/lib/auth";
+import { requireUser } from "@/lib/auth";
 import { getScope, visibleProjects } from "@/lib/permissions";
 import { prisma } from "@/lib/db";
 import { num, money0 } from "@/lib/format";
 import { PageHeader } from "@/components/ui";
+import LogoProyecto from "@/components/LogoProyecto";
 
 export const dynamic = "force-dynamic";
 
 export default async function InventarioIndex() {
-  const user = (await getCurrentUser())!;
+  const user = await requireUser();
   const scope = await getScope(user);
   const projects = await visibleProjects(scope);
   const ids = projects.map((p) => p.id);
@@ -43,8 +44,13 @@ export default async function InventarioIndex() {
               href={`/inventario/${p.id}`}
               className="card transition-transform hover:-translate-y-0.5 hover:shadow-md"
             >
-              <div className="text-xs font-semibold text-slate-400">{p.codigo}</div>
-              <div className="text-lg font-bold text-ovi-ink">{p.nombre}</div>
+              <div className="flex items-center gap-3">
+                <LogoProyecto codigo={p.codigo} nombre={p.nombre} size={56} />
+                <div className="min-w-0">
+                  <div className="text-xs font-semibold text-slate-400">{p.codigo}</div>
+                  <div className="text-lg font-bold leading-tight text-ovi-ink">{p.nombre}</div>
+                </div>
+              </div>
               <div className="mt-2 flex items-center justify-between text-sm">
                 <span className="text-slate-500">
                   {num(s.total)} lotes cargados

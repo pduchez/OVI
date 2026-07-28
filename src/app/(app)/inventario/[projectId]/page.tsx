@@ -41,6 +41,7 @@ export default async function InventarioProyecto({
   ]);
   const cnt = (e: string) => porEstado.find((g) => g.estado === e)?._count._all || 0;
   const editing = searchParams.edit ? lotes.find((l) => l.id === searchParams.edit) : null;
+  const canManage = scope.canManageInventory; // DP entra en solo-lectura
 
   return (
     <div>
@@ -49,13 +50,21 @@ export default async function InventarioProyecto({
         subtitle={`${project.codigo} · ${num(lotes.length)} lotes`}
         action={
           <div className="flex gap-2 no-print">
-            <a href={`/api/inventario/export?projectId=${project.id}`} className="btn-ghost">
-              ⬇️ Exportar Excel
-            </a>
+            {canManage ? (
+              <a href={`/api/inventario/export?projectId=${project.id}`} className="btn-ghost">
+                ⬇️ Exportar Excel
+              </a>
+            ) : null}
             <Link href="/inventario" className="btn-ghost">← Proyectos</Link>
           </div>
         }
       />
+
+      {!canManage ? (
+        <p className="mb-4 rounded-lg bg-orange-50 px-4 py-3 text-sm font-medium text-orange-700">
+          Vista de inventario (solo lectura). Los precios los fija Grupo Chacón.
+        </p>
+      ) : null}
 
       {searchParams.ok === "import" ? (
         <p className="mb-4 rounded-lg bg-emerald-50 px-4 py-3 font-medium text-emerald-700">
@@ -74,7 +83,8 @@ export default async function InventarioProyecto({
         <StatCard label="Bloqueados" value={num(cnt("bloqueado"))} />
       </div>
 
-      {/* Importar / cargar */}
+      {/* Importar / cargar (solo gestores) */}
+      {canManage ? (
       <div className="mb-6 grid gap-4 lg:grid-cols-2">
         <div className="card">
           <h2 className="font-bold text-ovi-ink">Importar inventario (Excel / CSV)</h2>
@@ -143,14 +153,15 @@ export default async function InventarioProyecto({
           ) : null}
         </div>
       </div>
+      ) : null}
 
       {/* Lotes + alta/edición */}
-      <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
+      <div className={`grid gap-6 ${canManage ? "lg:grid-cols-[1fr_320px]" : ""}`}>
         <div className="card overflow-x-auto">
           <h2 className="mb-3 font-bold text-ovi-ink">Lotes ({num(lotes.length)})</h2>
           {lotes.length === 0 ? (
             <p className="py-6 text-center text-sm text-slate-500">
-              Aún no hay lotes. Impórtalos desde Excel/CSV o agrégalos manualmente.
+              Aún no hay lotes cargados en este proyecto.
             </p>
           ) : (
             <table className="table">
@@ -160,7 +171,7 @@ export default async function InventarioProyecto({
                   <th className="text-right">Área m²</th>
                   <th className="text-right">Precio</th>
                   <th>Estado</th>
-                  <th></th>
+                  {canManage ? <th></th> : null}
                 </tr>
               </thead>
               <tbody>
@@ -170,14 +181,16 @@ export default async function InventarioProyecto({
                     <td className="text-right">{num(l.area)}</td>
                     <td className="text-right font-semibold">{money(l.precio)}</td>
                     <td><Badge value={l.estado} /></td>
-                    <td>
-                      <Link
-                        href={`/inventario/${project.id}?edit=${l.id}`}
-                        className="text-sm font-semibold text-ovi-primary"
-                      >
-                        Editar
-                      </Link>
-                    </td>
+                    {canManage ? (
+                      <td>
+                        <Link
+                          href={`/inventario/${project.id}?edit=${l.id}`}
+                          className="text-sm font-semibold text-ovi-primary"
+                        >
+                          Editar
+                        </Link>
+                      </td>
+                    ) : null}
                   </tr>
                 ))}
               </tbody>
@@ -185,6 +198,7 @@ export default async function InventarioProyecto({
           )}
         </div>
 
+        {canManage ? (
         <div className="card h-fit">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="font-bold text-ovi-ink">
@@ -222,6 +236,7 @@ export default async function InventarioProyecto({
             </Field>
           </ActionForm>
         </div>
+        ) : null}
       </div>
     </div>
   );

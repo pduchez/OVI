@@ -36,7 +36,11 @@ export default async function NegocioPage() {
         }
       />
       <div className="card">
-        <NegocioForm proyectos={proyectos} vendedores={vendedores} />
+        <NegocioForm
+          proyectos={proyectos}
+          vendedores={vendedores}
+          fuerzaFija={scope.fuerzaFija}
+        />
       </div>
     </div>
   );

@@ -60,6 +60,19 @@ export default async function Dashboard({
     actividadReciente(scope, 12),
   ]);
 
+  // Tarjetas de fuerza visibles según el rol: DP solo ve la suya; las fuerzas
+  // internas de Chacón no ven a Destinopropiedades.com; dirección ve todo.
+  const CARDS_FUERZA = [
+    { key: "interna", label: "Interna", bg: "bg-blue-50", tx: "text-blue-700" },
+    { key: "ucoes", label: "UCOES", bg: "bg-fuchsia-50", tx: "text-fuchsia-700" },
+    { key: "destino", label: "Destino.com", bg: "bg-orange-50", tx: "text-orange-700" },
+  ];
+  const fuerzasVisibles = scope.isDP
+    ? CARDS_FUERZA.filter((c) => c.key === "destino")
+    : scope.isDirector
+    ? CARDS_FUERZA
+    : CARDS_FUERZA.filter((c) => c.key !== "destino");
+
   return (
     <div>
       <PageHeader
@@ -135,12 +148,8 @@ export default async function Dashboard({
         </div>
         <div className="card">
           <h2 className="mb-4 font-bold text-ovi-ink">Ventas por fuerza</h2>
-          <div className="grid grid-cols-3 gap-3">
-            {[
-              { key: "interna", label: "Interna", bg: "bg-blue-50", tx: "text-blue-700" },
-              { key: "ucoes", label: "UCOES", bg: "bg-fuchsia-50", tx: "text-fuchsia-700" },
-              { key: "destino", label: "Destino.com", bg: "bg-orange-50", tx: "text-orange-700" },
-            ].map((f) => (
+          <div className={`grid gap-3 ${fuerzasVisibles.length === 1 ? "grid-cols-1" : "grid-cols-2"}`}>
+            {fuerzasVisibles.map((f) => (
               <div key={f.key} className={`rounded-lg ${f.bg} p-4`}>
                 <div className={`text-sm font-semibold ${f.tx}`}>{f.label}</div>
                 <div className="mt-1 text-2xl font-bold text-ovi-ink">

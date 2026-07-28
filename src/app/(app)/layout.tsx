@@ -22,7 +22,7 @@ export default async function AppLayout({
     { href: "/novedades", label: "Novedades", icon: "📌" },
     { href: "/reportes", label: "Reportes", icon: "📑" },
   ];
-  if (scope.canManageInventory) {
+  if (scope.canViewInventory) {
     nav.push({ href: "/inventario", label: "Inventario", icon: "🏷️" });
   }
   if (scope.canAdmin) {

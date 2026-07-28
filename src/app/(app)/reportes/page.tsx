@@ -180,11 +180,16 @@ async function renderReporte(
   if (tipo === "por_fuerza") {
     const f = await ventasPorFuerza(scope, desde, hasta);
     const totMonto = f.interna.monto + f.ucoes.monto + f.destino.monto;
-    const cards = [
+    const cardsAll = [
       { key: "interna", titulo: "Interna (Oficina — Lic. Claudia)", tx: "text-blue-700" },
       { key: "ucoes", titulo: "UCOES (Externa — Lic. Max)", tx: "text-fuchsia-700" },
       { key: "destino", titulo: "Destinopropiedades.com", tx: "text-orange-700" },
     ];
+    const cards = scope.isDP
+      ? cardsAll.filter((c) => c.key === "destino")
+      : scope.isDirector
+      ? cardsAll
+      : cardsAll.filter((c) => c.key !== "destino");
     return (
       <div className="grid gap-4 sm:grid-cols-3">
         {cards.map((c) => {

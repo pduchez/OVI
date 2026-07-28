@@ -51,7 +51,11 @@ export async function dashboardKpis(
         _sum: { precioLote: true },
       }),
       prisma.novedad.count({
-        where: { ...base, estado: { in: ["abierta", "en_proceso"] } },
+        // Novedad no tiene fuerza (es operativa por proyecto); solo filtra proyecto.
+        where: {
+          ...(scope.projectIds ? { projectId: { in: scope.projectIds } } : {}),
+          estado: { in: ["abierta", "en_proceso"] },
+        },
       }),
     ]);
 

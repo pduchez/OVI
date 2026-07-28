@@ -28,7 +28,12 @@ async function guard(projectId: string) {
   if (!scope.canRegister || !canAccessProject(scope, projectId)) {
     throw new Error("No tienes permiso para registrar en este proyecto.");
   }
-  return user;
+  return { user, scope };
+}
+
+/** Fuerza efectiva: si el usuario tiene fuerza fija (DP), se respeta esa. */
+function fuerzaEfectiva(scope: { fuerzaFija: string | null }, fd: FormData): string {
+  return scope.fuerzaFija || String(fd.get("fuerza") || "interna");
 }
 
 async function logRegistro(data: {
@@ -57,7 +62,7 @@ export async function registrarVisita(_prev: unknown, fd: FormData) {
   if (!projectId) return { error: "Selecciona el proyecto." };
   const cliente = String(fd.get("clienteNombre") || "").trim();
   if (!cliente) return { error: "Escribe el nombre del cliente." };
-  const user = await guard(projectId);
+  const { user, scope } = await guard(projectId);
 
   const v = await prisma.visita.create({
     data: {
@@ -66,7 +71,7 @@ export async function registrarVisita(_prev: unknown, fd: FormData) {
       clienteNombre: cliente,
       clienteTelefono: String(fd.get("clienteTelefono") || "").trim(),
       vendedorId: String(fd.get("vendedorId") || "") || null,
-      fuerza: String(fd.get("fuerza") || "interna"),
+      fuerza: fuerzaEfectiva(scope, fd),
       origen: String(fd.get("origen") || "otro"),
       interesado: fd.get("interesado") === "on",
       notas: String(fd.get("notas") || "").trim(),
@@ -91,7 +96,7 @@ export async function registrarNegocio(_prev: unknown, fd: FormData) {
   const cliente = String(fd.get("clienteNombre") || "").trim();
   if (!cliente) return { error: "Escribe el nombre del cliente." };
   const tipo = String(fd.get("tipo") || "reserva"); // reserva | venta
-  const user = await guard(projectId);
+  const { user, scope } = await guard(projectId);
 
   const prima = money(fd.get("prima"));
   const fecha = parseDate(fd.get("fecha"));
@@ -124,7 +129,7 @@ export async function registrarNegocio(_prev: unknown, fd: FormData) {
       clienteNombre: cliente,
       clienteTelefono: String(fd.get("clienteTelefono") || "").trim(),
       vendedorId: String(fd.get("vendedorId") || "") || null,
-      fuerza: String(fd.get("fuerza") || "interna"),
+      fuerza: fuerzaEfectiva(scope, fd),
       estado: esVenta ? "vendido" : "reservado",
       precioLote,
       prima,
@@ -177,7 +182,7 @@ export async function registrarAbono(_prev: unknown, fd: FormData) {
   if (!negocioId) return { error: "Selecciona el negocio." };
   const negocio = await prisma.negocio.findUnique({ where: { id: negocioId } });
   if (!negocio) return { error: "Negocio no encontrado." };
-  const user = await guard(negocio.projectId);
+  const { user } = await guard(negocio.projectId);
   const monto = money(fd.get("monto"));
   if (monto <= 0) return { error: "El monto debe ser mayor que cero." };
   const metodo = String(fd.get("metodo") || "efectivo"); // efectivo | deposito
@@ -247,7 +252,7 @@ export async function registrarCaida(_prev: unknown, fd: FormData) {
   const negocioId = String(fd.get("negocioId") || "");
   const negocio = await prisma.negocio.findUnique({ where: { id: negocioId } });
   if (!negocio) return { error: "Negocio no encontrado." };
-  const user = await guard(negocio.projectId);
+  const { user } = await guard(negocio.projectId);
 
   await prisma.negocio.update({
     where: { id: negocioId },
@@ -284,7 +289,7 @@ export async function marcarEscriturado(_prev: unknown, fd: FormData) {
   const negocioId = String(fd.get("negocioId") || "");
   const negocio = await prisma.negocio.findUnique({ where: { id: negocioId } });
   if (!negocio) return { error: "Negocio no encontrado." };
-  const user = await guard(negocio.projectId);
+  const { user } = await guard(negocio.projectId);
   await prisma.negocio.update({
     where: { id: negocioId },
     data: { estado: "escriturado", fechaEscritura: new Date() },
@@ -306,7 +311,7 @@ export async function registrarNovedad(_prev: unknown, fd: FormData) {
   if (!projectId) return { error: "Selecciona el proyecto." };
   const titulo = String(fd.get("titulo") || "").trim();
   if (!titulo) return { error: "Escribe un título para la novedad." };
-  const user = await guard(projectId);
+  const { user } = await guard(projectId);
 
   const n = await prisma.novedad.create({
     data: {

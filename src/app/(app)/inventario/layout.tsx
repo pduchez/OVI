@@ -12,7 +12,7 @@ export default async function InventarioLayout({
   const user = await getCurrentUser().catch(() => null);
   if (!user) redirect("/login");
   const scope = await getScope(user);
-  // Solo gerentes de ventas y directores.
-  if (!scope.canManageInventory) redirect("/");
+  // Gerentes/dirección (gestión) y fuerza DP (solo-lectura).
+  if (!scope.canViewInventory) redirect("/");
   return <>{children}</>;
 }

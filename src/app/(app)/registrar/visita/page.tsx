@@ -50,13 +50,17 @@ export default async function VisitaPage() {
               required
             />
           </Field>
-          <div className="grid grid-cols-2 gap-3">
+          <div className={`grid gap-3 ${scope.fuerzaFija ? "" : "grid-cols-2"}`}>
             <Field label="Fecha">
               <Input type="date" name="fecha" defaultValue={inputDate(new Date())} />
             </Field>
-            <Field label="Fuerza de venta">
-              <Select name="fuerza" options={FUERZAS} defaultValue="interna" />
-            </Field>
+            {scope.fuerzaFija ? (
+              <input type="hidden" name="fuerza" value={scope.fuerzaFija} />
+            ) : (
+              <Field label="Fuerza de venta">
+                <Select name="fuerza" options={FUERZAS} defaultValue="interna" />
+              </Field>
+            )}
           </div>
           <Field label="Nombre del cliente">
             <Input name="clienteNombre" placeholder="Ej. Juan Pérez" required />

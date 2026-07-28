@@ -16,6 +16,8 @@ export const SEED_USERS = [
   { username: "max", role: "gerente", displayName: "Lic. Max (UCOES)", fuerza: "ucoes" },
   { username: "central1", role: "lider_central", displayName: "Líder Central 1", fuerza: "ambas" },
   { username: "sitio1", role: "lider_sitio", displayName: "Líder Sitio 1", fuerza: "ambas" },
+  // Fuerza externa Destinopropiedades.com (ve todo el inventario, invisible a Chacón).
+  { username: "dp1", role: "gerente", displayName: "Destinopropiedades.com", fuerza: "destino" },
 ];
 
 // Catálogo OFICIAL de proyectos del Grupo Inmobiliario Chacón (gichacon.com).
@@ -49,6 +51,8 @@ export const SEED_VENDEDORES = [
   { nombre: "José Hernández", fuerza: "ucoes" },
   { nombre: "María López", fuerza: "ucoes" },
   { nombre: "Roberto Cruz", fuerza: "ucoes" },
+  { nombre: "Vendedor DP 1", fuerza: "destino" },
+  { nombre: "Vendedor DP 2", fuerza: "destino" },
 ];
 
 let bootstrapped = false;
@@ -56,25 +60,39 @@ let bootstrapped = false;
 /** Crea usuarios/proyectos/vendedores base si aún no existen. Idempotente. */
 export async function ensureBootstrap(): Promise<void> {
   if (bootstrapped) return;
-  const userCount = await prisma.user.count();
-  if (userCount === 0) {
-    for (const u of SEED_USERS) {
-      await prisma.user.create({
-        data: { ...u, passwordHash: hashPassword("password") },
-      });
+  // Asegura que los usuarios base existan (crea los que falten por username;
+  // no toca la contraseña de los ya existentes).
+  for (const u of SEED_USERS) {
+    const ex = await prisma.user.findFirst({
+      where: { username: { equals: u.username, mode: "insensitive" } },
+    });
+    if (!ex) {
+      await prisma.user.create({ data: { ...u, passwordHash: hashPassword("password") } });
     }
   }
-  const projCount = await prisma.project.count();
-  if (projCount === 0) {
-    for (const p of SEED_PROJECTS) {
-      await prisma.project.create({ data: { ...p, estado: "activo" } });
+  // Asegura que los 19 proyectos OFICIALES existan (crea los que falten por
+  // código; no sobreescribe ediciones del director en los existentes).
+  for (const p of SEED_PROJECTS) {
+    const ex = await prisma.project.findUnique({ where: { codigo: p.codigo } });
+    if (!ex) await prisma.project.create({ data: { ...p, estado: "activo" } });
+  }
+  // Limpia placeholders antiguos (código CHA-*) que no tengan datos operativos.
+  const legacy = await prisma.project.findMany({
+    where: { codigo: { startsWith: "CHA-" } },
+    include: { _count: { select: { lotes: true, negocios: true, visitas: true, novedades: true } } },
+  });
+  for (const l of legacy) {
+    const c = l._count;
+    if (!c.lotes && !c.negocios && !c.visitas && !c.novedades) {
+      await prisma.projectAssignment.deleteMany({ where: { projectId: l.id } });
+      await prisma.project.delete({ where: { id: l.id } });
     }
   }
-  const vendCount = await prisma.vendedor.count();
-  if (vendCount === 0) {
-    for (const v of SEED_VENDEDORES) {
-      await prisma.vendedor.create({ data: { ...v, activo: true } });
-    }
+
+  // Asegura los vendedores base (crea los que falten por nombre).
+  for (const v of SEED_VENDEDORES) {
+    const ex = await prisma.vendedor.findFirst({ where: { nombre: v.nombre } });
+    if (!ex) await prisma.vendedor.create({ data: { ...v, activo: true } });
   }
 
   // Asigna proyectos a los líderes de ejemplo si no tienen ninguno.

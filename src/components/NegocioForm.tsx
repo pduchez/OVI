@@ -20,9 +20,11 @@ function Submit() {
 export default function NegocioForm({
   proyectos,
   vendedores,
+  fuerzaFija,
 }: {
   proyectos: Opt[];
   vendedores: Opt[];
+  fuerzaFija?: string | null;
 }) {
   const [state, action] = useFormState(registrarNegocio, undefined as { error?: string } | undefined);
   const [projectId, setProjectId] = useState(proyectos.length === 1 ? proyectos[0].value : "");
@@ -163,14 +165,18 @@ export default function NegocioForm({
         </label>
       </div>
 
-      <label className="block">
-        <span className="label">Fuerza de venta</span>
-        <select name="fuerza" className="field" defaultValue="interna">
-          <option value="interna">Interna (Oficina)</option>
-          <option value="ucoes">UCOES (Externa)</option>
-          <option value="destino">Destinopropiedades.com</option>
-        </select>
-      </label>
+      {fuerzaFija ? (
+        <input type="hidden" name="fuerza" value={fuerzaFija} />
+      ) : (
+        <label className="block">
+          <span className="label">Fuerza de venta</span>
+          <select name="fuerza" className="field" defaultValue="interna">
+            <option value="interna">Interna (Oficina)</option>
+            <option value="ucoes">UCOES (Externa)</option>
+            <option value="destino">Destinopropiedades.com</option>
+          </select>
+        </label>
+      )}
 
       {vendedores.length > 0 ? (
         <label className="block">

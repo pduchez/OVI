@@ -16,8 +16,9 @@ plataforma en línea** con dashboard, reportes y control de acceso por rol.
   gerentes y directores lo ven al instante, sin perseguir a nadie.
 - **Menos error humano.** Todo lo capturable es un **menú desplegable** (proyecto,
   vendedor, fuerza, motivo, método…). Campos grandes, formularios cortos.
-- **Funciona en PC vieja e internet lento.** Render en el servidor, ~96 kB de
-  JavaScript, sin librerías pesadas. Se ve igual de bien en celular.
+- **Funciona en PC vieja e internet lento.** Render en el servidor y solo cinco
+  dependencias de producción, sin librerías pesadas: los lectores de Excel y de
+  PDF son propios y no traen ni un paquete extra. Se ve igual de bien en celular.
 - **Batería de reportes** exportables a CSV e imprimibles a PDF.
 
 ## Roles y accesos

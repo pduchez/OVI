@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/db";
+import { requireAdmin } from "@/lib/guards";
 import { FUERZAS, fuerzaCorta } from "@/lib/constants";
 import { PageHeader, Badge } from "@/components/ui";
 import ActionForm from "@/components/ActionForm";
@@ -13,6 +14,9 @@ export default async function AdminVendedores({
 }: {
   searchParams: Promise<{ edit?: string; ok?: string }>;
 }) {
+  // Ocultar el enlace del menú no basta: sin esto, cualquier usuario con
+  // sesión podía abrir esta página escribiendo la URL.
+  await requireAdmin();
   const sp = await searchParams;
   const vendedores = await prisma.vendedor.findMany({ orderBy: { nombre: "asc" } });
   const editing = sp.edit

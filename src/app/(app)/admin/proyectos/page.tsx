@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/db";
+import { requireAdmin } from "@/lib/guards";
 import { DEPARTAMENTOS_SV, FUERZAS_CON_AMBAS, FUERZA_LABEL } from "@/lib/constants";
 import { money0, num } from "@/lib/format";
 import { PageHeader, Badge } from "@/components/ui";
@@ -20,6 +21,9 @@ export default async function AdminProyectos({
 }: {
   searchParams: Promise<{ edit?: string; ok?: string; c?: string; a?: string; e?: string }>;
 }) {
+  // Ocultar el enlace del menú no basta: sin esto, cualquier usuario con
+  // sesión podía abrir esta página escribiendo la URL.
+  await requireAdmin();
   const sp = await searchParams;
   const proyectos = await prisma.project.findMany({ orderBy: { codigo: "asc" } });
   const editing = sp.edit

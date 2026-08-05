@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { requireUser } from "@/lib/auth";
-import { getScope, visibleProjects } from "@/lib/permissions";
+import { requireCapacidad } from "@/lib/guards";
+import { visibleProjects } from "@/lib/permissions";
 import { prisma } from "@/lib/db";
 import { ROLE_LABEL, FUERZAS, FUERZAS_CON_AMBAS, fuerzaCorta } from "@/lib/constants";
 import { PageHeader, Badge } from "@/components/ui";
@@ -20,8 +20,9 @@ export default async function UsuariosPage({
   searchParams: Promise<{ edit?: string; ok?: string }>;
 }) {
   const sp = await searchParams;
-  const me = await requireUser();
-  const scope = await getScope(me);
+  // Sin esta guardia, cualquier usuario con sesión podía abrir /usuarios y
+  // leer el padrón completo: nombres, correos y celulares de todo el equipo.
+  const { user: me, scope } = await requireCapacidad("canManageUsers");
   const esDirector = scope.manageFuerza === null;
 
   // Usuarios que puede administrar (su fuerza, o todos si director).

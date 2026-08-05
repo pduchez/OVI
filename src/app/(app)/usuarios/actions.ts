@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
-import { getCurrentUser, hashPassword } from "@/lib/auth";
+import { getCurrentUser, hashPassword, validarPassword } from "@/lib/auth";
 import { getScope } from "@/lib/permissions";
 import { logSecurity } from "@/lib/securityLog";
 
@@ -72,7 +72,15 @@ export async function guardarUsuarioGestion(_prev: unknown, fd: FormData) {
   const projectIds = fd.getAll("projectIds").map(String).filter(Boolean);
 
   if (!username) return { error: "El usuario (para ingresar) es obligatorio." };
+  if (!/^[a-z0-9._-]{3,60}$/.test(username)) {
+    return { error: "El usuario solo admite letras, números, punto, guion y guion bajo (3 a 60)." };
+  }
   if (!displayName) return { error: "El nombre de la persona es obligatorio." };
+  // Si el administrador escribe una contraseña, debe cumplir la política.
+  if (password) {
+    const problema = validarPassword(password, username);
+    if (problema) return { error: problema };
+  }
 
   // Restricciones para gerente/asistente (no director):
   if (scope.manageFuerza !== null) {
@@ -87,6 +95,13 @@ export async function guardarUsuarioGestion(_prev: unknown, fd: FormData) {
     return { error: "No puedes asignar un nivel igual o superior al tuyo." };
   }
 
+  // El superior debe existir de verdad.
+  if (supervisorId) {
+    const jefe = await prisma.user.findUnique({ where: { id: supervisorId } });
+    if (!jefe) return { error: "El superior seleccionado no existe." };
+    if (id && jefe.id === id) return { error: "Un usuario no puede ser su propio superior." };
+  }
+
   try {
     let targetId = id;
     if (id) {
@@ -98,7 +113,14 @@ export async function guardarUsuarioGestion(_prev: unknown, fd: FormData) {
         where: { id },
         data: {
           username, displayName, email, phone, role, fuerza, supervisorId,
-          ...(password ? { passwordHash: hashPassword(password), mustChangePassword: true } : {}),
+          // Cambiar la contraseña invalida las sesiones abiertas del usuario.
+          ...(password
+            ? {
+                passwordHash: hashPassword(password),
+                mustChangePassword: true,
+                sessionEpoch: { increment: 1 },
+              }
+            : {}),
         },
       });
     } else {
@@ -115,8 +137,14 @@ export async function guardarUsuarioGestion(_prev: unknown, fd: FormData) {
     // Reasigna proyectos (para vendedores).
     await prisma.projectAssignment.deleteMany({ where: { userId: targetId } });
     if (["vendedor", "lider_sitio", "lider_central"].includes(role)) {
-      for (const pid of projectIds) {
-        await prisma.projectAssignment.create({ data: { userId: targetId, projectId: pid } });
+      // Solo ids de proyectos que existen de verdad: no se aceptan valores
+      // inventados en el formulario.
+      const validos = await prisma.project.findMany({
+        where: { id: { in: projectIds } },
+        select: { id: true },
+      });
+      for (const p of validos) {
+        await prisma.projectAssignment.create({ data: { userId: targetId, projectId: p.id } });
       }
     }
     await logSecurity(
@@ -138,7 +166,13 @@ export async function resetPasswordUsuario(fd: FormData) {
   if (!target || puedeSobreUsuario(user, scope, target)) return; // sin autoridad
   await prisma.user.update({
     where: { id },
-    data: { passwordHash: hashPassword("password"), mustChangePassword: true },
+    data: {
+      passwordHash: hashPassword("password"),
+      mustChangePassword: true,
+      // Expulsa cualquier sesión abierta: si se restablece la contraseña es
+      // porque se sospecha de ella, y la cookie robada seguiría sirviendo.
+      sessionEpoch: { increment: 1 },
+    },
   });
   await logSecurity(user, "usuario_reset_pass", `Restableció contraseña de ${target.username}`);
   revalidatePath("/usuarios");
@@ -149,7 +183,14 @@ export async function toggleActivoUsuario(fd: FormData) {
   const id = String(fd.get("id") || "");
   const target = await prisma.user.findUnique({ where: { id } });
   if (!target || puedeSobreUsuario(user, scope, target)) return; // sin autoridad
-  await prisma.user.update({ where: { id }, data: { activo: !target.activo } });
+  await prisma.user.update({
+    where: { id },
+    data: {
+      activo: !target.activo,
+      // Al dar de baja, la sesión abierta deja de valer de inmediato.
+      ...(target.activo ? { sessionEpoch: { increment: 1 } } : {}),
+    },
+  });
   await logSecurity(
     user,
     "usuario_estado",

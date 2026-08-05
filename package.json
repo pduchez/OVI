@@ -6,18 +6,19 @@
   "scripts": {
     "dev": "next dev",
     "build": "prisma generate && next build",
-    "vercel-build": "prisma generate && (timeout 120 prisma db push --accept-data-loss --skip-generate || echo 'Esquema no aplicado (sin BD o timeout): el build continua igual') && next build",
+    "vercel-build": "prisma generate && (timeout 120 prisma db push --accept-data-loss --skip-generate || echo 'Esquema no aplicado (sin BD o timeout): el build continua igual') && (timeout 60 node scripts/harden-db.mjs || echo 'Blindaje de BD no aplicado: revisar el log') && next build",
     "start": "next start",
     "lint": "next lint",
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts",
     "db:studio": "prisma studio",
     "setup": "prisma generate && prisma db push && tsx prisma/seed.ts",
-    "guias": "node scripts/guias.mjs"
+    "guias": "node scripts/guias.mjs",
+    "harden-db": "node scripts/harden-db.mjs"
   },
   "dependencies": {
     "@prisma/client": "^6.2.0",
-    "next": "^16.2.12",
+    "next": "^16.3.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "zod": "^3.24.1"

@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { requireAdmin } from "@/lib/guards";
 import { ROLE_LABEL } from "@/lib/constants";
 import { fechaHora } from "@/lib/format";
 import { PageHeader, EmptyState } from "@/components/ui";
@@ -14,6 +15,9 @@ const ACCION_LABEL: Record<string, string> = {
 };
 
 export default async function SeguridadPage() {
+  // Ocultar el enlace del menú no basta: sin esto, cualquier usuario con
+  // sesión podía abrir esta página escribiendo la URL.
+  await requireAdmin();
   const [logs, projects] = await Promise.all([
     prisma.securityLog.findMany({ orderBy: { createdAt: "desc" }, take: 200 }),
     prisma.project.findMany({ select: { id: true, codigo: true } }),

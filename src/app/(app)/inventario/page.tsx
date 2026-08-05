@@ -1,6 +1,5 @@
 import Link from "next/link";
-import { requireUser } from "@/lib/auth";
-import { getScope } from "@/lib/permissions";
+import { requireCapacidad } from "@/lib/guards";
 import { prisma } from "@/lib/db";
 import { num, money0 } from "@/lib/format";
 import { PageHeader, EmptyState } from "@/components/ui";
@@ -9,8 +8,7 @@ import LogoProyecto from "@/components/LogoProyecto";
 export const dynamic = "force-dynamic";
 
 export default async function InventarioIndex() {
-  const user = await requireUser();
-  const scope = await getScope(user);
+  const { scope } = await requireCapacidad("canViewInventory");
   // El inventario tiene su propio alcance: UCOES y DP lo ven completo aunque
   // su actividad esté acotada a su fuerza.
   const projects = await prisma.project.findMany({

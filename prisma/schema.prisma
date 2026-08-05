@@ -39,6 +39,10 @@ model User {
   fuerza       String   @default("ambas")
   // Debe cambiar la contraseña en el próximo ingreso (alta con "password").
   mustChangePassword Boolean @default(false)
+  // Generación de sesión. Sube al cambiar/restablecer la contraseña o al
+  // desactivar al usuario: invalida AL INSTANTE todas las sesiones abiertas,
+  // incluida la de un atacante que ya tuviera la cookie.
+  sessionEpoch Int      @default(0)
   // Jerarquía: superior directo (para trazabilidad).
   supervisorId String?
   supervisor   User?    @relation("Supervisa", fields: [supervisorId], references: [id])
@@ -309,4 +313,22 @@ model InventoryImport {
   createdAt  DateTime @default(now())
 
   @@index([projectId, createdAt])
+}
+
+// ---------------------------------------------------------------
+//  Intentos de ingreso — anti fuerza bruta COMPARTIDO entre instancias.
+//  En Vercel cada petición puede caer en un proceso distinto, así que un
+//  contador en memoria se reinicia solo y no frena nada. Este vive en la
+//  base, que es la única memoria común.
+// ---------------------------------------------------------------
+model LoginAttempt {
+  id           String   @id @default(cuid())
+  // Clave del cubo: "u:<usuario>" o "ip:<ip>" (se limita por ambos ejes).
+  clave        String   @unique
+  fallos       Int      @default(0)
+  primerFallo  DateTime @default(now())
+  bloqueadoHasta DateTime?
+  updatedAt    DateTime @updatedAt
+
+  @@index([bloqueadoHasta])
 }

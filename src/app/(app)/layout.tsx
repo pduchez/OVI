@@ -27,6 +27,7 @@ export default async function AppLayout({
   }
   if (scope.canManageUsers) {
     nav.push({ href: "/usuarios", label: "Usuarios", icon: "👥" });
+    nav.push({ href: "/bitacora", label: "Bitácora", icon: "🛡️" });
   }
   if (scope.canAdmin) {
     nav.push({ href: "/admin", label: "Administración", icon: "⚙️" });

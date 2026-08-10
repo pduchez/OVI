@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/db";
-import { requireAdmin } from "@/lib/guards";
+import { requireCapacidad } from "@/lib/guards";
 import { ROLE_LABEL } from "@/lib/constants";
 import { fechaHora } from "@/lib/format";
 import { PageHeader, EmptyState } from "@/components/ui";
@@ -14,10 +14,11 @@ const ACCION_LABEL: Record<string, string> = {
   doc_upload: "Subió documento",
 };
 
-export default async function SeguridadPage() {
-  // Ocultar el enlace del menú no basta: sin esto, cualquier usuario con
-  // sesión podía abrir esta página escribiendo la URL.
-  await requireAdmin();
+export default async function BitacoraPage() {
+  // La bitácora la leen Dirección, gerentes y asistentes: es la herramienta
+  // con la que vigilan cambios de precio, cargas de inventario y reservas
+  // registradas sin boleta. Los vendedores no entran.
+  await requireCapacidad("canManageUsers");
   const [logs, projects] = await Promise.all([
     prisma.securityLog.findMany({ orderBy: { createdAt: "desc" }, take: 200 }),
     prisma.project.findMany({ select: { id: true, codigo: true } }),

@@ -16,6 +16,7 @@ const GUIAS = [
   { fuente: "1-direccion", salida: "OVI-direccion" },
   { fuente: "2-mandos", salida: "OVI-mandos" },
   { fuente: "3-vendedores", salida: "OVI-vendedores" },
+  { fuente: "4-gerente", salida: "OVI-gerente-de-ventas" },
 ];
 
 let chromium;

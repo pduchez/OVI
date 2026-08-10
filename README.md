@@ -162,6 +162,7 @@ En [`docs/guias/`](./docs/guias) hay tres guías en PDF, con su fuente en HTML:
 | `OVI-direccion.pdf` | Dirección — vista estratégica de las capacidades y los controles. |
 | `OVI-mandos.pdf` | Gerentes y asistentes — todo lo que configuran y lo que requiere su autorización. |
 | `OVI-vendedores.pdf` | Vendedores — paso a paso práctico del uso diario. |
+| `OVI-gerente-de-ventas.pdf` | Gerente de ventas — alcance, ventajas, ahorro de tiempo y recomendaciones de implementación. **Con imagen de marca.** |
 
 Para regenerarlas después de editar el HTML: `npm run guias`.
 

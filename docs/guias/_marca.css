@@ -1,0 +1,174 @@
+/* Hoja con la identidad del Grupo Chacón: azul institucional, verde hoja y
+   café del tronco. Se usa en las guías que van con imagen de marca. */
+@page { size: letter; margin: 20mm 18mm; }
+
+:root {
+  --azul: #243372;
+  --azul-osc: #1b2657;
+  --verde: #b9ce33;
+  --cafe: #9a4320;
+  --tinta: #1b2340;
+  --gris: #64748b;
+  --suave: #eef1f9;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 10.5pt;
+  line-height: 1.55;
+  color: var(--tinta);
+  margin: 0;
+}
+
+/* --- Portada ---------------------------------------------------------- */
+.portada {
+  text-align: center;
+  padding: 14mm 0 10mm;
+  border-bottom: 3pt solid var(--azul);
+  margin-bottom: 10mm;
+  page-break-after: avoid;
+}
+.portada img { width: 30mm; height: auto; }
+.portada .app {
+  font-size: 34pt;
+  font-weight: bold;
+  letter-spacing: 3pt;
+  color: var(--azul);
+  margin: 3mm 0 0;
+  line-height: 1;
+}
+.portada .lema {
+  font-size: 10pt;
+  color: var(--verde);
+  font-weight: bold;
+  letter-spacing: 1.5pt;
+  text-transform: uppercase;
+  margin: 1mm 0 6mm;
+}
+.portada .titulo {
+  font-size: 19pt;
+  font-weight: bold;
+  color: var(--tinta);
+  margin: 0;
+}
+.portada .sub { font-size: 11pt; color: var(--gris); margin: 2mm 0 0; }
+.portada .pie { font-size: 8.5pt; color: var(--gris); margin: 5mm 0 0; }
+
+/* --- Jerarquía -------------------------------------------------------- */
+h2 {
+  font-size: 14pt;
+  color: var(--azul);
+  margin: 9mm 0 3mm;
+  padding-bottom: 1.5mm;
+  border-bottom: 1.5pt solid var(--verde);
+  page-break-after: avoid;
+}
+h3 {
+  font-size: 11pt;
+  color: var(--cafe);
+  margin: 5mm 0 1.5mm;
+  page-break-after: avoid;
+}
+
+p { margin: 0 0 2.5mm; }
+ul, ol { margin: 0 0 3mm; padding-left: 6mm; }
+li { margin-bottom: 1.5mm; }
+b, strong { color: var(--azul); }
+
+/* --- Tablas ----------------------------------------------------------- */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 3mm 0 5mm;
+  font-size: 9.5pt;
+  page-break-inside: avoid;
+}
+th {
+  background: var(--azul);
+  color: #fff;
+  text-align: left;
+  padding: 2mm 2.5mm;
+  font-weight: bold;
+}
+td {
+  border-bottom: 0.5pt solid #cbd5e1;
+  padding: 2mm 2.5mm;
+  vertical-align: top;
+}
+tr:nth-child(even) td { background: #f8fafc; }
+td b, th b { color: inherit; }
+
+/* --- Bloques destacados ----------------------------------------------- */
+.clave {
+  background: var(--suave);
+  border-left: 3pt solid var(--azul);
+  padding: 3mm 4mm;
+  margin: 3mm 0 4mm;
+  page-break-inside: avoid;
+}
+.clave .rotulo {
+  font-size: 8.5pt;
+  font-weight: bold;
+  letter-spacing: 1pt;
+  text-transform: uppercase;
+  color: var(--azul);
+  margin-bottom: 1mm;
+}
+.clave p:last-child { margin-bottom: 0; }
+
+.alerta {
+  background: #fef6ee;
+  border-left: 3pt solid var(--cafe);
+  padding: 3mm 4mm;
+  margin: 3mm 0 4mm;
+  page-break-inside: avoid;
+}
+.alerta .rotulo {
+  font-size: 8.5pt;
+  font-weight: bold;
+  letter-spacing: 1pt;
+  text-transform: uppercase;
+  color: var(--cafe);
+  margin-bottom: 1mm;
+}
+.alerta p:last-child { margin-bottom: 0; }
+.alerta b { color: var(--cafe); }
+
+/* Recomendaciones numeradas */
+.reco {
+  margin: 0 0 4mm;
+  padding-left: 12mm;
+  position: relative;
+  page-break-inside: avoid;
+}
+.reco .n {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 8mm;
+  height: 8mm;
+  background: var(--verde);
+  color: var(--azul);
+  font-weight: bold;
+  font-size: 11pt;
+  text-align: center;
+  line-height: 8mm;
+  border-radius: 50%;
+}
+.reco h3 { margin-top: 0.5mm; }
+
+.cifras { display: table; width: 100%; margin: 4mm 0 5mm; }
+.cifras > div {
+  display: table-cell;
+  text-align: center;
+  padding: 3mm 1mm;
+  border-right: 0.5pt solid #cbd5e1;
+}
+.cifras > div:last-child { border-right: none; }
+.cifras .n { font-size: 20pt; font-weight: bold; color: var(--azul); line-height: 1; }
+.cifras .t { font-size: 8pt; color: var(--gris); text-transform: uppercase; letter-spacing: 0.5pt; }
+
+.salto { page-break-before: always; }
+.nota { font-size: 9pt; color: var(--gris); }

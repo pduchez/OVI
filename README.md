@@ -166,6 +166,14 @@ En [`docs/guias/`](./docs/guias) hay tres guías en PDF, con su fuente en HTML:
 | `OVI-asistente-ejecutiva.pdf` | Asistente ejecutiva — funciones, autoridades, límites y rutina. **Con imagen de marca.** |
 | `OVI-vendedor.pdf` | Vendedores (sitio, UCOES y DP) — funciones, autoridad y qué pedir autorizado. **Con imagen de marca.** |
 
+**Manuales de implementación** — los que acompañan al comunicado de la Gerencia:
+
+| Archivo | Para quién |
+|---|---|
+| `OVI-implementacion-asistente-ejecutiva.pdf` | Asistentes ejecutivas (ambas fuerzas) — su papel en el despliegue, etapas y listas de verificación. |
+| `OVI-implementacion-vendedores-chacon-ucoes.pdf` | Vendedores internos de Chacón y de UCOES. |
+| `OVI-implementacion-vendedores-destinopropiedades.pdf` | Fuerza de ventas de Destinopropiedades.com. |
+
 Para regenerarlas después de editar el HTML: `npm run guias`.
 
 ## Seguridad

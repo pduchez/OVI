@@ -19,6 +19,9 @@ const GUIAS = [
   { fuente: "4-gerente", salida: "OVI-gerente-de-ventas" },
   { fuente: "5-asistente", salida: "OVI-asistente-ejecutiva" },
   { fuente: "6-vendedor", salida: "OVI-vendedor" },
+  { fuente: "7-impl-asistente", salida: "OVI-implementacion-asistente-ejecutiva" },
+  { fuente: "8-impl-vendedor-chacon", salida: "OVI-implementacion-vendedores-chacon-ucoes" },
+  { fuente: "9-impl-vendedor-dp", salida: "OVI-implementacion-vendedores-destinopropiedades" },
 ];
 
 let chromium;

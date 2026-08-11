@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>OVI — Apéndice Técnico</title>
+<link rel="stylesheet" href="_marca.css">
+<style>
+  .paso-t { margin: 0 0 4mm; padding-left: 11mm; position: relative; page-break-inside: avoid; }
+  .paso-t .n { position: absolute; left: 0; top: 0.3mm; width: 7mm; height: 7mm;
+    background: var(--azul); color: #fff; font-weight: bold; font-size: 10pt;
+    text-align: center; line-height: 7mm; border-radius: 50%; }
+  .btn { display: inline-block; background: var(--azul); color: #fff; padding: 0.4mm 2mm;
+    border-radius: 1.5mm; font-size: 9pt; font-weight: bold; white-space: nowrap; }
+  .menu { display: inline-block; background: var(--suave); color: var(--azul);
+    padding: 0.4mm 2mm; border-radius: 1.5mm; font-size: 9pt; font-weight: bold;
+    border: 0.4pt solid #c7d0e8; white-space: nowrap; }
+  .campo { display: inline-block; background: #fff; border: 0.6pt solid #94a3b8;
+    padding: 0.3mm 2mm; border-radius: 1mm; font-size: 9pt; white-space: nowrap; }
+  .llenar { border-bottom: 1pt solid var(--azul); display: inline-block;
+    min-width: 62mm; height: 5mm; }
+  .nivel { display:inline-block; background: var(--verde); color: var(--azul);
+    font-size: 8pt; font-weight: bold; padding: 0.3mm 1.8mm; border-radius: 1mm; }
+</style>
+</head>
+<body>
+
+<div class="portada">
+  <img src="data:image/png;base64,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" alt="Grupo Inmobiliario Chacón">
+  <div class="app">OVI</div>
+  <div class="lema">Central de ventas · Grupo Inmobiliario Chacón</div>
+  <div class="titulo">Apéndice Técnico</div>
+  <div class="sub">Cómo instalarla, qué hace cada botón y qué puede hacer cada nivel</div>
+  <div class="pie">Para TODOS los usuarios · Acompaña a las guías por rol</div>
+</div>
+
+<div class="clave">
+<div class="rotulo">Cómo usar este documento</div>
+<p>Las secciones <b>1 a 4 son para todos</b>: instalar, entrar y las cuatro
+cosas que registra el día a día. De la <b>5 en adelante</b>, cada sección dice
+al inicio <b>qué nivel puede usarla</b>. Si su nivel no aparece, esa pantalla
+no le va a salir en el menú — no es un error.</p>
+</div>
+
+<h2>1. La dirección de OVI</h2>
+
+<p>OVI se abre en el navegador. No se busca en Google ni se baja de una tienda
+de aplicaciones. La dirección oficial es:</p>
+
+<p style="text-align:center;margin:5mm 0 3mm">
+<span class="llenar"></span><br>
+<span class="nota">(su asistente ejecutiva se la entrega el día del arranque)</span>
+</p>
+
+<div class="alerta">
+<div class="rotulo">Escríbala usted, no la busque</div>
+<p>Use <b>solo</b> la dirección oficial. No entre por enlaces reenviados en
+cadenas de mensajes: es la vía más fácil para que alguien lo lleve a una copia
+falsa y le robe su usuario. Cuando esté dentro, guárdela en favoritos o
+instale la aplicación (sección 2) y no vuelva a escribirla.</p>
+</div>
+
+<h2>2. Instalar OVI en el celular <span class="nivel">TODOS</span></h2>
+
+<p>OVI se instala como aplicación: queda con su ícono en la pantalla y abre a
+pantalla completa, sin barra de navegador. Funciona igual en la computadora,
+pero en el teléfono es donde más se usa.</p>
+
+<h3>En Android (Chrome)</h3>
+<div class="paso-t"><span class="n">1</span> Abra la dirección de OVI en <b>Chrome</b>.</div>
+<div class="paso-t"><span class="n">2</span> Espere unos segundos: aparece abajo una barra azul que dice <span class="btn">Instalar OVI</span>. Tóquela.</div>
+<div class="paso-t"><span class="n">3</span> Confirme <b>Instalar</b> en el aviso del teléfono.</div>
+<div class="paso-t"><span class="n">4</span> Listo: el ícono del árbol queda en su pantalla, igual que WhatsApp.</div>
+<p class="nota">Si no aparece la barra: menú de Chrome (los tres puntos ⋮) →
+<b>Instalar aplicación</b> o <b>Agregar a pantalla principal</b>. Hace lo mismo.</p>
+
+<h3>En iPhone (Safari)</h3>
+<div class="paso-t"><span class="n">1</span> Abra la dirección de OVI en <b>Safari</b>. Tiene que ser Safari.</div>
+<div class="paso-t"><span class="n">2</span> Toque el botón <b>Compartir</b> (el cuadrito con la flecha hacia arriba, abajo al centro).</div>
+<div class="paso-t"><span class="n">3</span> Baje en la lista y toque <b>Agregar a inicio</b>.</div>
+<div class="paso-t"><span class="n">4</span> Toque <b>Agregar</b> arriba a la derecha.</div>
+<p class="nota">En iPhone <b>no existe</b> el botón azul de instalar: es una
+limitación de Safari, no una falla.</p>
+
+<h3>En la computadora</h3>
+<p>Basta con abrir la dirección y guardarla en favoritos. En Chrome y Edge
+también aparece un ícono de instalar (⊕) al final de la barra de direcciones.</p>
+
+<div class="clave">
+<div class="rotulo">La aplicación se actualiza sola</div>
+<p>Todos los días a las <b>8:00 de la mañana</b>, hora de El Salvador. Usted no
+tiene que hacer nada ni volver a instalarla. Si el teléfono estaba apagado a
+esa hora, se pone al día al abrirla.</p>
+</div>
+
+<h2 class="salto">3. Entrar la primera vez <span class="nivel">TODOS</span></h2>
+
+<div class="paso-t"><span class="n">1</span> Abra OVI. Verá dos campos: <span class="campo">Usuario</span> y <span class="campo">Contraseña</span>.</div>
+<div class="paso-t"><span class="n">2</span> Escriba su <b>usuario</b> (se lo entrega su asistente ejecutiva). <b>No importan las mayúsculas.</b></div>
+<div class="paso-t"><span class="n">3</span> La contraseña la primera vez es <code>password</code>, todo junto y en minúsculas.</div>
+<div class="paso-t"><span class="n">4</span> Toque <span class="btn">Entrar</span>. OVI lo lleva directo a <span class="menu">🔑 Mi cuenta</span> para que cambie la contraseña.</div>
+<div class="paso-t"><span class="n">5</span> Llene los tres campos: <span class="campo">Contraseña actual</span> (es <code>password</code>), <span class="campo">Nueva contraseña</span> y <span class="campo">Repetir nueva contraseña</span>. Toque <span class="btn">Actualizar contraseña</span>.</div>
+
+<div class="alerta">
+<div class="rotulo">Reglas de la contraseña nueva</div>
+<p>Al menos <b>10 caracteres</b> · No puede ser una clave obvia (<i>password</i>,
+<i>123456</i>, <i>qwerty</i>…) · No puede contener su nombre de usuario · No
+puede ser un solo carácter repetido · No puede ser la misma de antes.</p>
+<p><b>Si se equivoca 5 veces al entrar, OVI bloquea 15 minutos</b> por
+seguridad. No es una falla: espere o pida que se la restablezcan.</p>
+</div>
+
+<h2>4. El menú: qué es cada cosa</h2>
+
+<p>En el celular el menú se abre con el botón <b>☰</b> arriba a la izquierda.
+En la computadora está siempre a la vista, en la columna de la izquierda.</p>
+
+<table>
+<tr><th style="width:30%">Menú</th><th style="width:44%">Para qué sirve</th><th>Quién lo ve</th></tr>
+<tr><td><span class="menu">📊 Tablero</span></td><td>Resumen: visitas, reservas, ventas y actividad reciente</td><td>Todos</td></tr>
+<tr><td><span class="menu">➕ Registrar</span></td><td>Anotar visita, reserva/venta, abono o novedad</td><td>Todos</td></tr>
+<tr><td><span class="menu">🤝 Negocios</span></td><td>Cada venta con su historial de pagos</td><td>Todos</td></tr>
+<tr><td><span class="menu">📌 Novedades</span></td><td>Problemas reportados, con prioridad y estado</td><td>Todos</td></tr>
+<tr><td><span class="menu">📑 Reportes</span></td><td>Los seis reportes, exportables</td><td>Todos</td></tr>
+<tr><td><span class="menu">🏷️ Inventario</span></td><td>Lotes, precios y estado. Aquí se marcan las reservas</td><td>Todos con proyecto asignado</td></tr>
+<tr><td><span class="menu">👥 Usuarios</span></td><td>Alta, baja y reasignación de personas</td><td>Dirección, gerentes y asistentes</td></tr>
+<tr><td><span class="menu">🛡️ Bitácora</span></td><td>Cambios de precio, cargas y excepciones sin boleta</td><td>Dirección, gerentes y asistentes</td></tr>
+<tr><td><span class="menu">⚙️ Administración</span></td><td>Proyectos y vendedores del catálogo</td><td><b>Solo Dirección</b></td></tr>
+<tr><td><span class="menu">🔑 Mi cuenta</span></td><td>Cambiar su contraseña</td><td>Todos</td></tr>
+</table>
+
+<p class="nota">Si un menú no le aparece, es porque su nivel no lo tiene. No
+intente llegar escribiendo la dirección: OVI lo devuelve al Tablero.</p>
+
+<h2 class="salto">5. Registrar: las cuatro cosas del día a día <span class="nivel">TODOS</span></h2>
+
+<p>Toque <span class="menu">➕ Registrar</span> y verá cuatro botones grandes.
+Esto es el 90 % del uso diario.</p>
+
+<table>
+<tr><th style="width:32%">Botón</th><th>Cuándo se usa</th></tr>
+<tr><td><span class="btn">Visita</span></td><td>Un prospecto llegó al proyecto</td></tr>
+<tr><td><span class="btn">Reserva / Venta</span></td><td>Se apartó o se vendió un lote</td></tr>
+<tr><td><span class="btn">Abono / Pago</span></td><td>El cliente hizo un pago</td></tr>
+<tr><td><span class="btn">Novedad / Problema</span></td><td>Algo que reportar del proyecto</td></tr>
+</table>
+
+<h3>5.1 Registrar una VISITA</h3>
+<div class="paso-t"><span class="n">1</span> <span class="menu">➕ Registrar</span> → <span class="btn">Visita</span></div>
+<div class="paso-t"><span class="n">2</span> Llene <span class="campo">Nombre del cliente</span> y <span class="campo">Teléfono</span>.</div>
+<div class="paso-t"><span class="n">3</span> Escoja de las listas: <span class="campo">Proyecto</span>, <span class="campo">Origen</span> (cómo se enteró) y <span class="campo">Vendedor</span>.</div>
+<div class="paso-t"><span class="n">4</span> Marque <span class="campo">¿Quedó interesado?</span> si aplica. Guarde.</div>
+
+<h3>5.2 Registrar una RESERVA o VENTA — desde el Inventario</h3>
+<p>Es la forma recomendada, porque toma el precio del lote automáticamente.</p>
+<div class="paso-t"><span class="n">1</span> <span class="menu">🏷️ Inventario</span> → toque el proyecto.</div>
+<div class="paso-t"><span class="n">2</span> Busque el lote en la lista. Los disponibles tienen el botón <span class="btn">Reservar / Vender</span>.</div>
+<div class="paso-t"><span class="n">3</span> Se abre el panel. Arriba aparece el lote con <b>su precio ya fijado</b>: no se puede cambiar.</div>
+<div class="paso-t"><span class="n">4</span> <span class="campo">¿Qué pasó?</span> → <b>Se reservó (apartado)</b> o <b>Se vendió</b>.</div>
+<div class="paso-t"><span class="n">5</span> <span class="campo">Nombre del cliente</span> y <span class="campo">Teléfono</span>.</div>
+<div class="paso-t"><span class="n">6</span> <span class="campo">Depósito recibido</span> — el monto en dólares.</div>
+<div class="paso-t"><span class="n">7</span> <span class="campo">Foto de la boleta</span> → se abre la cámara. Tome la foto del comprobante.</div>
+<div class="paso-t"><span class="n">8</span> Toque <span class="btn">Marcar como RESERVADO</span> (o <b>VENDIDO</b>). El lote queda bloqueado al instante para todos.</div>
+
+<div class="alerta">
+<div class="rotulo">Si no lo deja guardar</div>
+<p>Lea el <b>mensaje rojo</b>. Casi siempre es una de dos: falta el
+<b>monto del depósito</b> o falta la <b>foto de la boleta</b>. Sin boleta no se
+puede reservar ni vender — es la regla, y solo la capa de mando puede saltarla.</p>
+</div>
+
+<h3>5.3 Registrar un ABONO o PAGO</h3>
+<div class="paso-t"><span class="n">1</span> <span class="menu">➕ Registrar</span> → <span class="btn">Abono / Pago</span></div>
+<div class="paso-t"><span class="n">2</span> Escoja el <span class="campo">Negocio</span> del cliente en la lista.</div>
+<div class="paso-t"><span class="n">3</span> Llene <span class="campo">Monto</span>, <span class="campo">Tipo</span> (prima, cuota o contado) y <span class="campo">Método</span>.</div>
+<div class="paso-t"><span class="n">4</span> Si el método es <b>Depósito</b>, la <span class="campo">Foto de la boleta</span> es <b>obligatoria</b>.</div>
+<div class="paso-t"><span class="n">5</span> Guarde. El abono queda con su comprobante y descuenta del saldo.</div>
+
+<h3>5.4 Registrar una NOVEDAD</h3>
+<div class="paso-t"><span class="n">1</span> <span class="menu">➕ Registrar</span> → <span class="btn">Novedad / Problema</span></div>
+<div class="paso-t"><span class="n">2</span> Escoja <span class="campo">Proyecto</span>, <span class="campo">Categoría</span> y <span class="campo">Prioridad</span>.</div>
+<div class="paso-t"><span class="n">3</span> Escriba el <span class="campo">Título</span> y el <span class="campo">Detalle</span>. Guarde.</div>
+<p class="nota">Prioridad <b>alta</b> solo para lo que impide vender.</p>
+
+<h2 class="salto">6. Negocios: seguir una venta <span class="nivel">TODOS</span></h2>
+
+<p><span class="menu">🤝 Negocios</span> lista las ventas que usted puede ver.
+Toque una para abrir su ficha, donde aparece:</p>
+
+<ul>
+<li><b>Precio del lote</b>, <b>Prima pactada</b>, <b>Cobrado</b> y <b>Saldo</b>.</li>
+<li>El historial de pagos, cada uno con su enlace <b>Boleta</b> para ver el comprobante.</li>
+<li>Quién lo registró y cuándo.</li>
+</ul>
+
+<p>Desde la ficha se puede <span class="btn">Registrar caída</span> cuando el
+cliente desiste: pide el <span class="campo">Motivo de caída</span>. Esto da de
+baja el negocio, pero <b>no libera el lote</b>: eso lo hace la capa de mando
+(sección 8).</p>
+
+<h2>7. Reportes <span class="nivel">TODOS</span></h2>
+
+<p><span class="menu">📑 Reportes</span>. Arriba se escoge el reporte y el
+periodo; abajo aparece la tabla.</p>
+
+<table>
+<tr><th style="width:46%">Reporte</th><th>Responde</th></tr>
+<tr><td><b>Resumen ejecutivo</b></td><td>Cómo va el periodo en conjunto</td></tr>
+<tr><td><b>Ventas por proyecto</b></td><td>Qué proyecto está colocando</td></tr>
+<tr><td><b>Ventas por vendedor</b></td><td>Quién está vendiendo</td></tr>
+<tr><td><b>Comparativo por fuerza</b></td><td>Cómo va cada equipo</td></tr>
+<tr><td><b>Análisis de caídas</b></td><td>Por qué se están cayendo los negocios</td></tr>
+<tr><td><b>Cartera y cobranza</b></td><td>Cuánto falta cobrar y quién está en mora</td></tr>
+</table>
+
+<p><b>Periodo:</b> <span class="campo">7 días</span> ·
+<span class="campo">30 días</span> · <span class="campo">90 días</span> ·
+<span class="campo">12 meses</span>.</p>
+
+<p><b>Para sacarlo de OVI:</b> <span class="btn">⬇️ CSV</span> descarga el
+archivo para Excel; <span class="btn">Imprimir / PDF</span> abre el diálogo de
+impresión, donde se puede escoger «Guardar como PDF».</p>
+<p class="nota">El botón CSV no aparece en «Resumen ejecutivo» ni en
+«Comparativo por fuerza»: esos se imprimen.</p>
+
+<h2 class="salto">8. Inventario: qué puede hacer cada nivel</h2>
+
+<p>Todos ven el inventario que les corresponde, pero <b>los botones cambian
+según el nivel</b>. Esta tabla es la referencia:</p>
+
+<table>
+<tr><th style="width:38%">Botón / acción</th><th style="width:20%">Vendedor</th><th style="width:20%">Asistente</th><th>Gerente y Dirección</th></tr>
+<tr><td><span class="btn">Reservar / Vender</span></td><td>Sí, <b>con boleta</b></td><td>Sí, sin boleta</td><td>Sí, sin boleta</td></tr>
+<tr><td><span class="btn">Liberar</span></td><td><b>No</b></td><td>Sí</td><td>Sí</td></tr>
+<tr><td><span class="btn">Editar</span> lote</td><td><b>No</b></td><td><b>No</b></td><td>Sí</td></tr>
+<tr><td><span class="btn">Importar archivo</span></td><td><b>No</b></td><td><b>No</b></td><td>Sí</td></tr>
+<tr><td><span class="btn">Subir documento</span></td><td><b>No</b></td><td>Sí</td><td>Sí</td></tr>
+<tr><td><span class="btn">⬇️ Exportar Excel</span></td><td><b>No</b></td><td><b>No</b></td><td>Sí</td></tr>
+<tr><td>Agregar lote a mano</td><td><b>No</b></td><td><b>No</b></td><td>Sí</td></tr>
+</table>
+
+<h3>8.1 Liberar un lote <span class="nivel">ASISTENTE · GERENTE · DIRECCIÓN</span></h3>
+<div class="paso-t"><span class="n">1</span> <span class="menu">🏷️ Inventario</span> → proyecto → busque el lote reservado o vendido.</div>
+<div class="paso-t"><span class="n">2</span> Toque <span class="btn">Liberar</span>.</div>
+<div class="paso-t"><span class="n">3</span> Escriba el <span class="campo">Motivo</span> — es obligatorio.</div>
+<div class="paso-t"><span class="n">4</span> <span class="btn">Liberar lote</span>. Vuelve a disponible y el negocio queda como caída.</div>
+
+<h3>8.2 Importar un inventario <span class="nivel">GERENTE · DIRECCIÓN</span></h3>
+<div class="paso-t"><span class="n">1</span> <span class="menu">🏷️ Inventario</span> → proyecto → tarjeta <b>Importar inventario (Excel · CSV · PDF)</b>.</div>
+<div class="paso-t"><span class="n">2</span> Escoja el archivo: <code>.xlsx</code>, <code>.xlsm</code>, <code>.csv</code>, <code>.txt</code> o <code>.pdf con texto</code>.</div>
+<div class="paso-t"><span class="n">3</span> <span class="btn">Importar archivo</span>. OVI dice cuántos lotes creó, cuántos actualizó y qué hoja del Excel usó.</div>
+<p class="nota">Un lote ya reservado o vendido <b>no cambia de estado</b> al
+reimportar. Un <b>PDF escaneado</b> (foto del papel) no se puede leer: OVI lo
+avisa en vez de adivinar cifras.</p>
+
+<h3>8.3 Cambiar el precio de un lote <span class="nivel">GERENTE · DIRECCIÓN</span></h3>
+<div class="paso-t"><span class="n">1</span> <span class="menu">🏷️ Inventario</span> → proyecto → <span class="btn">Editar</span> en la fila del lote.</div>
+<div class="paso-t"><span class="n">2</span> Cambie <span class="campo">Precio (US$)</span> y guarde.</div>
+<p class="nota">Queda en la bitácora con el precio anterior, el nuevo, quién y
+cuándo. <b>No altera negocios ya cerrados</b>: ahí el precio quedó congelado.</p>
+
+<h2 class="salto">9. Usuarios <span class="nivel">ASISTENTE · GERENTE · DIRECCIÓN</span></h2>
+
+<p><span class="menu">👥 Usuarios</span>. A la izquierda la lista, a la derecha
+el formulario.</p>
+
+<table>
+<tr><th style="width:30%">Botón en la fila</th><th>Qué hace</th></tr>
+<tr><td><span class="btn">Editar</span></td><td>Carga esa persona en el formulario de la derecha</td></tr>
+<tr><td><span class="btn">Reset clave</span></td><td>Devuelve la contraseña a <code>password</code> y <b>cierra su sesión abierta</b></td></tr>
+<tr><td><span class="btn">Baja / Alta</span></td><td>Desactiva o reactiva. Al dar de baja, la sesión muere en el acto</td></tr>
+</table>
+
+<h3>Dar de alta a una persona</h3>
+<div class="paso-t"><span class="n">1</span> Busque el usuario que va a ocupar y toque <span class="btn">Editar</span>.</div>
+<div class="paso-t"><span class="n">2</span> Llene <span class="campo">Nombre de la persona (real)</span>, <span class="campo">Correo</span> y <span class="campo">Celular</span>.</div>
+<div class="paso-t"><span class="n">3</span> Revise <span class="campo">Rol</span>, <span class="campo">Fuerza</span> y <span class="campo">Superior</span>.</div>
+<div class="paso-t"><span class="n">4</span> Si es vendedor de sitio, marque su <span class="campo">Proyecto</span>.</div>
+<div class="paso-t"><span class="n">5</span> Guarde y luego <span class="btn">Reset clave</span> para entregarla.</div>
+
+<div class="alerta">
+<div class="rotulo">Nunca borrar, siempre dar de baja</div>
+<p>Borrar a una persona hace perder la huella de todo lo que registró. La
+<b>baja</b> le quita el acceso y conserva su historial. Y un usuario es de
+<b>una sola persona</b>: nunca se presta.</p>
+</div>
+
+<p class="nota">Cada quien administra solo a los de <b>su propia fuerza</b> y a
+niveles <b>inferiores</b> al suyo. La Dirección administra a todos.</p>
+
+<h2>10. Bitácora <span class="nivel">ASISTENTE · GERENTE · DIRECCIÓN</span></h2>
+
+<p><span class="menu">🛡️ Bitácora</span> lista las acciones delicadas, de la
+más reciente hacia atrás: cambios de precio, cargas y descargas de inventario,
+documentos subidos y <b>reservas registradas sin boleta</b>. Cada línea dice
+quién, qué y cuándo.</p>
+
+<p class="nota">Es una pantalla de solo lectura. Revísela una vez al mes: si
+las excepciones sin boleta se repiten, el control se está aflojando.</p>
+
+<h2>11. Administración <span class="nivel">SOLO DIRECCIÓN</span></h2>
+
+<p><span class="menu">⚙️ Administración</span> tiene dos pestañas:
+<b>Proyectos</b> (alta y edición del catálogo, y el botón
+<span class="btn">Cargar catálogo oficial</span>) y <b>Vendedores</b> (el
+listado de vendedores para los reportes).</p>
+
+<h2 class="salto">12. Tabla maestra de autorizaciones</h2>
+
+<p>Una sola hoja con todo. Si tiene duda de si puede hacer algo, está aquí.</p>
+
+<table>
+<tr>
+  <th style="width:34%">Acción</th>
+  <th style="width:11%">Vendedor sitio</th>
+  <th style="width:11%">UCOES / DP</th>
+  <th style="width:12%">Asistente</th>
+  <th style="width:11%">Gerente</th>
+  <th>Dirección</th>
+</tr>
+<tr><td>Registrar visita, abono y novedad</td><td>Sí</td><td>Sí</td><td>Sí</td><td>Sí</td><td>Sí</td></tr>
+<tr><td>Ver inventario</td><td>Su proyecto</td><td>Los 20</td><td>Los 20</td><td>Los 20</td><td>Los 20</td></tr>
+<tr><td>Ver actividad</td><td>Su fuerza</td><td>Su fuerza</td><td><b>Todas</b></td><td><b>Todas</b></td><td><b>Todas</b></td></tr>
+<tr><td>Marcar lote reservado/vendido</td><td>Con boleta</td><td>Con boleta</td><td>Sin boleta</td><td>Sin boleta</td><td>Sin boleta</td></tr>
+<tr><td>Liberar un lote</td><td>No</td><td>No</td><td>Sí</td><td>Sí</td><td>Sí</td></tr>
+<tr><td>Fijar o cambiar precios</td><td>No</td><td>No</td><td><b>No</b></td><td>Sí</td><td>Sí</td></tr>
+<tr><td>Importar / exportar inventario</td><td>No</td><td>No</td><td><b>No</b></td><td>Sí</td><td>Sí</td></tr>
+<tr><td>Adjuntar documento de respaldo</td><td>No</td><td>No</td><td>Sí</td><td>Sí</td><td>Sí</td></tr>
+<tr><td>Administrar usuarios</td><td>No</td><td>No</td><td>Su fuerza</td><td>Su fuerza</td><td>Todas</td></tr>
+<tr><td>Leer la bitácora</td><td>No</td><td>No</td><td>Sí</td><td>Sí</td><td>Sí</td></tr>
+<tr><td>Administrar proyectos</td><td>No</td><td>No</td><td>No</td><td>No</td><td><b>Sí</b></td></tr>
+</table>
+
+<h2>13. Problemas frecuentes</h2>
+
+<table>
+<tr><th style="width:40%">Qué pasa</th><th>Qué hacer</th></tr>
+<tr><td><b>No me acepta la contraseña</b></td><td>Revise mayúsculas. A los 5 intentos fallidos OVI bloquea 15 minutos. Espere, o pida <span class="btn">Reset clave</span>.</td></tr>
+<tr><td><b>Me dice «Demasiados intentos»</b></td><td>Es el bloqueo de seguridad. Espere los minutos que indica.</td></tr>
+<tr><td><b>No me deja guardar la reserva</b></td><td>Falta el <b>monto</b> o la <b>foto de la boleta</b>. Lea el mensaje rojo.</td></tr>
+<tr><td><b>No veo el menú Inventario</b></td><td>No tiene proyecto asignado. Pida a su asistente que se lo asigne.</td></tr>
+<tr><td><b>Escribo una dirección y me manda al Tablero</b></td><td>Esa sección no es de su nivel. No es un error.</td></tr>
+<tr><td><b>Dice «Sin conexión»</b></td><td>No hay internet. OVI prefiere avisar antes que mostrarle datos viejos: un lote que apareciera disponible sin serlo causaría una doble venta.</td></tr>
+<tr><td><b>Va lento o no carga</b></td><td>Espere señal. <b>No registre dos veces</b> sin revisar antes si ya quedó guardado.</td></tr>
+<tr><td><b>Se fue la señal a medio registro</b></td><td>Entre otra vez y revise en Inventario si el lote quedó marcado. Si no, regístrelo de nuevo.</td></tr>
+<tr><td><b>El ícono desapareció del teléfono</b></td><td>Vuelva a instalar (sección 2). No se pierde nada: la información vive en el servidor.</td></tr>
+</table>
+
+<div class="clave">
+<div class="rotulo">A quién llamar</div>
+<p><b>Vendedores</b> → su asistente ejecutiva.
+<b>Asistentes</b> → su gerente de ventas.
+<b>Gerentes</b> → la Dirección.</p>
+<p>Nunca deje de registrar por una duda: registre y avise.</p>
+</div>
+
+</body>
+</html>

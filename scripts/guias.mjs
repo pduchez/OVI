@@ -22,6 +22,7 @@ const GUIAS = [
   { fuente: "7-impl-asistente", salida: "OVI-implementacion-asistente-ejecutiva" },
   { fuente: "8-impl-vendedor-chacon", salida: "OVI-implementacion-vendedores-chacon-ucoes" },
   { fuente: "9-impl-vendedor-dp", salida: "OVI-implementacion-vendedores-destinopropiedades" },
+  { fuente: "10-apendice-tecnico", salida: "OVI-apendice-tecnico" },
 ];
 
 let chromium;

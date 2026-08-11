@@ -174,6 +174,12 @@ En [`docs/guias/`](./docs/guias) hay tres guías en PDF, con su fuente en HTML:
 | `OVI-implementacion-vendedores-chacon-ucoes.pdf` | Vendedores internos de Chacón y de UCOES. |
 | `OVI-implementacion-vendedores-destinopropiedades.pdf` | Fuerza de ventas de Destinopropiedades.com. |
 
+**Apéndice técnico** — el operativo, para TODOS los usuarios:
+
+| Archivo | Contenido |
+|---|---|
+| `OVI-apendice-tecnico.pdf` | Cómo instalar OVI en Android, iPhone y computadora; entrar la primera vez; qué hace cada menú y cada botón, paso a paso; qué puede operar cada nivel; tabla maestra de autorizaciones y problemas frecuentes. |
+
 Para regenerarlas después de editar el HTML: `npm run guias`.
 
 ## Seguridad

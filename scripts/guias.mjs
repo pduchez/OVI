@@ -23,6 +23,7 @@ const GUIAS = [
   { fuente: "8-impl-vendedor-chacon", salida: "OVI-implementacion-vendedores-chacon-ucoes" },
   { fuente: "9-impl-vendedor-dp", salida: "OVI-implementacion-vendedores-destinopropiedades" },
   { fuente: "10-apendice-tecnico", salida: "OVI-apendice-tecnico" },
+  { fuente: "11-plan-implementacion-coordinacion", salida: "OVI-plan-implementacion-coordinacion" },
 ];
 
 let chromium;

@@ -180,6 +180,12 @@ En [`docs/guias/`](./docs/guias) hay tres guías en PDF, con su fuente en HTML:
 |---|---|
 | `OVI-apendice-tecnico.pdf` | Cómo instalar OVI en Android, iPhone y computadora; entrar la primera vez; qué hace cada menú y cada botón, paso a paso; qué puede operar cada nivel; tabla maestra de autorizaciones y problemas frecuentes. |
 
+**Plan de despliegue** — para quien coordina la puesta en marcha:
+
+| Archivo | Contenido |
+|---|---|
+| `OVI-plan-implementacion-coordinacion.pdf` | Cascada en 4 fases y 15 días, de la coordinación a los 20 proyectos, con metas medibles por fase (10 % → 25 % → 50 % → 100 %), criterio verificable de «proyecto implementado», semáforo diario y tablero de control. |
+
 Para regenerarlas después de editar el HTML: `npm run guias`.
 
 ## Seguridad

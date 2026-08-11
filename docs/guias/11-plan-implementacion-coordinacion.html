@@ -1,0 +1,433 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>OVI — Plan de Implementación · Coordinación</title>
+<link rel="stylesheet" href="_marca.css">
+<style>
+  .fase { border-left: 3pt solid var(--azul); padding: 3mm 0 1mm 5mm; margin: 0 0 6mm;
+          page-break-inside: avoid; }
+  .fase .cab { font-size: 8.5pt; font-weight: bold; letter-spacing: 1pt;
+               text-transform: uppercase; color: var(--verde); }
+  .fase h3 { margin: 0.5mm 0 1mm; font-size: 12.5pt; color: var(--azul); }
+  .fase .dias { font-size: 9pt; color: var(--cafe); font-weight: bold; margin-bottom: 2mm; }
+  .meta { background: #f1f5e8; border: 0.6pt solid var(--verde); padding: 2.5mm 3.5mm;
+          margin: 2.5mm 0 1mm; }
+  .meta .r { font-size: 8pt; font-weight: bold; letter-spacing: 0.8pt;
+             text-transform: uppercase; color: #6b7a1f; margin-bottom: 1mm; }
+  .meta p { margin: 0 0 1mm; }
+  .meta p:last-child { margin: 0; }
+  .semaforo td:first-child { font-weight: bold; white-space: nowrap; }
+  .reco { margin: 0 0 4mm; padding-left: 12mm; position: relative; page-break-inside: avoid; }
+  .reco .n { position: absolute; left: 0; top: 0; width: 8mm; height: 8mm;
+    background: var(--verde); color: var(--azul); font-weight: bold; font-size: 11pt;
+    text-align: center; line-height: 8mm; border-radius: 50%; }
+  .reco h3 { margin-top: 0.5mm; }
+</style>
+</head>
+<body>
+
+<div class="portada">
+  <img src="data:image/png;base64,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" alt="Grupo Inmobiliario Chacón">
+  <div class="app">OVI</div>
+  <div class="lema">Central de ventas · Grupo Inmobiliario Chacón</div>
+  <div class="titulo">Plan de Implementación</div>
+  <div class="sub">Manual de la Coordinación · Asistente Ejecutiva, fuerza Interna</div>
+  <div class="pie">15 días · De la coordinadora a los 20 proyectos</div>
+</div>
+
+<h2>Su encargo</h2>
+
+<p>Usted coordina la puesta en marcha de OVI dentro del Grupo Chacón. No es un
+encargo técnico —la herramienta ya está lista y probada—: es un encargo de
+<b>cascada</b>. Usted aprende, le enseña a la Gerencia, y de ahí baja proyecto
+por proyecto hasta que los 20 estén registrando.</p>
+
+<div class="clave">
+<div class="rotulo">La regla de la cascada</div>
+<p><b>Nadie enseña lo que no domina.</b> Por eso el orden no se altera: usted
+primero, la Gerencia después, los vendedores al final. Si se salta un escalón,
+lo que baja es la confusión.</p>
+</div>
+
+<div class="cifras">
+  <div><div class="n">15</div><div class="t">Días máximo</div></div>
+  <div><div class="n">4</div><div class="t">Fases</div></div>
+  <div><div class="n">20</div><div class="t">Proyectos</div></div>
+  <div><div class="n">4</div><div class="t">Olas de despliegue</div></div>
+</div>
+
+<h2>El calendario de un vistazo</h2>
+
+<table>
+<tr><th style="width:14%">Días</th><th style="width:26%">Fase</th><th style="width:34%">Qué termina</th><th>Meta</th></tr>
+<tr><td><b>1 – 2</b></td><td>0 · Lectura</td><td>Usted entendió OVI</td><td>3 documentos leídos</td></tr>
+<tr><td><b>1 – 2</b></td><td>1 · Usted</td><td>Usted instalada y operando</td><td>6 operaciones hechas</td></tr>
+<tr><td><b>3</b></td><td>2 · Gerencia</td><td>Gerencia instalada y capacitada</td><td>1 inventario importado</td></tr>
+<tr><td><b>4 – 5</b></td><td>3 · Piloto</td><td>2 proyectos operando</td><td><b>10 %</b></td></tr>
+<tr><td><b>6 – 8</b></td><td>3 · Ola 2</td><td>5 proyectos operando</td><td><b>25 %</b></td></tr>
+<tr><td><b>9 – 11</b></td><td>3 · Ola 3</td><td>10 proyectos operando</td><td><b>50 %</b></td></tr>
+<tr><td><b>12 – 15</b></td><td>3 · Ola 4</td><td>20 proyectos operando</td><td><b>100 %</b></td></tr>
+</table>
+
+<div class="alerta">
+<div class="rotulo">Lea esto antes de fijar fechas</div>
+<p>El calendario <b>no lo limita la capacitación: lo limita el inventario</b>.
+Un proyecto no puede salir a producción si su lista de lotes no está cargada y
+validada, y eso lo hace la Gerencia, no usted. Hasta donde tenemos registro,
+<b>4 de los 20 proyectos</b> tienen lista de precios cargada. Los otros 16
+dependen de conseguir el archivo con el desarrollador.</p>
+<p>Por eso la Fase 2 arranca <b>una vía paralela</b>: mientras usted despliega
+vendedores, la Gerencia carga inventarios. <b>Ninguna ola puede incluir un
+proyecto cuyo inventario no esté listo.</b> Si el archivo no llega, ese
+proyecto se corre a la siguiente ola — no se lanza a medias.</p>
+</div>
+
+<h2 class="salto">FASE 0 · Entender antes de enseñar</h2>
+
+<div class="fase">
+<div class="cab">Fase 0</div>
+<h3>Lectura y comprensión</h3>
+<div class="dias">Días 1 y 2 · en paralelo con la Fase 1</div>
+
+<p>Lea en este orden:</p>
+<ol>
+<li><b>Apéndice Técnico</b> — el operativo: cómo se instala, qué hace cada
+botón, qué puede cada nivel. Es el que más va a usar.</li>
+<li><b>Guía de la Asistente Ejecutiva</b> — sus autoridades y sus tres límites.</li>
+<li><b>Manual de Implementación de la Asistente</b> — su operación permanente.</li>
+</ol>
+<p>Y hojee, para saber qué les está pidiendo a los demás: la <b>Guía del
+Gerente</b> y el <b>Manual del Vendedor</b>.</p>
+
+<div class="meta">
+<div class="r">Meta medible · Día 2</div>
+<p>Puede responder estas cinco preguntas sin consultar. Si falla una, relea
+antes de seguir:</p>
+<p>1. ¿Qué pasa con un lote en el instante en que se marca como reservado?<br>
+2. ¿Qué se necesita, sin excepción, para que un vendedor pueda reservar?<br>
+3. ¿Qué dos cosas puede hacer la Gerencia que usted no?<br>
+4. ¿Por qué un usuario se da de baja y nunca se borra?<br>
+5. ¿Qué ve un vendedor de sitio que no ve uno de UCOES, y al revés?</p>
+</div>
+</div>
+
+<h2>FASE 1 · Usted primero</h2>
+
+<div class="fase">
+<div class="cab">Fase 1</div>
+<h3>Instalación y práctica propia</h3>
+<div class="dias">Días 1 y 2</div>
+
+<ol>
+<li>Instale OVI en su teléfono siguiendo el Apéndice Técnico, sección 2.</li>
+<li>Entre, cambie su contraseña y recorra los <b>ocho menús</b> sin registrar
+nada.</li>
+<li><b>Practique las seis operaciones</b> de la meta. No lea sobre ellas:
+hágalas.</li>
+</ol>
+
+<div class="meta">
+<div class="r">Meta medible · Día 2 · No pase a la Fase 2 sin esto</div>
+<p>Ejecutó al menos una vez, de principio a fin:</p>
+<p>☐ Registrar una <b>visita</b> &nbsp;· &nbsp;☐ Marcar una <b>reserva con foto
+de boleta</b> &nbsp;· &nbsp;☐ Registrar un <b>abono</b> &nbsp;· &nbsp;☐ Reportar
+una <b>novedad</b> &nbsp;· &nbsp;☐ <b>Liberar</b> un lote &nbsp;· &nbsp;☐ Dar de
+alta y de baja un <b>usuario</b></p>
+</div>
+
+<div class="alerta">
+<div class="rotulo">Dónde practicar sin ensuciar los datos</div>
+<p><b>Pídale a la Dirección que cree un proyecto llamado «00 — Capacitación»
+con cinco lotes de mentira.</b> Le toma cinco minutos y le sirve para siempre:
+ahí practica usted, ahí practica la Gerencia y ahí va a practicar cada
+vendedor nuevo que entre de aquí a años. Sin eso, tendría que ensayar sobre un
+proyecto real y después limpiar.</p>
+</div>
+</div>
+
+<h2>FASE 2 · La Gerencia</h2>
+
+<div class="fase">
+<div class="cab">Fase 2</div>
+<h3>Instalación y capacitación de la Gerencia de Ventas</h3>
+<div class="dias">Día 3 · una sesión de 60 a 90 minutos</div>
+
+<p>Usted acompaña, no delega. El guion de la sesión:</p>
+<ol>
+<li><b>Instalación</b> en su teléfono, ahí mismo, con usted al lado (15 min).</li>
+<li><b>Recorrido</b> de los menús y del Tablero (15 min).</li>
+<li><b>Lo que solo la Gerencia puede hacer</b> — y aquí está el peso de la
+sesión (30 min): importar un inventario desde Excel, CSV o PDF; fijar y
+cambiar el precio de un lote; exportar el inventario a Excel.</li>
+<li><b>Reserva sin boleta</b>: cuándo se vale y por qué queda en la bitácora
+a su nombre (10 min).</li>
+<li><b>Acuerdo de trabajo</b>: quién consigue los archivos de inventario que
+faltan y en qué orden (20 min).</li>
+</ol>
+
+<div class="meta">
+<div class="r">Meta medible · Fin del día 3</div>
+<p>☐ Gerencia instalada, con contraseña cambiada<br>
+☐ Gerencia <b>importó el inventario de al menos un proyecto</b> por su cuenta,
+con usted mirando<br>
+☐ Existe una <b>lista escrita</b> de los proyectos sin inventario, con
+responsable y fecha para cada archivo</p>
+</div>
+
+<p class="nota">Ese tercer punto es el que salva el calendario. Sin esa lista,
+la Ola 3 se cae y usted se entera tarde.</p>
+</div>
+
+<h2 class="salto">FASE 3 · Despliegue en olas</h2>
+
+<p>De aquí en adelante el trabajo es repetitivo a propósito: <b>el mismo guion,
+proyecto por proyecto</b>. Lo que cambia es cuántos hace a la vez.</p>
+
+<h3>El guion de cada proyecto — 45 minutos, no más</h3>
+
+<table>
+<tr><th style="width:14%">Minutos</th><th>Qué hace</th></tr>
+<tr><td><b>0 – 10</b></td><td>Instalación en el teléfono del vendedor. Entra y cambia su contraseña.</td></tr>
+<tr><td><b>10 – 20</b></td><td>Le muestra <b>su</b> inventario. Que lo vea, lo recorra y reconozca sus lotes.</td></tr>
+<tr><td><b>20 – 35</b></td><td>Practican juntos en «00 — Capacitación»: una visita y una reserva con foto de boleta.</td></tr>
+<tr><td><b>35 – 45</b></td><td>Le entrega el <b>Manual del Vendedor</b> y el <b>Apéndice Técnico</b>. Le deja claro a quién llama: a usted.</td></tr>
+</table>
+
+<p class="nota">Si con una persona toma más de una hora, el problema no es la
+persona: es el teléfono, la señal o el inventario. Anótelo y siga; no se
+quede atascada ahí.</p>
+
+<h3>Las cuatro olas</h3>
+
+<div class="fase">
+<div class="cab">Ola 1</div>
+<h3>Piloto — 2 proyectos</h3>
+<div class="dias">Días 4 y 5 · meta 10 %</div>
+<p>Escoja <b>proyectos que usted mira directamente</b> y que tengan movimiento
+real. Aquí van a salir las dudas que no se ven desde el escritorio: anótelas
+todas, porque son el guion de las olas siguientes.</p>
+<div class="meta">
+<div class="r">Meta medible · Fin del día 5</div>
+<p>☐ 2 proyectos cumplen los <b>cinco criterios de proyecto implementado</b><br>
+☐ Lista escrita de las dudas y tropiezos que salieron<br>
+☐ Al menos <b>un registro real</b> —no de práctica— hecho por un vendedor</p>
+</div>
+</div>
+
+<div class="fase">
+<div class="cab">Ola 2</div>
+<h3>+3 proyectos</h3>
+<div class="dias">Días 6 a 8 · acumulado 25 %</div>
+<p>Siguen siendo proyectos suyos. Ya con el guion corregido por lo aprendido en
+el piloto. A este ritmo va un proyecto por día: alcanza para hacerlo bien.</p>
+<div class="meta">
+<div class="r">Meta medible · Fin del día 8</div>
+<p>☐ 5 proyectos implementados (25 %)<br>
+☐ Los 2 del piloto <b>siguen registrando</b> — que arranquen no basta, tienen
+que sostenerse<br>
+☐ Guion de capacitación ajustado por escrito</p>
+</div>
+</div>
+
+<div class="fase">
+<div class="cab">Ola 3</div>
+<h3>+5 proyectos</h3>
+<div class="dias">Días 9 a 11 · acumulado 50 %</div>
+<p>Aquí empieza a entrar lo que hoy ven sus compañeros. <b>No lo haga sola:</b>
+por cada proyecto nuevo, pida que la acompañe un vendedor de las olas
+anteriores. Explica mejor quien acaba de aprender, y usted deja de ser el
+cuello de botella.</p>
+<div class="meta">
+<div class="r">Meta medible · Fin del día 11</div>
+<p>☐ 10 proyectos implementados (50 %)<br>
+☐ Al menos <b>3 capacitaciones</b> las dio un vendedor ya formado, con usted
+solo supervisando<br>
+☐ Ningún proyecto de olas anteriores lleva más de <b>3 días sin registrar</b></p>
+</div>
+</div>
+
+<div class="fase">
+<div class="cab">Ola 4</div>
+<h3>+10 proyectos — cierre</h3>
+<div class="dias">Días 12 a 15 · acumulado 100 %</div>
+<p>El resto. A este punto el guion está probado y hay vendedores formados
+ayudando. Deje para el final los proyectos con menos movimiento o más lejanos:
+si algo se corre, que sea lo de menor impacto.</p>
+<div class="meta">
+<div class="r">Meta medible · Fin del día 15</div>
+<p>☐ 20 proyectos implementados (100 %)<br>
+☐ <b>Cero</b> usuarios activos sin nombre real, correo y celular<br>
+☐ Todo negocio con abono tiene su <b>boleta adjunta</b><br>
+☐ Acta de cierre entregada a la Gerencia y a la Dirección</p>
+</div>
+</div>
+
+<h2 class="salto">Cuándo un proyecto cuenta como implementado</h2>
+
+<p>No cuenta por haber dado la capacitación. Cuenta cuando se cumplen <b>los
+cinco</b>, y los cinco se verifican dentro de OVI:</p>
+
+<table>
+<tr><th style="width:8%">✓</th><th style="width:46%">Criterio</th><th>Dónde lo comprueba</th></tr>
+<tr><td></td><td><b>1.</b> El inventario está cargado y validado</td><td>Inventario → el proyecto muestra sus lotes</td></tr>
+<tr><td></td><td><b>2.</b> El vendedor entró y cambió su contraseña</td><td>Usuarios → ya no dice contraseña inicial</td></tr>
+<tr><td></td><td><b>3.</b> Tiene OVI instalado en su teléfono</td><td>Se lo confirma usted el día de la sesión</td></tr>
+<tr><td></td><td><b>4.</b> Su usuario tiene nombre real, correo y celular</td><td>Usuarios → ficha completa</td></tr>
+<tr><td></td><td><b>5.</b> Registró al menos un movimiento <b>real</b></td><td>Tablero → actividad reciente</td></tr>
+</table>
+
+<div class="clave">
+<div class="rotulo">El criterio 5 es el único que no se puede fingir</div>
+<p>Una persona puede asistir a la capacitación, asentir con la cabeza y no
+volver a abrir la aplicación. <b>Un registro real en el Tablero no se
+simula.</b> Si un proyecto no llega al criterio 5, no está implementado
+aunque la capacitación se haya dado.</p>
+</div>
+
+<h2>Su semáforo diario</h2>
+
+<p>Cinco minutos cada mañana, desde el <b>Tablero</b>. Usted ve los 20
+proyectos, así que no necesita preguntarle a nadie.</p>
+
+<table class="semaforo">
+<tr><th style="width:16%">Color</th><th style="width:40%">Qué significa</th><th>Qué hace ese mismo día</th></tr>
+<tr><td>🟢 Verde</td><td>Registró en las últimas 24 horas</td><td>Nada. Va bien.</td></tr>
+<tr><td>🟡 Amarillo</td><td>Lleva 2 días sin registrar</td><td>Una llamada corta. Casi siempre es una duda, no resistencia.</td></tr>
+<tr><td>🔴 Rojo</td><td>Lleva 3 días o más sin registrar</td><td>Visita o videollamada. Y avise a la Gerencia.</td></tr>
+</table>
+
+<p class="nota">Un proyecto en rojo dos veces en la misma semana no es un
+problema de capacitación: es un problema de decisión. Escálelo.</p>
+
+<h2>Tablero de control</h2>
+
+<p>Llene esta tabla conforme avanza. Es lo que entrega en el acta de cierre.</p>
+
+<table>
+<tr><th style="width:6%">#</th><th style="width:26%">Proyecto</th><th style="width:12%">Ola</th><th style="width:16%">Fecha sesión</th><th style="width:16%">Inventario listo</th><th>Primer registro real</th></tr>
+<tr><td>1</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>2</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>3</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>4</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>5</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>6</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>7</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>8</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>9</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>10</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>11</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>12</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>13</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>14</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>15</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>16</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>17</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>18</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>19</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>20</td><td></td><td></td><td></td><td></td><td></td></tr>
+</table>
+
+<h2 class="salto">Recomendaciones para que salga bien</h2>
+
+<p>Estas siete no son teoría: son los puntos donde este tipo de implementación
+se cae.</p>
+
+<div class="reco">
+<div class="n">1</div>
+<h3>El cuello de botella es el inventario, no la gente</h3>
+<p>Usted puede capacitar a veinte personas en quince días sin problema. Lo que
+no controla es que lleguen los archivos de los desarrolladores. <b>Persiga esa
+lista desde el día 3</b>, no desde el día que le toca la ola. Un proyecto sin
+inventario no se lanza: se corre a la siguiente ola, y punto.</p>
+</div>
+
+<div class="reco">
+<div class="n">2</div>
+<h3>Empiece el piloto por el vendedor más difícil, no por el más entusiasta</h3>
+<p>Parece al revés, pero no lo es. Con el entusiasta todo sale bien y usted no
+aprende nada; con el difícil salen todas las objeciones de una vez y las
+resuelve cuando todavía tiene tiempo. Además, <b>si el más reacio lo está
+usando, el resto pierde la excusa.</b></p>
+</div>
+
+<div class="reco">
+<div class="n">3</div>
+<h3>Multiplíquese desde la Ola 3</h3>
+<p>Si las veinte capacitaciones las da usted sola, usted es el techo del
+proyecto. Desde la tercera ola, cada vendedor ya formado acompaña a uno nuevo.
+Explica mejor quien acaba de aprender, porque todavía se acuerda de qué le
+costó.</p>
+</div>
+
+<div class="reco">
+<div class="n">4</div>
+<h3>Mida actividad registrada, nunca asistencia</h3>
+<p>«Ya les di la capacitación» no es un avance. El avance es el Tablero. Es la
+diferencia entre creer que la implementación va al 50 % y que vaya de verdad.</p>
+</div>
+
+<div class="reco">
+<div class="n">5</div>
+<h3>Fecha de corte, y sostenerla</h3>
+<p>El error más común es dejar el WhatsApp «por si acaso». Con dos sistemas
+vivos ninguno tiene la verdad y la gente se queda con el más cómodo. Fije con
+la Gerencia una fecha —sugerencia: el <b>día 16</b>— a partir de la cual
+<b>lo que no está en OVI no existe</b>. Comuníquela desde el día 1, no al
+final.</p>
+</div>
+
+<div class="reco">
+<div class="n">6</div>
+<h3>Resuelva el mismo día o pierde la semana</h3>
+<p>Un vendedor que no puede entrar y espera tres días por una contraseña, no
+vuelve a intentar. Durante estos quince días, <b>contraseñas, asignaciones de
+proyecto y liberaciones se atienden el mismo día</b>. Es la parte del encargo
+que no se puede posponer.</p>
+</div>
+
+<div class="reco">
+<div class="n">7</div>
+<h3>Anticipe los tres tropiezos físicos</h3>
+<p><b>Teléfono viejo o sin espacio:</b> OVI pesa poco, pero si no instala, se
+usa desde el navegador — funciona igual, solo hay que escribir la dirección.
+<b>Sin señal en el proyecto:</b> que registre al salir, el mismo día, y que
+nunca registre dos veces sin verificar antes. <b>Sin teléfono propio:</b>
+escálelo de una vez a la Gerencia; no se resuelve con capacitación.</p>
+</div>
+
+<h2>Los límites de su encargo</h2>
+
+<div class="alerta">
+<div class="rotulo">Qué no está en sus manos</div>
+<p><b>UCOES no es suyo.</b> Usted administra usuarios de la fuerza Interna. Los
+vendedores de UCOES los administra su propia Gerencia. Puede coordinar el
+calendario con ellos, pero <b>no puede darles de alta ni restablecerles la
+contraseña</b>. Acuérdelo desde el día 3 o esa ola se traba.</p>
+<p><b>Destinopropiedades.com tampoco.</b> Esa fuerza tiene su propia asistente
+ejecutiva y su propio plan.</p>
+<p><b>Precios e inventario son de la Gerencia.</b> Usted detecta y escala; no
+corrige.</p>
+</div>
+
+<h2>Acta de cierre — día 15</h2>
+
+<p>Entregue a la Gerencia y a la Dirección un documento de una página con:</p>
+<ul>
+<li>El tablero de control lleno: 20 proyectos con sus fechas.</li>
+<li>Cuántos vendedores están registrando, y cuántos no, con nombre.</li>
+<li>Qué proyectos quedaron pendientes y por qué —casi siempre, inventario—.</li>
+<li>Las tres dudas que más se repitieron: eso mejora el guion para el próximo
+que entre.</li>
+<li>Su recomendación de fecha de corte definitiva.</li>
+</ul>
+
+<div class="clave">
+<div class="rotulo">En una frase</div>
+<p>Su trabajo no es dar veinte capacitaciones. Es lograr que <b>veinte
+proyectos aparezcan registrando en el Tablero</b> y sigan haciéndolo la semana
+siguiente. Todo lo demás es medio para eso.</p>
+</div>
+
+</body>
+</html>

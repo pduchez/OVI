@@ -196,6 +196,33 @@ async function renombrarUsuario(viejo: string, nuevo: string, displayName: strin
   });
 }
 
+/**
+ * Renombra un usuario y le devuelve la contraseña inicial, UNA SOLA VEZ: si el
+ * usuario viejo ya no existe (porque el cambio ya ocurrió), no hace nada. Así
+ * un despliegue posterior no le vuelve a borrar la contraseña que la persona
+ * haya escogido.
+ */
+async function renombrarConClaveInicial(viejo: string, nuevo: string) {
+  const u = await prisma.user.findFirst({
+    where: { username: { equals: viejo, mode: "insensitive" } },
+  });
+  if (!u) return;
+  const ocupado = await prisma.user.findFirst({
+    where: { username: { equals: nuevo, mode: "insensitive" } },
+  });
+  if (ocupado) return;
+  await prisma.user.update({
+    where: { id: u.id },
+    data: {
+      username: nuevo,
+      passwordHash: hashPassword("password"),
+      mustChangePassword: true,
+      // El cambio de contraseña cierra cualquier sesión abierta anterior.
+      sessionEpoch: { increment: 1 },
+    },
+  });
+}
+
 /** Retira un cupo que sobra: se borra si nunca se usó; si no, se desactiva. */
 async function retirarCupo(username: string) {
   const u = await prisma.user.findFirst({
@@ -223,7 +250,11 @@ export async function ensureOrgUsers(): Promise<void> {
 
   // --- Capa de mando por fuerza ---
   const gInterna = await upsertUser({ username: "gerente_interna", role: "gerente", displayName: "Gerente de Ventas — Interna", fuerza: "interna", supervisorId: dir1?.id });
-  const aInterna = await upsertUser({ username: "asist_interna", role: "asistente", displayName: "Asistente Ejecutiva — Interna", fuerza: "interna", supervisorId: gInterna });
+  // La asistente ejecutiva de la fuerza Interna usa su nombre como usuario.
+  // Se renombra conservando rol, permisos, historial y jerarquía: lo único que
+  // cambia es cómo se identifica al entrar.
+  await renombrarConClaveInicial("asist_interna", "pamela");
+  const aInterna = await upsertUser({ username: "pamela", role: "asistente", displayName: "Asistente Ejecutiva — Interna", fuerza: "interna", supervisorId: gInterna });
   const gUcoes = await upsertUser({ username: "gerente_ucoes", role: "gerente", displayName: "Gerente de Ventas — UCOES", fuerza: "ucoes", supervisorId: dir1?.id });
   const aUcoes = await upsertUser({ username: "asist_ucoes", role: "asistente", displayName: "Asistente Ejecutiva — UCOES", fuerza: "ucoes", supervisorId: gUcoes });
   const aDp = await upsertUser({ username: "asist_dp", role: "asistente", displayName: "Asistente Ejecutiva — Destinopropiedades.com", fuerza: "destino", supervisorId: dir2?.id });

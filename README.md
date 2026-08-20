@@ -185,6 +185,7 @@ En [`docs/guias/`](./docs/guias) hay tres guías en PDF, con su fuente en HTML:
 | Archivo | Contenido |
 |---|---|
 | `OVI-plan-implementacion-coordinacion.pdf` | Cascada en 4 fases y 15 días, de la coordinación a los 20 proyectos, con metas medibles por fase (10 % → 25 % → 50 % → 100 %), criterio verificable de «proyecto implementado», semáforo diario y tablero de control. |
+| `OVI-Nuevo-San-Vicente.pdf` | **Piloto.** Manual personalizado para las tres asesoras del proyecto: instalación, primer ingreso, carga del inventario y día a día. Lenguaje llano, paso a paso. |
 
 Para regenerarlas después de editar el HTML: `npm run guias`.
 

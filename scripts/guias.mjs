@@ -24,6 +24,7 @@ const GUIAS = [
   { fuente: "9-impl-vendedor-dp", salida: "OVI-implementacion-vendedores-destinopropiedades" },
   { fuente: "10-apendice-tecnico", salida: "OVI-apendice-tecnico" },
   { fuente: "11-plan-implementacion-coordinacion", salida: "OVI-plan-implementacion-coordinacion" },
+  { fuente: "12-piloto-nuevo-san-vicente", salida: "OVI-Nuevo-San-Vicente" },
 ];
 
 let chromium;

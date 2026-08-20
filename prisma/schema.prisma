@@ -43,6 +43,12 @@ model User {
   // desactivar al usuario: invalida AL INSTANTE todas las sesiones abiertas,
   // incluida la de un atacante que ya tuviera la cookie.
   sessionEpoch Int      @default(0)
+  // MODO PILOTO — temporal. A un vendedor con este marcador se le levantan los
+  // frenos DENTRO DE SU PROYECTO: puede cargar el inventario, marcar y liberar
+  // lotes y hacerlo sin adjuntar boleta. Sirve para arrancar una implementación
+  // sin fricción; se apaga usuario por usuario cuando el equipo ya opera solo.
+  // No amplía a qué proyectos llega: solo qué puede hacer en el suyo.
+  modoPiloto   Boolean  @default(false)
   // Jerarquía: superior directo (para trazabilidad).
   supervisorId String?
   supervisor   User?    @relation("Supervisa", fields: [supervisorId], references: [id])

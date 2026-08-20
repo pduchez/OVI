@@ -110,11 +110,17 @@ export async function getScope(user: SessionUser): Promise<Scope> {
     select: { projectId: true },
   });
   const projectIds = assignments.map((a) => a.projectId);
+  // MODO PILOTO: mientras se implementa, al vendedor se le levantan los frenos
+  // DENTRO DE SU PROYECTO — carga su propio inventario, y bloquea y desbloquea
+  // lotes sin tener que adjuntar boleta. No le abre otros proyectos: el alcance
+  // sigue siendo el suyo. Se apaga por usuario cuando el equipo ya opera solo.
+  const piloto = user.modoPiloto === true;
   return {
     projectIds, inventoryProjectIds: projectIds, fuerza: "interna", excludeDestino: true,
-    canRegister: true, canAdmin: false, canManageInventory: false,
+    canRegister: true, canAdmin: false,
+    canManageInventory: piloto,
     canViewInventory: projectIds.length > 0, canSetLoteEstado: true,
-    canLiberarLote: false, requiereBoleta: true,
+    canLiberarLote: piloto, requiereBoleta: !piloto,
     canManageUsers: false, manageFuerza: null, fuerzaFija: "interna",
     isDirector: false, isGerente: false, isAsistente: false, isVendedor: true, isDP: false,
   };

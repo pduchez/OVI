@@ -24,6 +24,8 @@ export interface SessionUser {
   role: string;
   fuerza: string; // interna | ucoes | destino | ambas
   mustChangePassword: boolean;
+  /** Modo piloto: frenos levantados dentro de su propio proyecto. */
+  modoPiloto: boolean;
 }
 
 // --- Hash de contraseñas -------------------------------------------------
@@ -215,6 +217,7 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
     role: user.role,
     fuerza: user.fuerza,
     mustChangePassword: user.mustChangePassword,
+    modoPiloto: user.modoPiloto,
   };
 }
 

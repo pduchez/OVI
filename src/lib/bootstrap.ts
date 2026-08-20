@@ -43,6 +43,24 @@ export const SEED_PROJECTS = [
   { codigo: "GIC-20", nombre: "Condado Villa Lourdes", departamento: "La Libertad", municipio: "Lourdes, Colón", fuerza: "ambas", totalLotes: 0, precioDesde: 0 },
 ];
 
+/**
+ * PILOTO — Nuevo San Vicente. Las asesoras del proyecto arrancan con los
+ * frenos levantados (`modoPiloto`): cargan su propio inventario y bloquean y
+ * desbloquean lotes sin adjuntar boleta, para que la implementación no se
+ * trabe. Cuando el equipo ya opere solo, se apaga el marcador desde el panel
+ * de Usuarios, una por una, y quedan con las reglas normales.
+ */
+export const PILOTO = {
+  codigoProyecto: "GIC-06", // Nuevo San Vicente
+  /** Cupo genérico del proyecto: sobra al haber personas con nombre propio. */
+  cupoGenerico: "ventasNuevosanvicente",
+  asesoras: [
+    { username: "liz", displayName: "Liz" },
+    { username: "clarita", displayName: "Clarita" },
+    { username: "gaby", displayName: "Gaby" },
+  ],
+};
+
 export const SEED_VENDEDORES = [
   { nombre: "Ana Martínez", fuerza: "interna" },
   { nombre: "Carlos Rivas", fuerza: "interna" },
@@ -114,7 +132,7 @@ export async function ensureBootstrap(): Promise<void> {
 // ---------------------------------------------------------------
 async function upsertUser(u: {
   username: string; role: string; displayName: string; fuerza: string;
-  supervisorId?: string | null;
+  supervisorId?: string | null; modoPiloto?: boolean;
 }): Promise<string> {
   const ex = await prisma.user.findFirst({
     where: { username: { equals: u.username, mode: "insensitive" } },
@@ -129,6 +147,7 @@ async function upsertUser(u: {
       supervisorId: u.supervisorId || null,
       passwordHash: hashPassword("password"),
       mustChangePassword: true,
+      modoPiloto: u.modoPiloto === true,
     },
   });
   return created.id;
@@ -251,5 +270,33 @@ export async function ensureOrgUsers(): Promise<void> {
     await renombrarUsuario(`v_dp_${pad(i)}`, `vdp${i}`, nombre);
     const uid = await upsertUser({ username: `vdp${i}`, role: "vendedor", displayName: nombre, fuerza: "destino", supervisorId: aDp });
     await prisma.projectAssignment.deleteMany({ where: { userId: uid } });
+  }
+
+  // --- PILOTO: las asesoras de Nuevo San Vicente -------------------------
+  const proyPiloto = projects.find((p) => p.codigo === PILOTO.codigoProyecto);
+  if (proyPiloto) {
+    for (const a of PILOTO.asesoras) {
+      const uid = await upsertUser({
+        username: a.username,
+        role: "vendedor",
+        displayName: a.displayName,
+        fuerza: "interna",
+        supervisorId: aInterna,
+        modoPiloto: true,
+      });
+      // El marcador se re-afirma en cada arranque solo si nadie lo apagó a
+      // mano: `upsertUser` no toca a los usuarios que ya existen, así que
+      // apagarlo desde el panel de Usuarios es definitivo.
+      if ((await prisma.projectAssignment.count({ where: { userId: uid } })) === 0) {
+        await prisma.projectAssignment.create({
+          data: { userId: uid, projectId: proyPiloto.id },
+        });
+      }
+    }
+    // El cupo genérico del proyecto sobra: ya hay tres personas con nombre.
+    await prisma.user.updateMany({
+      where: { username: { equals: PILOTO.cupoGenerico, mode: "insensitive" }, activo: true },
+      data: { activo: false },
+    });
   }
 }

@@ -5,6 +5,19 @@ Necesita solo dos cosas: un runtime **Node** y una base **PostgreSQL** propia.
 
 ---
 
+## Dirección en producción
+
+**https://ovi-eta.vercel.app/**
+
+Es la que se reparte al equipo y la que va en los manuales. La asigna Vercel al
+proyecto y es estable: no cambia con cada despliegue.
+
+No repartir las direcciones largas de un despliegue puntual
+(`ovi-<hash>-....vercel.app`, `ovi-git-main-....vercel.app`): quedan
+congeladas en una versión vieja o dejan de servir en el siguiente deploy.
+
+---
+
 ## Opción A — Vercel + Neon/Supabase (rápida, recomendada para empezar)
 
 1. **Base de datos (nueva y exclusiva de OVI):**

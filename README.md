@@ -137,6 +137,8 @@ instante qué corregir. Casos conocidos:
 
 ## Aplicación en el celular
 
+**Dirección en producción: https://ovi-eta.vercel.app/**
+
 OVI se instala en el teléfono como una aplicación (PWA): al abrirla desde el
 navegador aparece **“Instalar OVI”**; en iPhone, con “Compartir → Agregar a
 inicio”. Queda con su ícono, a pantalla completa y sin barra del navegador.

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { requireUser } from "@/lib/auth";
 import { ROLE_LABEL, fuerzaCorta } from "@/lib/constants";
 import { PageHeader } from "@/components/ui";
@@ -54,6 +55,12 @@ export default async function CuentaPage({
           </Field>
         </ActionForm>
       </div>
+
+      <p className="mt-4 text-center text-sm">
+        <Link href="/ayuda" className="font-semibold text-ovi-primary underline">
+          Cómo instalar OVI en el teléfono o la computadora
+        </Link>
+      </p>
     </div>
   );
 }

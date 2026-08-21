@@ -1,4 +1,5 @@
 {
+  "id": "/",
   "name": "OVI — Grupo Inmobiliario Chacón",
   "short_name": "OVI",
   "description": "Central de ventas de lotes del Grupo Inmobiliario Chacón.",
@@ -7,16 +8,14 @@
   "start_url": "/?fuente=app",
   "scope": "/",
   "display": "standalone",
-  "orientation": "portrait",
+  "display_override": ["standalone", "minimal-ui", "browser"],
   "background_color": "#ffffff",
   "theme_color": "#243372",
+  "prefer_related_applications": false,
+  "categories": ["business", "productivity"],
   "icons": [
     { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
     { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
     { "src": "/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
-  ],
-  "shortcuts": [
-    { "name": "Registrar", "short_name": "Registrar", "url": "/registrar" },
-    { "name": "Inventario", "short_name": "Inventario", "url": "/inventario" }
   ]
 }

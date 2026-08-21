@@ -15,6 +15,12 @@ export const metadata: Metadata = {
     title: "OVI",
     statusBarStyle: "default",
   },
+  // Next 16 emite el nombre moderno (`mobile-web-app-capable`), que Safari
+  // entiende desde iOS 15.4. En los iPhone más viejos que siguen en la calle
+  // solo vale el nombre antiguo, así que se emite también: sin él, la app se
+  // abriría dentro de Safari con la barra de direcciones en vez de a pantalla
+  // completa.
+  other: { "apple-mobile-web-app-capable": "yes" },
   icons: {
     icon: [
       { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
@@ -24,10 +30,26 @@ export const metadata: Metadata = {
   },
 };
 
+/**
+ * Toda la aplicación se renderiza por petición.
+ *
+ * No es una preferencia: la CSP de `src/middleware.ts` usa un NONCE distinto en
+ * cada petición, y Next solo puede estampar ese nonce en sus <script> mientras
+ * está renderizando esa petición. Una página pregenerada en el build llevaría
+ * el nonce de otro momento —o ninguno—, así que el navegador bloquearía TODOS
+ * sus scripts y la página quedaría sin JavaScript: sin botón de instalar, sin
+ * Service Worker y sin formularios que respondan. Al declararlo aquí, en la
+ * raíz, queda cubierta también cualquier página que se agregue después.
+ */
+export const dynamic = "force-dynamic";
+
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
+  // Se permite acercar con los dedos: mucha gente en campo necesita agrandar
+  // la letra, y bloquear el zoom la dejaría sin poder leer el inventario.
+  maximumScale: 5,
+  userScalable: true,
   themeColor: "#243372",
   // Que el contenido no quede debajo del notch ni de la barra de gestos.
   viewportFit: "cover",

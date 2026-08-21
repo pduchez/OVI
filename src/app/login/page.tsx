@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useFormState, useFormStatus } from "react-dom";
 import { loginAction } from "./actions";
 
@@ -68,7 +69,12 @@ export default function LoginPage() {
           ) : null}
           <SubmitBtn />
         </form>
-        <p className="mt-4 text-center text-xs text-slate-400">
+        <p className="mt-4 text-center text-sm">
+          <Link href="/ayuda" className="font-semibold text-white/90 underline">
+            ¿Cómo instalo OVI en mi teléfono?
+          </Link>
+        </p>
+        <p className="mt-2 text-center text-xs text-slate-400">
           Acceso restringido · OVI v0.1
         </p>
       </div>

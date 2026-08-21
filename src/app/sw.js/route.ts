@@ -108,7 +108,9 @@ self.addEventListener("fetch", (e) => {
         "<p>OVI necesita internet para mostrarte información al día.</p>" +
         "<p style='color:#64748b;font-size:.9rem'>No se muestran datos guardados: " +
         "un lote que aparezca disponible sin serlo causaría una doble venta.</p>" +
-        "<p><a href='' onclick='location.reload();return false' " +
+        // Sin onclick: un manejador en línea lo bloquearía la CSP. Un enlace
+        // con href vacío ya recarga la misma dirección.
+        "<p><a href='' " +
         "style=\\"display:inline-block;margin-top:1rem;background:#243372;color:#fff;" +
         "padding:.8rem 1.5rem;border-radius:.5rem;text-decoration:none\\">Reintentar</a></p>",
         { headers: { "Content-Type": "text/html; charset=utf-8" }, status: 503 }

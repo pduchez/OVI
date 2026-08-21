@@ -1,16 +1,21 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
+// Atrapa la oferta de instalación del navegador, que llega antes de que monte
+// cualquier componente. Quien la usa es <InstalarOVI/>, ya dentro de la sesión.
+import "@/lib/instalar";
 
 /**
  * Convierte OVI en una aplicación instalable en el celular y la mantiene al día.
  *
- * Tres cosas:
+ * Dos cosas:
  *  1. Registra el Service Worker (permite instalarla y que abra rápido).
- *  2. Ofrece el botón "Instalar OVI" cuando el navegador lo permite.
- *  3. Revisa si hay versión nueva cada día a las 8:00 de la mañana, hora de
+ *  2. Revisa si hay versión nueva cada día a las 8:00 de la mañana, hora de
  *     El Salvador, y la aplica sola. Así todos los usuarios corren la misma
  *     versión sin que nadie tenga que hacer nada.
+ *
+ * El aviso para instalar NO vive aquí: aparece solo al entrar, y lo dibuja
+ * <InstalarOVI/> con los pasos del equipo desde el que entró la persona.
  *
  * Importante: esto NO afecta los datos, que siempre se leen en vivo del
  * servidor. Lo que se sincroniza a las 8 AM es la aplicación misma.
@@ -49,9 +54,6 @@ export function faltaParaCorte(ahora = new Date()): number {
 }
 
 export default function AppMovil() {
-  const [instalable, setInstalable] = useState<Event | null>(null);
-  const [oculto, setOculto] = useState(true);
-
   useEffect(() => {
     if (typeof window === "undefined" || !("serviceWorker" in navigator)) return;
     let cancelado = false;
@@ -126,66 +128,13 @@ export default function AppMovil() {
       /* si el navegador no lo permite, la app sigue funcionando igual */
     });
 
-    // Oferta de instalación de Android/Chrome.
-    const alInstalable = (e: Event) => {
-      e.preventDefault();
-      setInstalable(e);
-      try {
-        setOculto(localStorage.getItem("ovi-instalar-oculto") === "1");
-      } catch {
-        setOculto(false);
-      }
-    };
-    window.addEventListener("beforeinstallprompt", alInstalable);
-
     return () => {
       cancelado = true;
       if (temporizador) clearTimeout(temporizador);
       if (alVolver) document.removeEventListener("visibilitychange", alVolver);
-      window.removeEventListener("beforeinstallprompt", alInstalable);
     };
   }, []);
 
-  if (!instalable || oculto) return null;
-
-  return (
-    <div className="no-print fixed inset-x-3 bottom-3 z-50 flex items-center gap-3 rounded-xl bg-ovi-primary px-4 py-3 text-white shadow-lg sm:left-auto sm:right-4 sm:w-96">
-      <div className="min-w-0 flex-1">
-        <div className="font-bold">Instalar OVI</div>
-        <div className="text-sm text-white/80">
-          Queda como una aplicación en tu teléfono.
-        </div>
-      </div>
-      <button
-        type="button"
-        className="shrink-0 rounded-lg bg-white px-3 py-2 text-sm font-bold text-ovi-primary"
-        onClick={async () => {
-          const p = instalable as Event & {
-            prompt: () => Promise<void>;
-            userChoice: Promise<{ outcome: string }>;
-          };
-          await p.prompt();
-          await p.userChoice.catch(() => null);
-          setInstalable(null);
-        }}
-      >
-        Instalar
-      </button>
-      <button
-        type="button"
-        aria-label="Ahora no"
-        className="shrink-0 px-1 text-xl leading-none text-white/70"
-        onClick={() => {
-          setOculto(true);
-          try {
-            localStorage.setItem("ovi-instalar-oculto", "1");
-          } catch {
-            /* sin localStorage: solo se oculta en esta sesión */
-          }
-        }}
-      >
-        ×
-      </button>
-    </div>
-  );
+  // No dibuja nada: solo mantiene la aplicación al día.
+  return null;
 }

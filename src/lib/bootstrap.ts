@@ -42,6 +42,10 @@ export const SEED_PROJECTS = [
   { codigo: "GIC-18", nombre: "Panamerican City", departamento: "Usulután", municipio: "Usulután", fuerza: "ambas", totalLotes: 0, precioDesde: 0 },
   { codigo: "GIC-19", nombre: "Condado El Triunfo", departamento: "Usulután", municipio: "Jiquilisco", fuerza: "ambas", totalLotes: 0, precioDesde: 0 },
   { codigo: "GIC-20", nombre: "Condado Villa Lourdes", departamento: "La Libertad", municipio: "Lourdes, Colón", fuerza: "ambas", totalLotes: 0, precioDesde: 0 },
+  // Alta pedida por Gerencia. Departamento y municipio quedan en blanco a
+  // propósito: no se dieron, e inventarlos sería peor que dejarlos vacíos
+  // para que Dirección los complete desde Administración → Proyectos.
+  { codigo: "GIC-21", nombre: "Altos de Las Mercedes", departamento: "", municipio: "", fuerza: "ambas", totalLotes: 0, precioDesde: 0 },
 ];
 
 /**
@@ -79,6 +83,11 @@ export const PILOTOS = [
     codigos: ["GIC-19"], // Condado El Triunfo
     cupos: ["ventasCondadoeltriunfo"],
     asesoras: [{ username: "luci", displayName: "Luci" }],
+  },
+  {
+    codigos: ["GIC-21"], // Altos de Las Mercedes
+    cupos: ["ventasAltosdelasmercedes"],
+    asesoras: [{ username: "dalila", displayName: "Dalila" }],
   },
   {
     // Santiago City y Cumbres de Santiago son ETAPAS del mismo proyecto, no
@@ -120,8 +129,15 @@ export async function ensureBootstrap(): Promise<void> {
   // Asegura que los proyectos OFICIALES existan (crea los que falten por
   // código; no sobreescribe ediciones del director en los existentes).
   for (const p of SEED_PROJECTS) {
-    const ex = await prisma.project.findUnique({ where: { codigo: p.codigo } });
-    if (!ex) await prisma.project.create({ data: { ...p, estado: "activo" } });
+    const porCodigo = await prisma.project.findUnique({ where: { codigo: p.codigo } });
+    if (porCodigo) continue;
+    // Puede que Dirección ya lo haya dado de alta a mano con otro código: en
+    // ese caso NO se crea un segundo, que dejaría el inventario partido en dos.
+    const porNombre = await prisma.project.findFirst({
+      where: { nombre: { equals: p.nombre, mode: "insensitive" } },
+    });
+    if (porNombre) continue;
+    await prisma.project.create({ data: { ...p, estado: "activo" } });
   }
   // Limpia placeholders antiguos (código CHA-*) que no tengan datos operativos.
   const legacy = await prisma.project.findMany({
@@ -440,8 +456,17 @@ export async function ensureOrgUsers(): Promise<void> {
 
   // --- PILOTOS: la gente de los proyectos que van primero ----------------
   for (const piloto of PILOTOS) {
+    // Por código, y si no aparece, por el nombre del catálogo: si Dirección
+    // creó el proyecto a mano con otro código, la asesora igual queda asignada.
     const proyectos = piloto.codigos
-      .map((c) => projects.find((p) => p.codigo === c))
+      .map((c) => {
+        const porCodigo = projects.find((p) => p.codigo === c);
+        if (porCodigo) return porCodigo;
+        const nombre = SEED_PROJECTS.find((p) => p.codigo === c)?.nombre;
+        return nombre
+          ? projects.find((p) => p.nombre.toLowerCase() === nombre.toLowerCase())
+          : undefined;
+      })
       .filter((p): p is NonNullable<typeof p> => Boolean(p));
     if (!proyectos.length) continue;
 

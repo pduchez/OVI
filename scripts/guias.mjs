@@ -30,6 +30,7 @@ const GUIAS = [
   { fuente: "15-condado-el-triunfo", salida: "OVI-Condado-El-Triunfo" },
   { fuente: "16-guia-sencilla", salida: "OVI-guia-sencilla" },
   { fuente: "17-santiago", salida: "OVI-Santiago" },
+  { fuente: "18-altos-de-las-mercedes", salida: "OVI-Altos-de-Las-Mercedes" },
 ];
 
 let chromium;

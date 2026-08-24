@@ -258,11 +258,19 @@ export async function actividadReciente(scope: Scope, limit = 25) {
  * - aldia      → reportó en las últimas 48 h.
  * - atrasado   → reportaba, y lleva 2 a 7 días sin hacerlo.
  * - frio       → reportaba, y lleva más de una semana callado. ESTA es la alerta.
- * - siniciar   → nunca ha reportado nada. No es un descuido: es un proyecto que
- *                todavía no entra a OVI, y pintarlo de rojo sería ruido que
- *                tapa las alertas de verdad.
+ * - entrosinreportar → su gente YA ENTRÓ a OVI pero todavía no registra nada.
+ *                Es el estado propio de la implantación: no hay que ir a
+ *                buscarlos, hay que acompañarlos. Por eso va aparte, y en azul.
+ * - siniciar   → nadie de ese proyecto ha entrado nunca. No es un descuido: es
+ *                un proyecto que todavía no arranca, y pintarlo de rojo sería
+ *                ruido que tapa las alertas de verdad.
  */
-export type PulsoEstado = "aldia" | "atrasado" | "frio" | "siniciar";
+export type PulsoEstado =
+  | "aldia"
+  | "atrasado"
+  | "frio"
+  | "entrosinreportar"
+  | "siniciar";
 
 export interface PulsoProyecto {
   id: string;
@@ -270,6 +278,8 @@ export interface PulsoProyecto {
   nombre: string;
   /** Último movimiento registrado, o null si nunca hubo. */
   ultimo: Date | null;
+  /** Último ingreso de alguien de su equipo, o null si nadie ha entrado. */
+  ultimoIngreso: Date | null;
   /** Días completos desde ese movimiento; null si nunca hubo. */
   dias: number | null;
   estado: PulsoEstado;
@@ -297,7 +307,13 @@ export async function pulsoProyectos(scope: Scope): Promise<PulsoProyecto[]> {
 
   const proyectos = await prisma.project.findMany({
     where,
-    select: { id: true, codigo: true, nombre: true },
+    select: {
+      id: true,
+      codigo: true,
+      nombre: true,
+      // Para saber si su gente ya entró, aunque todavía no registre nada.
+      assignments: { select: { user: { select: { ultimoIngreso: true } } } },
+    },
   });
   if (!proyectos.length) return [];
   const ids = proyectos.map((p) => p.id);
@@ -325,21 +341,35 @@ export async function pulsoProyectos(scope: Scope): Promise<PulsoProyecto[]> {
   }
 
   const ahora = Date.now();
-  const filas = proyectos.map((p) => {
+  const filas = proyectos.map(({ assignments, ...p }) => {
+    // El ingreso más reciente de cualquiera de su equipo.
+    let ultimoIngreso: Date | null = null;
+    for (const a of assignments) {
+      const i = a.user.ultimoIngreso;
+      if (i && (!ultimoIngreso || i > ultimoIngreso)) ultimoIngreso = i;
+    }
+
     const ultimo = ultimoPor.get(p.id) || null;
     if (!ultimo) {
-      return { ...p, ultimo: null, dias: null, estado: "siniciar" as PulsoEstado };
+      // Sin movimientos: la diferencia está en si su gente ya entró o no.
+      return {
+        ...p,
+        ultimo: null,
+        ultimoIngreso,
+        dias: null,
+        estado: (ultimoIngreso ? "entrosinreportar" : "siniciar") as PulsoEstado,
+      };
     }
     const horas = (ahora - ultimo.getTime()) / 3600000;
     const dias = Math.floor(horas / 24);
     const estado: PulsoEstado =
       horas < AL_DIA_H ? "aldia" : dias < FRIO_D ? "atrasado" : "frio";
-    return { ...p, ultimo, dias, estado };
+    return { ...p, ultimo, ultimoIngreso, dias, estado };
   });
 
   // Arriba lo que hay que ir a mover HOY: el que dejó de reportar, luego el
   // atrasado. Los que aún no arrancan van al final: no son un descuido.
-  const peso = { frio: 0, atrasado: 1, siniciar: 2, aldia: 3 };
+  const peso = { frio: 0, atrasado: 1, entrosinreportar: 2, siniciar: 3, aldia: 4 };
   return filas.sort((a, b) => {
     if (peso[a.estado] !== peso[b.estado]) return peso[a.estado] - peso[b.estado];
     if (a.dias === null || b.dias === null) return a.nombre.localeCompare(b.nombre);

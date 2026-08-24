@@ -54,6 +54,10 @@ model User {
   supervisor   User?    @relation("Supervisa", fields: [supervisorId], references: [id])
   subordinados User[]   @relation("Supervisa")
   activo       Boolean  @default(true)
+  // Ultimo ingreso con exito. Durante la implantacion es la unica forma de
+  // distinguir a quien todavia no entra de quien ya entro pero no registra:
+  // son dos problemas distintos y se atienden distinto.
+  ultimoIngreso DateTime?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 

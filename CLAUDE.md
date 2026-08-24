@@ -4,6 +4,26 @@ Plataforma central de administración de ventas de lotes del **Grupo Inmobiliari
 Chacón**. Estas son las reglas que rigen el proyecto. No son sugerencias: cuando
 una decisión técnica choque con una de ellas, manda la regla.
 
+## Cómo se trabaja aquí — antes que cualquier regla técnica
+
+**Una instrucción se ejecuta hasta el final y llega a producción.** No se entrega
+a medias, no se deja «listo para integrar», no se espera una confirmación que no
+se pidió. Terminar significa: hecho, verificado, integrado a `main` y desplegado.
+
+Nada de esto es un ensayo **salvo que la instrucción diga explícitamente que lo
+es**. Si dice «probá», «hagamos una prueba» o «no lo subás todavía», ahí sí se
+para; en cualquier otro caso, se lleva hasta el final.
+
+**Si algo de la instrucción quedó sin responder, hay que volver a preguntarlo.**
+Un cabo suelto no autoriza a detenerse ni a inventar la respuesta: se hace todo
+lo que no dependa de esa duda, se pregunta lo que sí, y se retoma.
+
+> Esto se escribió porque pasó dos veces: seis usuarias con su contraseña «que no
+> servía», y el registro de ingresos «que no funcionaba». Las dos veces el
+> trabajo estaba hecho y verificado, y las dos veces estaba **apagado en un PR
+> sin integrar**. Un cambio que no llegó a producción no está hecho: para quien
+> lo necesita, es idéntico a no haberlo hecho nunca.
+
 ## Independencia
 
 OVI es un proyecto **separado** de `destinopropiedades` y de `finca el salto`.

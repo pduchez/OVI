@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>OVI — Guía sencilla</title>
+<link rel="stylesheet" href="_marca.css">
+<style>
+  /* Letra grande y pocas palabras: esta guía es para leerse de un vistazo,
+     de pie y con el teléfono en la mano. */
+  body { font-size: 13pt; line-height: 1.5; }
+  p { margin: 0 0 3mm; }
+
+  /* La portada y el índice tienen que caber JUNTOS en la primera página: si
+     el índice se parte, la persona pierde de vista el camino completo. */
+  .portada { padding: 7mm 0 5mm; margin-bottom: 6mm; }
+  .portada img { width: 24mm; }
+  .portada .app { font-size: 30pt; }
+  .portada .lema { margin-bottom: 4mm; }
+
+  .etapa { page-break-before: always; }
+  .etapa:first-of-type { page-break-before: avoid; }
+
+  .cabeza { border-bottom: 2.5pt solid var(--verde); padding-bottom: 2mm;
+    margin-bottom: 5mm; page-break-after: avoid; }
+  .cabeza .num { font-size: 9pt; font-weight: bold; letter-spacing: 2pt;
+    text-transform: uppercase; color: var(--verde); }
+  .cabeza h2 { font-size: 22pt; color: var(--azul); margin: 0; border: none;
+    padding: 0; line-height: 1.1; }
+  .cabeza .para { font-size: 11pt; color: var(--gris); margin-top: 1.5mm; }
+
+  .p { margin: 0 0 5mm; padding-left: 14mm; position: relative;
+    page-break-inside: avoid; font-size: 14pt; }
+  .p .n { position: absolute; left: 0; top: -0.5mm; width: 10mm; height: 10mm;
+    background: var(--azul); color: #fff; font-weight: bold; font-size: 13pt;
+    text-align: center; line-height: 10mm; border-radius: 50%; }
+
+  .btn { display: inline-block; background: var(--azul); color: #fff;
+    padding: 0.6mm 2.5mm; border-radius: 1.5mm; font-size: 12pt;
+    font-weight: bold; white-space: nowrap; }
+  .menu { display: inline-block; background: var(--suave); color: var(--azul);
+    padding: 0.6mm 2.5mm; border-radius: 1.5mm; font-size: 12pt;
+    font-weight: bold; border: 0.5pt solid #c7d0e8; white-space: nowrap; }
+
+  .listo { border: 1.2pt solid var(--verde); background: #f7fae9;
+    padding: 4mm 5mm; margin-top: 7mm; page-break-inside: avoid; }
+  .listo .t { font-size: 15pt; font-weight: bold; color: var(--azul); }
+  .listo .s { font-size: 11pt; color: var(--gris); margin-top: 1mm; }
+
+  .ojo { background: #fef6ee; border-left: 3pt solid var(--cafe);
+    padding: 3mm 4mm; margin: 4mm 0; font-size: 12pt; page-break-inside: avoid; }
+  .ojo b { color: var(--cafe); }
+
+  .mapa { margin: 5mm 0 0; }
+  .mapa div { padding: 2mm 0; border-bottom: 0.5pt solid #cbd5e1;
+    font-size: 12.5pt; }
+  .mapa .e { display: inline-block; width: 22mm; font-weight: bold;
+    color: var(--verde); }
+  table { font-size: 12pt; }
+  td, th { padding: 3mm 3mm; }
+</style>
+</head>
+<body>
+
+<div class="portada">
+  <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMEAAADECAMAAAARUbUdAAAAwFBMVEX////4+uD0+Nnv9M7p7sLr6cnf5qng3bLT3IzM1n7F0mi/0DS+0DC/z0K+zzS9zzO/zzK+zzK8zzK/zzC9zy+7zzDAzlO9zja+zjS+zjO9zjO7zjO9zjK/zjG+zjG9zjG7zjG9zi/AzFi8zD++zTa7zTe+zTO8zTK8zTC7zTDHyG27ykq8yzm7yTy+lYaZXEWaRCKSRymaQyKaQyCaQx+YQyGUQyKaQiCZQiGZQh+ZQh6YQiCYQSCXQiCUQSEAAACKM7BrAAAaiElEQVR42u2dCXeiSNeAx31BQY0CAgOyQwOJiV+cGGPe//+vvnurUHaiduwx50zNnO6eniTyeJe6W5V//fXf+m/9t265Gq12F1a73Wr+yOdvdfu/hgas4XDQ77Z+2uM3u/0hH5imGVpWGJoBP+y3fxRAuz8MTFuWJVlWFEVVRDsKhv2fI4dGd8Dj8ydLlFzb5AftH6NBw7G9Wq0UxfM8+H01m4EgJDkMht2fAdA3THmxWOj6AyxtBmulaRowCOaw2/gJKkQB5gig6/P5XDsuSY5+ghS6Q3OGAITgIU3gaRwg3L0ttAYBkUBM8DAajaawKAPHycGgee9GwEeUYJQhQAT8TTaN3p1vBMNIljWQADy5Os0tYABrvnOf2g9seTaiq0iAHsk2uvctglBmtdLHj41hJZt3bQld3mXFadWiBOFdu6NB4LLKFwR3rUatoclKXxIE/ftVo7YRcu7XBIP7DVLbvL3wviQwh/dL0ONt3//ZBIHteyz7gwlAi/zpzyYwQo390QTgTS1RZFmuBkG07jk8bQyC0MoSMMmKCWy+f8eJWh8JxFoC6b5Du+4wyhGkF6ugDO47TWsNTLuOABCsew4qiBrVyUCSNCW87/wAEgRT8LnZrOT5l+JEFFXnzkVAai3srJRgslyKjhbefbGi2Q+EUhlMJqojOu5du9JYjwaBkCJQYZFKC/zuOKE5+AHlXzCFHIGu65QgDH5G8bfLmzZxRxOyVCw9alNFEaNg+DOq143uMBhbjjrBjZgweJ7HMkJk3HMXJGOeDWyAhK4KD/+3qpDl2CY/7CZ+tHFX9tyg/b60m292B8Y4tCzLUUSGsawQWzjt01OTDmH7bvaFJihNUGiUtbCRZobYRjPNsfGrnwigAXhBYBj3YtWtgRG5omWZeT/TbHf7g8FgOBj0++k3HM3EJO3B+2gmwA5mC5LEiha4yk7h/7ZgNRu5+DUwBcl15XB8F66pa9jg60Vc1ln7bQuyIEFwfc91hXvY3xogAiBYihAweIUEGJv67XY7I4QubyOADh7Wu4cgCRICUVMnS8dxNM82OllD6A+GxnA4HKQ6+s2+KTOsTwlsvnsPBJIaE0DonyZowaYQkQWO6tTDhG/gGE8nAJ4d9O+BADZfQuCwGYL2gI9C8FGi40i2edrNUAZyLAIg6N6DKxJVyFzgOR0mbQdgsLYtiCLHrVYLeRYZRyl0A3vlgwxctIN7yNfAF+kPIu6+mhsMGomF86Esuy4gyIvFbLGwj0bbGUZAMHccRdfuItaG91pUVdQiyxz2UmCR7eKSZMh3gMAfx3WuRt8wRc93Adq8j5S5jVUuAMCpiUa69CVTArIWKITu0cINMrMDe/KdpMztvhGY48AY9DJZDgWICTTdF/j+KZD6xQdRNlb9lxWp2+/npri6fOhmCOa6EJx2bAhm+xgrJSJr/NvRdiMX+uBO7WVlAASDRsl3kFm8PgFq3VHOAASCTzy+dyKwMgSpGNzgA7Luahqv0Q1c3/+SAIfxAjOMp8FME2zpzzE0W+26IUwI3+SVnxCoZQSQi2IeJwgEwJUFOxyDP/gDuoSGOMA5TJR7u1VecYk4fH7X1RRK4IV8PycACDtcEbZtN1nok2/uYlH0kCRGYYhploGBZ6Ms2OAIgEsTfSAwsxkZ5Kb8WFgyDLvUqNHD1+u6a0fGbWcim+j9I9uOddcOI7NUebtDGx7JFV3SM8D2Wbb3BKnm2BSw46YpU5QS+bK57imCeVOEVhd2L3kGj47PL1ngLRkRGZoFb8SHiuYwLBDAhoztv27W1PH5GWZKBqe0ZHkrCRBupkgQMcPzQ6SGBKsZK9iuNp/7ISA0il8a+u5S0TwPAYLslGN3aK7KW4WIGxq3GonEEMj1FvMpB67D06YMEHhzRAiKY5jtPh9Z4hIswPPtnH1COCholQSLlXmj7BMBHFWfT0UR1HY+VxlGhIQXEfySMUyI4CIIul3XDoOcjLpGKFUQaCuMAm/TJmn1CcDDlGUlhYyhMQwDGxcizKclVWmw+iFZg1y9tDMwXa2OQA5vUkqCoNhy1AcVCDg6R4eFXd0HjzkbTUK+JFtp4L7XLpQXMSua1xHM5OAGjZI2Ajg4PscyDM5ggv+bAIJE96K5fbb5gRW480oCYgq3sATYo1wFUkOce2Wmc30lwaNrqEgiZgKevjj7RSF5qCWAnE6+QR0GB0klx2Hp6KvmuxKYg6cRY2BY2It899zSSReiCd2rJtAUVpa/3ZYx4pcl+NmEgJl6IAkGCDRq0aOR7vth+cxKL/8o4BFcv45A0yTn24sArYEpIwE31TwFHl7VSItvyjETMI0ZRM8Q05Qm7s3H3Jhyc2AKZxB8tyGA+0AC+uOpKc893NSYKQdRDTyRPnfLcpi/Ok+Pjdy2AgSeVkvguuZ3+1OiRDGBxrE4s4IBGTudTFluyoJVeyOldPSp9/TYyVvUGQTfXQxrDAJbwrkOfF2OEoABS9JUhf/kGFGCZxJDo4Tg8fmpdymB5yrhNzsjnFmRVgtKQObQKIEyh42BqBES2Ea7RImenx8LP0vWpnW+CFOdb5ZBawivugKfCbbL4lwyuiCcF0JPxEk4tOJ5bBlBDwmaOUv+ikBCgva3E3BAMEcdUvDB56TLTfYDYGJZkLxg88VXfXzabrNqRBzzVwTsd/siJAA7RgJY+gh2BGLMU6pUsLkBgVhC0Hh8BoKsGvV5INBqCSR2/M3jhBDKWBqJQUleBb+yLEMJGELgSp4rlxCAEm23OUMAz4yhT+1+wH53aAdRESWA7Qsn/tABsQwVBCqR5EqaK2R7OEclet0+P3XyhYx6AokNv/u4Dkl7kWB0Uh56sGbETKYKEEgOtiYL+0Hn8Xn9+lo0BGFWR6CIwvjbOwuQVRECqkZk+BJCaw4IRvCSgIAExT0ZlGj9us6rUduImHqCG3QW2sOYQD0OkU6BQJmOJhMNPazkKK5QfFlQIiBY59QI58CAgKsgUBTr+0WATlzUNEgoR+pUS1VJptSeOXBUJcFYEzzRKyHIb8umrHAsx2klBIoo3qS50x2GM0mLhcCRp6YE8Uu7jlV0H+iJXg9gCDk1wnlCSRZFUdIKS5HEkL9Foo+nFRkN0vopiYySM3IkYYBYTCzZRdET4QKCTs638aYtQoZdBODEWx1zAVuWOY+8ypRj87rruSWzvFSJCEJOjeAN4THG9goArGibg9s0CHGIReaI2DlwQokdxgd3S8IAUCJ4+hdYrzk1ogUxuYAANmCbNxvaaYMeySTC1nA/O40mU4Kyw9OPaYJmsSAWhHk7wLrvDQenusPIlkSPqBEaQ8yAxieUVWtBiZ7J8yPBU69Yxh/ypiXStIMKwApvex8BDmfZMjb3WAEWZgmTCQbbrj0uKzcTT/SyxvWaj+6OTZwgCgGC9KtYATvMtx3XQYTIdkURgkcRoiFuMpmILH3nStwfeqI1XYfPohr9dZzfoY3AgMfq5K37NzjjZ4YWCACEz9LBLsvEgbmSV8bAOgYAGWyfOuVemk7jDQb17dhGi6xvAGyB8kayCGoE/1q4zMBIzWFm88t1LIPN5vD5VBlsNhuN+pY4ERVZ/W73t7vOOA1r8GOUhBWaY94Y9iuGC3ongtfNZv/5/Hh13xE1zSSLqtrvM5BWJs+TH1c9+Irb2QEd0QbWobAtXyB004xCm67QNDOztxVCo5f2dKsVs9Fq92q/4LghxwQHWNuna3IWYnh0UOm4rAq7S3Su2x+SS3tIv7h9tXdGJTrsX97e3nZ7JLhGjXCc2LZhv4C9W4kX7BtyVL1rNMmlN6RXDCsa88Ov5gQqm/s9sAIQAQCcCJoXfHsMYNqyo+FukY4Bdbmy6dwizWJHWYo4rk7mtsySPmVaS7G5X+wzETNYb9MEhxJ/mvr2Rllqa0SsKIjYtFASAkhSdBceqwy7Nwgiy0FRkfoDO1Fc2cU+ZavqPYIIM7JlITSDfEsZM2RQohRBQY3IkH9kktmAErUgF8CAz3bEpeaoWppgrkMYU7SFJpnoFjgkOB5EJO2UqiZ7s2+MQ1uAVGu2kPNfhHEp2nFCcMjX7tDL4HTASgYXYxRygvbAtBxBcB1HVcVJJv6DTEsuhrA4JxAKrEi3WgogThUyN8OXIWCWAruaSMYJFvkvwrh0TwhwUYKMGmGIIsgChCiKLAngYHKvAdF8KMAXuDgJajnZXNTz4AVzzAggEN2B7zh5LkXhOAipwzIEMLPYORCERbZWi740R5D1p20AmCnLJfwEUZYkKTSySSqktTInCoJEn6ZwznmxyFW327+CkI0JkoUzG7IslVXz8dTWkUBV9fnMTh8ZbZD0LEeQNgR4i8eCqijYCiIjSEJWLZrw42UZ7FgSqwiy5SnM+iy2gEDnmyTFLR5ohaxTpJM3ZM051k5NEEFQRFMDSvC2pwSdtARNdpkikLLTL3hxBLx3kihZVhmBpi3cjBC6YJQiy+QRjgSSnS8fYE8kQ/DAQn7YSAx5myXYI0FKjfo8aLmTIlhl3lNS15vhzVkVMgACP10caQ0C0/FjJ5pCiAkkMRznCpmtoSkcCfAxdJW1Uo8AucFLmgAVCRK1x/QbIChaQqCs5kKq2IEj8thwqSPwohQymI1QddMEx4LtQwKV3ULahilI5Kc7kCMoqq6r6a4FmEEc08Ha4Xp//3h7PjUFm79MEKGD5wWpDDFV5XvpmtgMIgn0nFX3Fsy11GlzMBtXqroqg+M0PNWXO5wOeioTAgcJyKN4ViKnx2fMjrME7y/JttwEETqemxCoipiuWoKVaXEdowJAnatyMvwPxJLnS5W0uHJzAikCB3/BZ3FO/QMw5ATgRLBP0hwgsBRKEDNAnp96hS7/BYE6mivuuJ98vS37nqTVEeTGTcAOCIFDF+jSRE/6aD0k+AdXmuAjKRs1B6bseB49dkqOzyqztMs+i0CO+onhy7IvfUGQ3QNB8YDAOS2R/VtPLJkYcpHgLdmW+7wNBF6KQE/XzL4kmAKBHR3fVNhd5JXLVN/1gcFUcgbiJDcphQAi8E+nuWA/+ywheH9LtmVQdMfBkh2qkY5P6qf3gy5vkeZvOQHLTbmppggJAQ5NCIJYd1uJptnZUAr2ZFuWVHVJAnF4F5fJ2Swwg7cCweEABCk1CkLL9Yg/niNBdt+H92e2qJMBN11wgnkkIGMfAvsFgZyLLLroT8EAxSXZDxSITpP9DERQQvBxSPxpF29IidOu6VRxsyV3EBFXSzBFgtM8UEzAXkbQgtgUsonlhLhELxX9Nchu8E+B4HDYp/wpHgWR0MI02EkBIFMvbQ+j2WKxqiHgZlwitTMJ8qERGWakIlDwNpZWKjc4vCUiSBHsUmUjRMDYUJtzDJM/lwqP9AUBu+AS02/1zyGwi02mLt6Eiwm1mUnksNxICVL7Aclz3g+p+BRyTCw82eTbc2kquMcaAiz+s7PUsU485YaVXK2aAGRtl8wJtOkQvJFJdEl6tkkAYoLdDgj26fi0cfz2kqoZmHI1ActNGGFlp3YoPO0J+uBpeKqeAcWOLwmIF4lb3NK5sXgeM11tgAx5e3h/3+QWELx9fLxlq48l335So7G8wPBaYksWTgT56f2jjdO5ouKpE2ZSsgjBuWcoG6BD+8P7roLg49yyUR+nymQSGZcQjEZzmc8G15boAAASqA90JQQ6+szovA5pExLkw/6wKxAAAxB8fJxbfcT9ZkUJ0gj0PwEgu8M2+kYI8SWVAT58muDhAQJnPAFeokSdXvZxGj0A+NxVELx8FNSovv+7WEg5BPJfoEOjee4qqvYQL5jwvAeGmTzkZAAEjhiafLHw1Xl8enp6fOx1mqSA3unh828/XysINpQgL4SqwnsTQqeVkkOgKSPHCvmWLZY2XAxQyCPD7w9pO0CCsus+cH7r+ZlQkPUE/71dv74Sx1NGgIZw2D6l6kaNDvnOTkULG+KWOE9M14uWkNAWngcniZHA81xHVMlFzylLBoIyK8Dpp+0zDhDFa7slRYkqgjjdTGX8HUL9XKFYsOtHkE2LeNzo+PSq6mmONS6O2jchyvHgwVXPdUWHIKQJSg8EQPCACIf1/v19/UHW4WuCl937JyTMPVyodNtDZYeKHPmMZHpgyjst1ym9vhxChND3JszSdTDShMw9RSCXX84LD/C8xj4NJsHnEmB88blF3SNKtyVVmKraMp6UNy3XlQWqTPhwTmiWXwBDRBaK4IyU3HawtIJhqZg7iPCyXm92m/3ZBG80wtiSFVcjezUdhIEBDCzt2LrgE8Mo+FXRAGlDrBkBwoP+wGQ2NqHycg8wQ9CDt/V6f9hfRIARxnHViOBYocfoC1tQ+DEERk0jrQW4kcXMdX2Eg6X07i3GCutuHeqQDeDz9fVwOIcAKzDA8P6+iwt5n59fN9iax/CJnkJs1eMa5piZzz3f93GuGOccvuqz003s5TV5Uw+b8rUmv+CvHx9rIo7XTzTqr/foRpPGT+38DSplmvTLMCFvEUnhTsZLh75ufnaoGLDJUUWwPv5CmsvrmODlcB7A5d1bPhibpjkOaprFua0NMvvPbY0M1qc/HAleAODjBgA04MVT62RO4OwGOojh8/D6Wq9FMctuAwJYr2OAGw1SNJrFS3voafpGDQKO1FUSnEwb//D2sn55gbT/ZgDXLET4rJEBPPguQQGCD9jVHv/oyXyQSunxuFTPgyCUO1J4fPz7HUXZbagK1c2KfLdtdPuDX0Ps9Q8HVbMIEKnWEiT/wnZAAP6YBOg4CylKYO+3arwEAr3XfdVmdoJYwz9AkI2x85k3GdlofhsgGVSAPQLPfDvkqCvucp0yIXzuziWo2ImJsOHtwkZ//5smvjC0MiFY/XtCC+0KxOC6D+FtScoGHrWcYBe7UfIbJSiL5nAzgjgulF3HhbcJ3qdvuPyBhLcihIVLkUbd2I2WuYVsFidkmo/bQ70M4o3t/X1TJgIcJQqwQLHiuNlMEuwoKDk/f7EGGRCeazjUSI8dxB+pssAe/q9WIWerIiB/t4vlAIHd+rlXMsOHQwqcImnkyBKZPrXHxu9NMLcGfGSRo2MQZCcVvOkUP2hoNs7nbZB1VmjRjvrQdVy+e18XlAinOuTFgqMpMSWY6xx+1sBvDHCS+W5Pnxc/1IMQFE4kVxJs4r+EbI78fyDoFEeJ5IUmiZKSzLDoOhmivR4Bx2NsV9Mfqurf+fGSswg2pQT4YViyIkmOpKUJVMeyrOtvRW3/Mi1Fmz88MKUAs8VinD14U0Ww2xwB1tQmCgTtoWkLsiQtM3NElOD6m2mbfbzRAACqCEbzWbYMVk2wyRFsspaMIwWCoJAJEz0hwIt1cTTw2hMV8L4wGvlopKpOlr4YZ94d2JQLBOv1+vT4+GdiCu/vmfpvA+/VlUWN9DWnmSuCVWz0OtcN9GMZj5k+1BCwuamdRgXBOkVAeAhBJ9NyEmSZdjUzPWNKsPS0q04WtQdjgZ2qdQSQhqYPH0J0evhCBpsjQXpPbqDLk8F3Ymc5c0U2IWA5XxeuOesLjohx1Id6AjF9O2avnCA2gs1JiXBPS48NkkOfikYHRPIEqipxc90fX2EJfYgmviJw3fTZ/N7T9ksCElLA33ymhu56fOjGBFoZgTLS/SuOyjYHZmjB90/qCfTUOcDHp4q4qECw3nwkbYRGP7AkSlDomsU3luurK06o4Ud6WC78gKWqVFuyq5vDZqqLXBtdpxPm96Qb1RqMpSleHKFweL6HK70KRbj8HtH2MLTErwgkVxdOZ/M7RxHUE8QYHyc1gldSKQFtkZUScObFhtAdgnV5dHipss9MCJKJnM+zCTb/JGrUNcLpFI8H1xHIVxAYNjY3VQX+OY/g8flzfz7B++cx0e8aAiGIW00VBNGgcTmBsJTEpagulbMIcD5zdzbB5p+TP+3y5xCYF58ZbxuhIEkMTsEvawi80x0V4Ev3lxAcjttylw/RKcQEFZcaydHFWtQahqyigASWVXZAJt3c6OiLEiU6i2BzGmKGrZPjYgKu6lqmK2TQHESipi1rLBkIdIx8G3HNbnsZwf54yA4PK9+CAPcZzaMTrVXjkroOoV0/8USXEPzf/jjv1f41lgUkUKoHUzJTIOebcqh5KgpBqZIBJCCn3R6U6EKCw5YaAr05vpZAXV1zCUprYGqehzJYVo6sOtYxNiUDLRcRvCeG8DWBds0VIjgAOSMfQKJWE5xuuMGo7jKC3YmgBY5b8qqnueAhlKs+JhQtjAZcE9IeZ9nsvA7E7tapz4wiOOw356/X19N5BJzn8k/z1/HheTyCMhqNyGvpqnXVBRw4QO/GYfsDAuQJAOAoAlCi/cUEpx2hPbSPs8uq79OiGhbYTgTOlZ/U2h6OBbz56iSFPEEysYPb2WUEh/fEECBJEx/oB+doPjn4LlG/qo4wPfGYqw++40RprEhqFoGM21uJecWB9SUE2Po8Bnf4GQRkmmOOpRFaqqCfYAwIqn/9NY/ktJOUKFKOILnEsxnn+JcRvCfzszg+SwnwwfH2iHlMMHrw3N/4yGUcirU5LONMVF1RkoELVXEsKzl/dYzqLiDAKaqkYtHAouP8uHTP98gfNDCFqfVbn2SEEy/kI6lVPHcVF3AcR1WYzGW2xwz5EgJcScUC66a+Ds/ugUXjhyOoU0gvGdERsVXxe/0DYyxw87myxDsdjwRYj00B4Kj77vcIUAqRz4q+70ua57tgzK4/FRhrnLlP/soeDm+vcLSKnBYg503BjWZaE9jGvIogfRFHg0wAW+R2Zjx9JeH1D/Z3XFtMz39aiq57IFd8fCsKsmd+e0/1zZtKguxRzRZ+ipENuoQGPNd930YN+o5eGh5aNoLxmJxiNcm0RTtfdb+WIHtUE14IJ7EhtZLJMPb3XaJOW4x0RHpQmLboXE2wzzcEj9eZ8zhJ9BsH1MshWu12r3TCB1vh+6sIdsUbaRpklghf6A9OLDxeUCjKEbw938VsCCY31xJUDmr+0akWTA3eriV47v37BCRDvp7g8T6U6FqC3bVXiXyrkwKC18sJYoTcjvCvmcE1BPGedt1lKN9tBvurCDaU4F83BKJE6/3HFQSA8PZ2+H2C//309R/Bv7/+HzIc/UlP9cwHAAAAAElFTkSuQmCC" alt="Grupo Inmobiliario Chacón">
+  <div class="app">OVI</div>
+  <div class="lema">Central de ventas · Grupo Inmobiliario Chacón</div>
+  <div class="titulo">Guía sencilla</div>
+  <div class="sub">Una cosa a la vez</div>
+</div>
+
+<div class="clave">
+<div class="rotulo">Cómo usar esta guía</div>
+<p><b>Haga UNA etapa. Cuando le salga, pase a la siguiente.</b></p>
+<p>No tiene que aprenderlo todo hoy. Una etapa por vez está bien.</p>
+</div>
+
+<div class="mapa">
+  <div><span class="e">Etapa 1</span> Entrar</div>
+  <div><span class="e">Etapa 2</span> Dejar OVI en la pantalla</div>
+  <div><span class="e">Etapa 3</span> Anotar una visita</div>
+  <div><span class="e">Etapa 4</span> Ver mis lotes</div>
+  <div><span class="e">Etapa 5</span> Apartar un lote</div>
+  <div><span class="e">Etapa 6</span> Soltar un lote</div>
+  <div><span class="e">Etapa 7</span> Anotar un pago</div>
+</div>
+
+<div class="ojo">
+<b>¿Se le trabó algo?</b> No pasa nada. Nada se rompe. Todo se puede corregir.
+</div>
+
+<!-- ============ 1 ============ -->
+<div class="etapa">
+<div class="cabeza">
+  <div class="num">Etapa 1</div>
+  <h2>Entrar</h2>
+  <div class="para">Solo la primera vez.</div>
+</div>
+
+<div class="p"><span class="n">1</span> Abra en el teléfono:<br>
+  <b>ovi-eta.vercel.app</b></div>
+<div class="p"><span class="n">2</span> Escriba su <b>usuario</b>.</div>
+<div class="p"><span class="n">3</span> Escriba <b>password</b>.</div>
+<div class="p"><span class="n">4</span> Toque <span class="btn">Entrar</span></div>
+<div class="p"><span class="n">5</span> Le pide una contraseña nueva. Escríbala <b>dos veces</b> y guarde.</div>
+
+<div class="ojo">
+<b>La contraseña nueva:</b> de 10 letras o números para arriba.<br>
+Anótela donde no se le pierda.
+</div>
+
+<div class="listo">
+  <div class="t">☐ Ya entré</div>
+  <div class="s">Descanse aquí. Mañana siga con la Etapa 2.</div>
+</div>
+</div>
+
+<!-- ============ 2 ============ -->
+<div class="etapa">
+<div class="cabeza">
+  <div class="num">Etapa 2</div>
+  <h2>Dejar OVI en la pantalla</h2>
+  <div class="para">Para entrar de un toque, como WhatsApp.</div>
+</div>
+
+<div class="p"><span class="n">1</span> Al entrar le aparece solo un aviso que dice
+  <b>«Deje OVI en su pantalla»</b>.</div>
+<div class="p"><span class="n">2</span> Haga lo que ese aviso le diga. Él sabe qué
+  teléfono tiene usted.</div>
+<div class="p"><span class="n">3</span> Listo: le queda el ícono del árbol.</div>
+
+<div class="ojo">
+<b>¿Le salió un aviso rojo de Google?</b> No es un virus.<br>
+Toque <b>«Instalar de todas formas»</b>.<br>
+O ciérrelo y siga usando OVI como página. Funciona igual.
+</div>
+
+<div class="listo">
+  <div class="t">☐ Ya tengo el ícono</div>
+  <div class="s">O decidí usarla como página. Las dos están bien.</div>
+</div>
+</div>
+
+<!-- ============ 3 ============ -->
+<div class="etapa">
+<div class="cabeza">
+  <div class="num">Etapa 3</div>
+  <h2>Anotar una visita</h2>
+  <div class="para">Lo más fácil. Empiece por aquí.</div>
+</div>
+
+<div class="p"><span class="n">1</span> Toque <span class="menu">➕ Registrar</span></div>
+<div class="p"><span class="n">2</span> Toque <span class="btn">Visita</span></div>
+<div class="p"><span class="n">3</span> Nombre y teléfono del cliente.</div>
+<div class="p"><span class="n">4</span> Escoja de las listas lo que le pregunta.</div>
+<div class="p"><span class="n">5</span> Guarde.</div>
+
+<div class="ojo">
+Son <b>treinta segundos</b>. Hágalo con el cliente todavía enfrente.
+</div>
+
+<div class="listo">
+  <div class="t">☐ Ya anoté una visita</div>
+  <div class="s">Haga esto varios días antes de seguir. Cuando le salga sin pensar, pase a la Etapa 4.</div>
+</div>
+</div>
+
+<!-- ============ 4 ============ -->
+<div class="etapa">
+<div class="cabeza">
+  <div class="num">Etapa 4</div>
+  <h2>Ver mis lotes</h2>
+  <div class="para">Solo mirar. Todavía no toque nada.</div>
+</div>
+
+<div class="p"><span class="n">1</span> Toque <span class="menu">☰</span> arriba a la izquierda.</div>
+<div class="p"><span class="n">2</span> Toque <span class="menu">🏷️ Inventario</span></div>
+<div class="p"><span class="n">3</span> Toque el nombre de <b>su proyecto</b>.</div>
+<div class="p"><span class="n">4</span> Ahí están sus lotes. Mírelos. Nada más.</div>
+
+<div class="ojo">
+<b>¿Está vacío?</b> Todavía no le han subido el inventario.<br>
+Avise y espere. No siga a la Etapa 5 hasta que aparezcan sus lotes.
+</div>
+
+<div class="listo">
+  <div class="t">☐ Ya vi mis lotes</div>
+  <div class="s">Ahora sí: la Etapa 5 es la más importante de todas.</div>
+</div>
+</div>
+
+<!-- ============ 5 ============ -->
+<div class="etapa">
+<div class="cabeza">
+  <div class="num">Etapa 5</div>
+  <h2>Apartar un lote</h2>
+  <div class="para">Esto es lo más importante que hace OVI.</div>
+</div>
+
+<div class="p"><span class="n">1</span> <span class="menu">🏷️ Inventario</span> → su proyecto.</div>
+<div class="p"><span class="n">2</span> Busque el lote.</div>
+<div class="p"><span class="n">3</span> Toque <span class="btn">Reservar / Vender</span></div>
+<div class="p"><span class="n">4</span> Escoja <b>Se reservó</b> o <b>Se vendió</b>.</div>
+<div class="p"><span class="n">5</span> Nombre y teléfono del cliente.</div>
+<div class="p"><span class="n">6</span> Toque <span class="btn">Marcar como RESERVADO</span></div>
+
+<div class="ojo">
+Desde ese momento, <b>nadie más en todo el Grupo puede vender ese lote</b>.<br>
+Por eso se hace <b>en el momento</b>, no al final del día.
+</div>
+
+<div class="listo">
+  <div class="t">☐ Ya aparté un lote</div>
+  <div class="s">Lo más importante ya lo sabe hacer.</div>
+</div>
+</div>
+
+<!-- ============ 6 ============ -->
+<div class="etapa">
+<div class="cabeza">
+  <div class="num">Etapa 6</div>
+  <h2>Soltar un lote</h2>
+  <div class="para">Por si se equivocó, o el cliente ya no quiso.</div>
+</div>
+
+<div class="p"><span class="n">1</span> <span class="menu">🏷️ Inventario</span> → busque el lote apartado.</div>
+<div class="p"><span class="n">2</span> Toque <span class="btn">Liberar</span></div>
+<div class="p"><span class="n">3</span> Escriba por qué. Con pocas palabras basta.</div>
+<div class="p"><span class="n">4</span> Toque <span class="btn">Liberar lote</span></div>
+
+<div class="ojo">
+<b>Equivocarse no es grave.</b> Lo grave es no apartar por miedo a equivocarse.
+</div>
+
+<div class="listo">
+  <div class="t">☐ Ya sé soltar un lote</div>
+  <div class="s">Ya puede trabajar tranquila.</div>
+</div>
+</div>
+
+<!-- ============ 7 ============ -->
+<div class="etapa">
+<div class="cabeza">
+  <div class="num">Etapa 7</div>
+  <h2>Anotar un pago</h2>
+  <div class="para">Cuando el cliente abona.</div>
+</div>
+
+<div class="p"><span class="n">1</span> Toque <span class="menu">➕ Registrar</span></div>
+<div class="p"><span class="n">2</span> Toque <span class="btn">Abono / Pago</span></div>
+<div class="p"><span class="n">3</span> Escoja el cliente.</div>
+<div class="p"><span class="n">4</span> Cuánto pagó.</div>
+<div class="p"><span class="n">5</span> Si fue depósito: <b>tome la foto de la boleta</b>.</div>
+<div class="p"><span class="n">6</span> Guarde.</div>
+
+<div class="listo">
+  <div class="t">☐ Ya anoté un pago</div>
+  <div class="s">Terminó. Ya sabe usar OVI.</div>
+</div>
+</div>
+
+<!-- ============ Si algo sale mal ============ -->
+<div class="etapa">
+<div class="cabeza">
+  <div class="num">Por si acaso</div>
+  <h2>Si algo sale mal</h2>
+  <div class="para">Nada de esto es grave.</div>
+</div>
+
+<table>
+<tr><th style="width:42%">Si pasa esto…</th><th>Haga esto</th></tr>
+<tr><td><b>No me acepta la contraseña</b></td><td>Revise las mayúsculas. Si se equivocó varias veces, espere 15 minutos.</td></tr>
+<tr><td><b>No me deja guardar</b></td><td>Lea el mensaje rojo. Ahí dice qué falta.</td></tr>
+<tr><td><b>Aparté el lote equivocado</b></td><td>Suéltelo (Etapa 6) y aparte el bueno.</td></tr>
+<tr><td><b>Va lento</b></td><td>Es la señal. Espere. <b>No lo haga dos veces.</b></td></tr>
+<tr><td><b>Dice «Sin conexión»</b></td><td>No hay internet. Espere a tener señal.</td></tr>
+<tr><td><b>Se me borró el ícono</b></td><td>Entre otra vez a la dirección. No se pierde nada.</td></tr>
+<tr><td><b>Cualquier otra cosa</b></td><td>Pregunte. Y mientras tanto, <b>anote igual</b>.</td></tr>
+</table>
+
+<div class="clave" style="margin-top:8mm">
+<div class="rotulo">Lo único que hay que recordar</div>
+<p style="font-size:15pt"><b>Lo que no se anota, no existe.</b></p>
+<p>Un lote apartado que nadie anotó, otro lo vende.</p>
+</div>
+</div>
+
+</body>
+</html>

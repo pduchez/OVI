@@ -73,6 +73,11 @@ export const PILOTOS = [
     cupoGenerico: "ventasViabypass",
     asesoras: [{ username: "karla", displayName: "Karla" }],
   },
+  {
+    codigoProyecto: "GIC-19", // Condado El Triunfo
+    cupoGenerico: "ventasCondadoeltriunfo",
+    asesoras: [{ username: "luci", displayName: "Luci" }],
+  },
 ];
 
 export const SEED_VENDEDORES = [

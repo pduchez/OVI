@@ -34,6 +34,30 @@ a mano.
 
 Implementado en `importarInventario` (`src/app/(app)/inventario/actions.ts`).
 
+## Inventario: cada quien arma su archivo distinto
+
+Los archivos reales **no son tablas limpias**. Traen varias tablas de polígono
+una al lado de otra en la misma hoja, con el título en una celda combinada
+arriba, y el estado del lote **no escrito sino PINTADO** —rojo vendido, amarillo
+reserva administrativa, sin pintar disponible— con su leyenda en una esquina.
+
+`src/lib/inventario-lectura.ts` lo interpreta. Tres principios, y no se tocan:
+
+1. **La leyenda la pone el archivo, no OVI.** Se busca en la hoja un recuadro
+   pintado junto a una palabra de estado, y de ahí sale la tabla color → estado.
+   Nunca se supone que rojo es vendido: se supone lo que el archivo declare.
+2. **Un color sin leyenda no se adivina.** Se cuenta, se avisa en pantalla y en
+   la bitácora, y el lote queda disponible. Inventar el significado de un color
+   es exactamente como se ofrece un lote ya vendido.
+3. **La lectura se le enseña a quien subió el archivo**, con bloques, leyenda y
+   desglose por estado. Tiene que poder comprobarla, no confiar a ciegas.
+
+Una columna de estado escrita con letras **manda sobre el color**. El área en m²
+manda sobre la de varas². Las filas de TOTAL se descartan.
+
+Al ampliar esto: agregar sinónimos a `aEstado()` es barato y seguro; cambiar el
+orden de confianza (columna → color → disponible) no.
+
 ## Tiempo real, nunca datos viejos
 
 OVI vale por ser en tiempo real. **El Service Worker no cachea información**:

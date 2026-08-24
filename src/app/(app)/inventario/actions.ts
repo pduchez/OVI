@@ -110,10 +110,12 @@ export async function importarInventario(_prev: unknown, fd: FormData) {
   let hoja = "";
   let ignoradas: string[] = [];
   let diagnostico: { hoja: string; columnas: string[]; lotes: number }[] = [];
+  let informe: Awaited<ReturnType<typeof parseInventoryDetallado>>["informe"];
   try {
     const buf = Buffer.from(await file.arrayBuffer());
     const lectura = parseInventoryDetallado(buf, nombre);
     rows = lectura.filas;
+    informe = lectura.informe;
     hoja = lectura.hoja;
     ignoradas = lectura.hojasIgnoradas;
     diagnostico = lectura.diagnostico;
@@ -186,6 +188,15 @@ export async function importarInventario(_prev: unknown, fd: FormData) {
   const eliminados = retirables.length;
   const conservados = conConHistorial.length;
 
+  // Cómo se entendió el archivo. Va a la pantalla y a la bitácora: cada
+  // proyecto arma el suyo distinto y quien lo sube tiene que poder comprobar
+  // que OVI lo leyó como es, sin tener que confiar a ciegas.
+  const porEstado = { disponible: 0, reservado: 0, vendido: 0, bloqueado: 0 } as Record<string, number>;
+  for (const r of rows) porEstado[r.estado] = (porEstado[r.estado] || 0) + 1;
+  const sinExplicar = (informe?.coloresSinExplicar || []).reduce((a, c) => a + c.lotes, 0);
+  const leyenda = informe?.leyenda || [];
+  const bloques = informe?.bloques || [];
+
   await prisma.inventoryImport.create({
     data: {
       projectId,
@@ -200,6 +211,17 @@ export async function importarInventario(_prev: unknown, fd: FormData) {
       userName: user.displayName || user.username,
     },
   });
+  const comoSeLeyo =
+    (bloques.length
+      ? ` · ${bloques.length} bloque(s): ${bloques.map((b) => `${b.poligono || "sin polígono"}=${b.lotes}`).join(", ")}`
+      : "") +
+    (leyenda.length
+      ? ` · leyenda del archivo: ${leyenda.map((l) => `${l.etiqueta}→${l.estado}`).join(", ")}`
+      : "") +
+    ` · estados: ${porEstado.disponible} disponibles, ${porEstado.reservado} reservados, ` +
+    `${porEstado.vendido} vendidos, ${porEstado.bloqueado} bloqueados` +
+    (sinExplicar ? ` · ATENCIÓN: ${sinExplicar} lote(s) pintados sin leyenda que lo explique` : "");
+
   await logSecurity(
     user,
     "inventario_import",
@@ -210,14 +232,18 @@ export async function importarInventario(_prev: unknown, fd: FormData) {
             .slice(0, 10)
             .map((l) => l.numero)
             .join(", ")}${conservados > 10 ? "…" : ""})`
-        : ""),
+        : "") +
+      comoSeLeyo,
     projectId
   );
 
   revalidatePath(`/inventario/${projectId}`);
   redirect(
     `/inventario/${projectId}?ok=import&c=${creados}&a=${actualizados}&e=${eliminados}` +
-      `&k=${conservados}&h=${encodeURIComponent(hoja)}&ig=${ignoradas.length}`
+      `&k=${conservados}&h=${encodeURIComponent(hoja)}&ig=${ignoradas.length}` +
+      `&vd=${porEstado.vendido}&rs=${porEstado.reservado}&bl=${porEstado.bloqueado}` +
+      `&sc=${sinExplicar}&bq=${bloques.length}` +
+      `&ley=${encodeURIComponent(leyenda.map((l) => `${l.etiqueta}=${l.estado}`).join("|"))}`
   );
 }
 

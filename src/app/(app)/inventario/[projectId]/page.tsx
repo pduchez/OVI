@@ -22,6 +22,7 @@ export default async function InventarioProyecto({
   searchParams: Promise<{
     edit?: string; ok?: string; c?: string; a?: string; h?: string; ig?: string;
     e?: string; k?: string;
+    vd?: string; rs?: string; bl?: string; sc?: string; bq?: string; ley?: string;
     l?: string; reservar?: string; liberar?: string;
   }>;
 }) {
@@ -103,6 +104,36 @@ export default async function InventarioProyecto({
               {sp.ig && sp.ig !== "0" ? ` · se ignoraron ${sp.ig} hoja(s) sin lotes` : ""}.
             </span>
           ) : null}
+          {/* Cómo se entendió el archivo. Cada proyecto arma el suyo distinto,
+              así que quien lo sube tiene que poder COMPROBAR la lectura en vez
+              de confiar a ciegas: si OVI leyó mal, se ve aquí y no tres
+              semanas después con un cliente enfrente. */}
+          <span className="mt-2 block rounded-lg bg-white/70 px-3 py-2 text-sm font-normal text-slate-600">
+            <b className="text-ovi-ink">Así se leyó tu archivo:</b>{" "}
+            {sp.bq && sp.bq !== "0" ? `${sp.bq} bloque(s) de lotes · ` : ""}
+            {sp.vd || "0"} vendidos, {sp.rs || "0"} reservados
+            {sp.bl && sp.bl !== "0" ? `, ${sp.bl} bloqueados` : ""}, el resto
+            disponibles.
+            {sp.ley ? (
+              <span className="mt-1 block">
+                Los colores se interpretaron con la leyenda del propio archivo:{" "}
+                <b>{sp.ley.split("|").join(" · ")}</b>.
+              </span>
+            ) : null}
+            <span className="mt-1 block">
+              ¿No cuadra con tu Excel? No lo corrijas a mano: avisá y se ajusta
+              la lectura.
+            </span>
+          </span>
+          {/* Pintado pero sin leyenda: NO se adivina qué quiso decir. */}
+          {sp.sc && sp.sc !== "0" ? (
+            <span className="mt-2 block rounded-lg bg-amber-50 px-3 py-2 text-sm font-normal text-amber-800">
+              <b>{sp.sc} lote(s) venían pintados de un color que tu archivo no
+              explica.</b> No se adivinó qué significaba: quedaron como
+              disponibles. Si ese color quería decir vendido o reservado,
+              agregá la leyenda al Excel y volvé a subirlo.
+            </span>
+          ) : null}
           {/* Los lotes con historial nunca se borran solos: alguien tiene que
               mirarlos, porque detrás hay un cliente y probablemente un dinero. */}
           {sp.k && sp.k !== "0" ? (
@@ -152,6 +183,13 @@ export default async function InventarioProyecto({
             él se retiran — así no se mezcla con el que traía OVI precargado. Lo
             único que nunca se borra es un lote <b>reservado, vendido o con
             negocio</b>: ese se conserva y te avisamos.
+          </p>
+          <p className="mb-3 rounded-lg bg-ovi-primary/5 px-3 py-2 text-sm text-slate-600">
+            <b className="text-ovi-ink">Subilo tal como lo tenés.</b> OVI entiende
+            varias tablas de polígono en la misma hoja, y lee los lotes{" "}
+            <b>pintados</b> —vendido, reservado— siempre que el archivo traiga su
+            leyenda a un lado. Al terminar te muestra cómo lo entendió, para que
+            lo revises.
           </p>
           <ActionForm action={importarInventario} submitLabel="Importar archivo">
             <input type="hidden" name="projectId" value={project.id} />

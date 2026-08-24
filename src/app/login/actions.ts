@@ -90,6 +90,13 @@ export async function loginAction(_prev: unknown, formData: FormData) {
       .catch(() => null);
   }
 
+  // Queda anotado el ingreso. Durante la implantación es el único dato que
+  // distingue a quien todavía no entra de quien ya entró pero no registra
+  // nada: son dos problemas distintos y se atienden distinto.
+  await prisma.user
+    .update({ where: { id: user!.id }, data: { ultimoIngreso: new Date() } })
+    .catch(() => null); // que un fallo aquí jamás impida entrar
+
   (await cookies()).set(
     AUTH_COOKIE,
     signSession(user!.id, user!.sessionEpoch),

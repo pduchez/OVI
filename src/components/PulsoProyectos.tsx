@@ -16,6 +16,9 @@ const TONO = {
   aldia: { punto: "bg-emerald-500", texto: "text-emerald-700", chip: "bg-emerald-50" },
   atrasado: { punto: "bg-amber-500", texto: "text-amber-700", chip: "bg-amber-50" },
   frio: { punto: "bg-rose-500", texto: "text-rose-700", chip: "bg-rose-50" },
+  // Azul, no rojo: su gente ya entró, solo falta que registre. Es
+  // acompañamiento, no una alarma.
+  entrosinreportar: { punto: "bg-sky-500", texto: "text-sky-700", chip: "bg-sky-50" },
   // Gris a propósito: un proyecto que aún no arranca no es una alerta, y
   // pintarlo de rojo taparía a los que sí dejaron de reportar.
   siniciar: { punto: "bg-slate-300", texto: "text-slate-400", chip: "bg-slate-50" },
@@ -23,6 +26,7 @@ const TONO = {
 
 /** «hoy», «ayer», «hace 4 días», «sin movimiento». */
 function cuando(p: PulsoProyecto): string {
+  if (p.estado === "entrosinreportar") return "entró, sin registrar";
   if (p.dias === null) return "sin iniciar";
   if (p.dias === 0) return "hoy";
   if (p.dias === 1) return "ayer";
@@ -40,8 +44,12 @@ export default function PulsoProyectos({
   if (!filas.length) return null;
 
   const cuenta = (e: PulsoProyecto["estado"]) => filas.filter((p) => p.estado === e).length;
-  // Lo que pide acción hoy: dejó de reportar, o se está atrasando.
-  const pendientes = filas.filter((p) => p.estado === "frio" || p.estado === "atrasado");
+  // Lo que pide acción hoy: dejó de reportar, se está atrasando, o ya entró
+  // pero todavía no registra nada —que durante la implantación es lo más
+  // común y lo que más se puede ayudar—.
+  const pendientes = filas.filter(
+    (p) => p.estado === "frio" || p.estado === "atrasado" || p.estado === "entrosinreportar"
+  );
   const visibles = pendientes.slice(0, maximo);
   const resto = pendientes.length - visibles.length;
   const sinIniciar = cuenta("siniciar");
@@ -66,6 +74,10 @@ export default function PulsoProyectos({
         <span className={`flex-1 rounded-lg ${TONO.frio.chip} px-1.5 py-1.5 text-center whitespace-nowrap ${TONO.frio.texto}`}>
           <span className="block text-base font-bold">{cuenta("frio")}</span>
           sin reportar
+        </span>
+        <span className={`flex-1 rounded-lg ${TONO.entrosinreportar.chip} px-1.5 py-1.5 text-center whitespace-nowrap ${TONO.entrosinreportar.texto}`}>
+          <span className="block text-base font-bold">{cuenta("entrosinreportar")}</span>
+          entraron
         </span>
       </div>
 
@@ -102,7 +114,7 @@ export default function PulsoProyectos({
         <p className="mt-2 border-t border-slate-100 pt-2 text-center text-xs text-slate-400">
           {resto > 0 ? `y ${resto} más pendiente${resto === 1 ? "" : "s"}` : ""}
           {resto > 0 && sinIniciar > 0 ? " · " : ""}
-          {sinIniciar > 0 ? `${sinIniciar} proyecto${sinIniciar === 1 ? "" : "s"} sin iniciar` : ""}
+          {sinIniciar > 0 ? `${sinIniciar} proyecto${sinIniciar === 1 ? "" : "s"} donde nadie ha entrado` : ""}
         </p>
       ) : null}
     </div>

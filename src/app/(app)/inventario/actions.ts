@@ -222,6 +222,19 @@ export async function importarInventario(_prev: unknown, fd: FormData) {
     `${porEstado.vendido} vendidos, ${porEstado.bloqueado} bloqueados` +
     (sinExplicar ? ` · ATENCIÓN: ${sinExplicar} lote(s) pintados sin leyenda que lo explique` : "");
 
+  // La carga de inventario es el primer hito de cada asesora: tiene que verse
+  // en la actividad reciente, no solo en la bitácora de seguridad.
+  await prisma.registro.create({
+    data: {
+      tipo: "novedad",
+      projectId,
+      refId: stored?.id || "",
+      resumen:
+        `Inventario cargado desde ${nombre}: ${creados} lotes nuevos, ` +
+        `${actualizados} actualizados` + (eliminados ? `, ${eliminados} retirados` : ""),
+      registradoPorId: user.id,
+    },
+  });
   await logSecurity(
     user,
     "inventario_import",
@@ -430,6 +443,19 @@ export async function liberarLote(_prev: unknown, fd: FormData) {
     });
   }
   await prisma.lote.update({ where: { id: lote.id }, data: { estado: "disponible" } });
+  // Liberar es una acción de campo como cualquier otra: tiene que verse en la
+  // actividad reciente y contar como movimiento del proyecto. Sin esto, una
+  // asesora podía pasar el día corrigiendo lotes y su proyecto aparecía
+  // callado en el tablero.
+  await prisma.registro.create({
+    data: {
+      tipo: "caida",
+      projectId: lote.projectId,
+      refId: lote.id,
+      resumen: `Lote ${lote.numero} liberado (${lote.estado} → disponible): ${motivo}`,
+      registradoPorId: user.id,
+    },
+  });
   await logSecurity(
     user,
     "lote_liberado",

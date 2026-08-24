@@ -21,6 +21,7 @@ export default async function InventarioProyecto({
   params: Promise<{ projectId: string }>;
   searchParams: Promise<{
     edit?: string; ok?: string; c?: string; a?: string; h?: string; ig?: string;
+    e?: string; k?: string;
     l?: string; reservar?: string; liberar?: string;
   }>;
 }) {
@@ -88,11 +89,27 @@ export default async function InventarioProyecto({
 
       {sp.ok === "import" ? (
         <p className="mb-4 rounded-lg bg-emerald-50 px-4 py-3 font-medium text-emerald-700">
-          ✓ Importación completada: {sp.c} creados, {sp.a} actualizados.
+          ✓ Importación completada: {sp.c} creados, {sp.a} actualizados
+          {sp.e && sp.e !== "0" ? `, ${sp.e} retirados` : ""}.
+          {sp.e && sp.e !== "0" ? (
+            <span className="mt-1 block text-sm font-normal">
+              Los {sp.e} retirados no venían en tu archivo. Manda lo que subes
+              vos: lo que no está en el archivo, ya no está en OVI.
+            </span>
+          ) : null}
           {sp.h ? (
             <span className="mt-1 block text-sm font-normal">
               Se leyó la hoja <b>{sp.h}</b>
               {sp.ig && sp.ig !== "0" ? ` · se ignoraron ${sp.ig} hoja(s) sin lotes` : ""}.
+            </span>
+          ) : null}
+          {/* Los lotes con historial nunca se borran solos: alguien tiene que
+              mirarlos, porque detrás hay un cliente y probablemente un dinero. */}
+          {sp.k && sp.k !== "0" ? (
+            <span className="mt-2 block rounded-lg bg-amber-50 px-3 py-2 text-sm font-normal text-amber-800">
+              <b>Ojo: {sp.k} lote(s) no venían en tu archivo pero se
+              conservaron</b> porque están reservados, vendidos o tienen un
+              negocio. No se borran solos. Revisalos con Gerencia.
             </span>
           ) : null}
         </p>
@@ -125,8 +142,16 @@ export default async function InventarioProyecto({
           <h2 className="font-bold text-ovi-ink">Importar inventario (Excel · CSV · PDF)</h2>
           <p className="mt-1 mb-3 text-sm text-slate-500">
             Columnas: <b>numero</b> (o polígono + lote), <b>area</b>, <b>precio</b>, estado y
-            notas. También lee <b>listas de precios en PDF</b> que tengan texto. Los lotes
-            existentes se actualizan por su número. Queda registrado en la bitácora.
+            notas. También lee <b>listas de precios en PDF</b> que tengan texto.
+            Queda registrado en la bitácora.
+          </p>
+          {/* La regla más importante de esta pantalla, dicha antes de subir y
+              no después: el archivo manda sobre lo que ya estaba. */}
+          <p className="mb-3 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800">
+            <b>Tu archivo reemplaza el inventario.</b> Los lotes que no vengan en
+            él se retiran — así no se mezcla con el que traía OVI precargado. Lo
+            único que nunca se borra es un lote <b>reservado, vendido o con
+            negocio</b>: ese se conserva y te avisamos.
           </p>
           <ActionForm action={importarInventario} submitLabel="Importar archivo">
             <input type="hidden" name="projectId" value={project.id} />

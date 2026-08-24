@@ -157,6 +157,35 @@ export async function importarInventario(_prev: unknown, fd: FormData) {
     }
   }
 
+  // --- El archivo REEMPLAZA al inventario, no se suma a él ----------------
+  //
+  // Manda lo que sube quien está en el campo. Los proyectos vienen con lotes
+  // precargados que casi nunca coinciden con la realidad del terreno; si se
+  // conservaran, quedarían mezclados con los del archivo y se ofrecerían
+  // lotes que no existen.
+  //
+  // Con UNA excepción que no se negocia: un lote con historial NO se borra.
+  // Si está reservado, vendido, bloqueado, o tiene un negocio colgando, se
+  // conserva aunque no venga en el archivo — borrarlo destruiría el registro
+  // de una venta y el respaldo de un dinero recibido. Esos se informan para
+  // que la Gerencia los revise a mano.
+  const delArchivo = rows.map((r) => r.numero);
+  const sobrantes = await prisma.lote.findMany({
+    where: { projectId, numero: { notIn: delArchivo } },
+    include: { _count: { select: { negocios: true } } },
+  });
+  const retirables = sobrantes.filter(
+    (l) => l.estado === "disponible" && l._count.negocios === 0
+  );
+  const conConHistorial = sobrantes.filter(
+    (l) => !(l.estado === "disponible" && l._count.negocios === 0)
+  );
+  if (retirables.length) {
+    await prisma.lote.deleteMany({ where: { id: { in: retirables.map((l) => l.id) } } });
+  }
+  const eliminados = retirables.length;
+  const conservados = conConHistorial.length;
+
   await prisma.inventoryImport.create({
     data: {
       projectId,
@@ -165,6 +194,8 @@ export async function importarInventario(_prev: unknown, fd: FormData) {
       filas: rows.length,
       creados,
       actualizados,
+      eliminados,
+      conservados,
       userId: user.id,
       userName: user.displayName || user.username,
     },
@@ -172,13 +203,21 @@ export async function importarInventario(_prev: unknown, fd: FormData) {
   await logSecurity(
     user,
     "inventario_import",
-    `Importó ${nombre} (hoja "${hoja}"): ${creados} creados, ${actualizados} actualizados`,
+    `Importó ${nombre} (hoja "${hoja}"): ${creados} creados, ${actualizados} actualizados, ` +
+      `${eliminados} retirados por no venir en el archivo` +
+      (conservados
+        ? `, ${conservados} conservados pese a no venir en el archivo por tener historial (${conConHistorial
+            .slice(0, 10)
+            .map((l) => l.numero)
+            .join(", ")}${conservados > 10 ? "…" : ""})`
+        : ""),
     projectId
   );
 
   revalidatePath(`/inventario/${projectId}`);
   redirect(
-    `/inventario/${projectId}?ok=import&c=${creados}&a=${actualizados}&h=${encodeURIComponent(hoja)}&ig=${ignoradas.length}`
+    `/inventario/${projectId}?ok=import&c=${creados}&a=${actualizados}&e=${eliminados}` +
+      `&k=${conservados}&h=${encodeURIComponent(hoja)}&ig=${ignoradas.length}`
   );
 }
 

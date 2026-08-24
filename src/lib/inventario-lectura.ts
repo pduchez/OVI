@@ -116,6 +116,27 @@ const ENC_LOTE = (k: string) =>
 const ENC_AREA = (k: string) => k.startsWith("area") || k.startsWith("medidas") || k === "m2" || k === "v2";
 const ENC_PRECIO = (k: string) =>
   k.startsWith("precio") || k === "valor" || k === "monto" || k === "total";
+
+/**
+ * ¿Ese precio es UNITARIO —por vara², por m²— y no el del lote?
+ *
+ * Las listas del Grupo traen «PRECIO DE VARA» (125) justo antes de «PRECIO»
+ * (35,770). Quedarse con la primera columna que empiece por «precio» pondría
+ * $125 como precio del lote: un error que se convierte en una venta a precio
+ * equivocado.
+ */
+function esPrecioUnitario(encabezado: string): boolean {
+  const k = norm(encabezado);
+  return (
+    k.includes("vara") ||
+    k.includes("v2") ||
+    k.includes("vrs") ||
+    k.includes("m2") ||
+    k.includes("unitario") ||
+    k.includes("pormetro") ||
+    k.includes("pormt")
+  );
+}
 const ENC_ESTADO = (k: string) =>
   k.startsWith("estado") || k === "situacion" || k === "condicion" || k === "status";
 
@@ -165,89 +186,83 @@ export function leerLeyenda(
   return [...encontrado].map(([color, v]) => ({ color, ...v }));
 }
 
-// --- 2. Los bloques de lotes ---------------------------------------------
+// --- 2. Las secciones de lotes -------------------------------------------
 
 /**
- * Encuentra cada tabla de lotes de la hoja. Una hoja puede traer varias, una
- * al lado de la otra: en Nuevo San Vicente vienen POLIGONO 2, 3 y 7 en la misma
- * fila de encabezados. Tomar solo la primera —como se hacía antes— dejaba fuera
- * dos tercios del proyecto.
+ * Una hoja real no es una tabla: es una REJILLA de secciones de polígono,
+ * apiladas hacia abajo y puestas una al lado de otra, y —esto es lo que
+ * engaña— cada columna avanza a su propio ritmo. En Nuevo San Vicente, la
+ * banda izquierda va por el POLIGONO 28 mientras la del medio sigue listando
+ * lotes del 21 y la derecha ya arrancó el 32.
+ *
+ * Por eso no se busca «la fila de encabezados»: se buscan las BANDAS
+ * verticales —las columnas donde aparece un encabezado LOTE, en cualquier
+ * parte de la hoja— y cada banda se recorre de arriba abajo por separado,
+ * anotando el polígono que la va titulando.
  */
-export function detectarBloques(filas: string[][]): Bloque[] {
-  const bloques: Bloque[] = [];
-  const tope = Math.min(filas.length, 40); // los encabezados están arriba
-
-  for (let f = 0; f < tope; f++) {
-    const fila = (filas[f] || []).map(norm);
-    // Todas las columnas de esta fila que dicen "LOTE".
-    const inicios: number[] = [];
-    for (let c = 0; c < fila.length; c++) if (fila[c] && ENC_LOTE(fila[c])) inicios.push(c);
-    if (!inicios.length) continue;
-
-    for (let i = 0; i < inicios.length; i++) {
-      const desde = inicios[i];
-      // El bloque llega hasta donde empieza el siguiente.
-      const hasta = i + 1 < inicios.length ? inicios[i + 1] : fila.length;
-
-      // Dentro del bloque: área (prefiere m² sobre v²), precio y estado.
-      let colArea = -1;
-      let colAreaVaras = -1;
-      let colPrecio = -1;
-      let colEstado = -1;
-      for (let c = desde + 1; c < hasta; c++) {
-        const k = fila[c];
-        if (!k) continue;
-        if (ENC_AREA(k)) {
-          if (esVaras((filas[f] || [])[c])) {
-            if (colAreaVaras < 0) colAreaVaras = c;
-          } else if (colArea < 0) {
-            colArea = c;
-          }
-        } else if (ENC_PRECIO(k) && colPrecio < 0) {
-          colPrecio = c;
-        } else if (ENC_ESTADO(k) && colEstado < 0) {
-          colEstado = c;
-        }
-      }
-      // Si solo hay varas², se usa esa: mejor un área en varas anotada que
-      // ninguna. La conversión no se inventa aquí.
-      if (colArea < 0) colArea = colAreaVaras;
-
-      // Sin precio ni área no es una tabla de lotes, es otra cosa.
-      if (colPrecio < 0 && colArea < 0) continue;
-
-      bloques.push({
-        poligono: tituloDelBloque(filas, f, desde, hasta),
-        filaEncabezado: f,
-        colLote: desde,
-        colArea,
-        colPrecio,
-        colEstado,
-        desde,
-        hasta,
-        lotes: 0,
-      });
+function bandas(filas: string[][]): { desde: number; hasta: number }[] {
+  const cols = new Set<number>();
+  for (const fila of filas) {
+    for (let c = 0; c < (fila || []).length; c++) {
+      if (ENC_LOTE(norm(fila[c]))) cols.add(c);
     }
-    if (bloques.length) break; // una sola fila de encabezados por hoja
   }
-  return bloques;
+  const orden = [...cols].sort((a, b) => a - b);
+  return orden.map((desde, i) => ({
+    desde,
+    // Hasta donde empieza la banda siguiente; la última, un ancho razonable.
+    hasta: i + 1 < orden.length ? orden[i + 1] : desde + 8,
+  }));
 }
 
-/**
- * El polígono que titula un bloque: se busca hacia arriba, dentro de las
- * columnas del bloque. Viene en una celda combinada, así que su valor está en
- * la celda de más a la izquierda del bloque.
- */
-function tituloDelBloque(filas: string[][], filaEnc: number, desde: number, hasta: number): string {
-  for (let f = filaEnc - 1; f >= 0 && f >= filaEnc - 8; f--) {
-    for (let c = desde; c < hasta; c++) {
-      const txt = String((filas[f] || [])[c] || "").trim();
-      if (!txt) continue;
-      const m = txt.match(/\b(?:pol[ií]gono|poligono|manzana|mzn|bloque|sector|etapa)\s*[:\-]?\s*([A-Za-z0-9]{1,6})\b/i);
-      if (m) return m[1].toUpperCase();
+/** Las columnas de una sección, leídas de SU fila de encabezados. */
+function columnasDe(
+  fila: string[],
+  desde: number,
+  hasta: number
+): { area: number; precio: number; estado: number } {
+  let area = -1;
+  let areaVaras = -1;
+  let precio = -1;
+  let contado = -1;
+  let unitario = -1;
+  let estado = -1;
+  for (let c = desde + 1; c < hasta; c++) {
+    const crudo = fila[c];
+    const k = norm(crudo);
+    if (!k) continue;
+    if (ENC_AREA(k)) {
+      if (esVaras(crudo)) {
+        if (areaVaras < 0) areaVaras = c;
+      } else if (area < 0) {
+        area = c;
+      }
+    } else if (ENC_PRECIO(k)) {
+      if (k.includes("contado")) {
+        if (contado < 0) contado = c;
+      } else if (esPrecioUnitario(crudo)) {
+        if (unitario < 0) unitario = c;
+      } else if (precio < 0) {
+        precio = c;
+      }
+    } else if (ENC_ESTADO(k) && estado < 0) {
+      estado = c;
     }
   }
-  return "";
+  if (area < 0) area = areaVaras;
+  // Orden de confianza del precio: el de contado, luego el del lote a secas, y
+  // solo como último recurso uno unitario (por vara² o por m²).
+  if (contado >= 0) precio = contado;
+  else if (precio < 0) precio = unitario;
+  return { area, precio, estado };
+}
+
+/** ¿Esta celda titula una sección? Devuelve el polígono, o "". */
+function tituloDeSeccion(texto: string): string {
+  const m = String(texto || "").match(
+    /\b(?:pol[ií]gono|poligono|manzana|mzn|bloque|sector|etapa)\s*[:\-]?\s*([A-Za-z0-9][A-Za-z0-9\-]{0,7})\b/i
+  );
+  return m ? m[1].toUpperCase() : "";
 }
 
 // --- 3. Lectura completa de una hoja -------------------------------------
@@ -255,40 +270,69 @@ function tituloDelBloque(filas: string[][], filaEnc: number, desde: number, hast
 export function leerHojaDeInventario(filas: string[][], colores: string[][]): LecturaHoja {
   const leyenda = leerLeyenda(filas, colores);
   const porColor = new Map(leyenda.map((l) => [l.color, l.estado]));
-  // Los colores de la propia leyenda no son datos: no deben contarse como
-  // lotes ni como "color sin explicar".
-  const filasDeLeyenda = new Set<string>();
+
+  // Las celdas de la propia leyenda no son datos.
+  const esLeyenda = new Set<string>();
   for (let f = 0; f < filas.length; f++) {
     for (let c = 0; c < (filas[f] || []).length; c++) {
       const t = String(filas[f][c] || "").trim();
-      if (t && aEstado(t) && t.length <= 40) filasDeLeyenda.add(`${f}:${c}`);
+      if (t && t.length <= 40 && aEstado(t)) {
+        for (const dc of [-3, -2, -1, 0, 1, 2, 3]) esLeyenda.add(`${f}:${c + dc}`);
+      }
     }
   }
 
-  const bloques = detectarBloques(filas);
+  const bloques: Bloque[] = [];
   const lotes: LoteLeido[] = [];
   const vistos = new Set<string>();
   const sinExplicar = new Map<string, number>();
 
-  for (const b of bloques) {
-    let vacias = 0;
-    for (let f = b.filaEncabezado + 1; f < filas.length; f++) {
-      const fila = filas[f] || [];
-      const bruto = String(fila[b.colLote] ?? "").trim();
+  for (const banda of bandas(filas)) {
+    let poligono = "";
+    let cols: { area: number; precio: number; estado: number } | null = null;
+    let actual: Bloque | null = null;
 
-      if (!bruto) {
-        // Varias filas seguidas sin lote: el bloque terminó.
-        if (++vacias >= 6) break;
+    for (let f = 0; f < filas.length; f++) {
+      const fila = filas[f] || [];
+      const celda = String(fila[banda.desde] ?? "").trim();
+
+      // ¿Empieza una sección nueva? El título puede estar en cualquier celda
+      // de la banda, no solo en la primera.
+      let titulo = "";
+      for (let c = banda.desde; c < banda.hasta && !titulo; c++) {
+        titulo = tituloDeSeccion(String(fila[c] ?? ""));
+      }
+      if (titulo) {
+        poligono = titulo;
+        cols = null; // hasta que aparezca su fila de encabezados
+        actual = null;
         continue;
       }
-      vacias = 0;
-      if (/^(total|subtotal|suma)/i.test(bruto)) continue;
-      // El número de lote es un número o un código corto; un texto largo es
-      // una nota al pie, no un lote.
-      if (bruto.length > 12) continue;
-      if (!/[0-9]/.test(bruto)) continue;
 
-      const numero = (b.poligono ? `${b.poligono}-${bruto}` : bruto).slice(0, 60);
+      // ¿Es la fila de encabezados de esta sección?
+      if (ENC_LOTE(norm(celda))) {
+        cols = columnasDe(fila, banda.desde, banda.hasta);
+        actual = {
+          poligono,
+          filaEncabezado: f,
+          colLote: banda.desde,
+          colArea: cols.area,
+          colPrecio: cols.precio,
+          colEstado: cols.estado,
+          desde: banda.desde,
+          hasta: banda.hasta,
+          lotes: 0,
+        };
+        bloques.push(actual);
+        continue;
+      }
+
+      if (!cols || !actual || !celda) continue;
+      if (/^(total|subtotal|suma)/i.test(celda)) continue;
+      // Un número de lote es corto y lleva dígitos; un texto largo es una nota.
+      if (celda.length > 12 || !/[0-9]/.test(celda)) continue;
+
+      const numero = (poligono ? `${poligono}-${celda}` : celda).slice(0, 60);
       const clave = numero.toLowerCase();
       if (vistos.has(clave)) continue;
       vistos.add(clave);
@@ -297,9 +341,9 @@ export function leerHojaDeInventario(filas: string[][], colores: string[][]): Le
       let estado: string | null = null;
       let origen: LoteLeido["origenEstado"] = "sin marca";
 
-      // (a) Una columna que lo diga con todas sus letras manda sobre el color.
-      if (b.colEstado >= 0) {
-        const dicho = aEstado(String(fila[b.colEstado] ?? ""));
+      // (a) Una columna que lo diga con letras manda sobre el color.
+      if (cols.estado >= 0) {
+        const dicho = aEstado(String(fila[cols.estado] ?? ""));
         if (dicho) {
           estado = dicho;
           origen = "columna";
@@ -309,36 +353,35 @@ export function leerHojaDeInventario(filas: string[][], colores: string[][]): Le
       // (b) Si no, el relleno de la fila, según la leyenda del archivo.
       if (!estado) {
         const fColores = colores[f] || [];
-        for (let c = b.desde; c < b.hasta; c++) {
+        for (let c = banda.desde; c < banda.hasta; c++) {
           const color = fColores[c];
-          if (!color) continue;
-          if (filasDeLeyenda.has(`${f}:${c}`)) continue;
+          if (!color || esLeyenda.has(`${f}:${c}`)) continue;
           const porLeyenda = porColor.get(color);
           if (porLeyenda) {
             estado = porLeyenda;
             origen = "color";
             break;
           }
-          // Pintado pero sin explicación: NO se inventa nada, se anota.
+          // Pintado sin explicación: no se adivina, se anota.
           sinExplicar.set(color, (sinExplicar.get(color) || 0) + 1);
         }
       }
 
       lotes.push({
         numero,
-        area: b.colArea >= 0 ? aNumero(fila[b.colArea]) : 0,
-        precio: b.colPrecio >= 0 ? aNumero(fila[b.colPrecio]) : 0,
+        area: cols.area >= 0 ? aNumero(fila[cols.area]) : 0,
+        precio: cols.precio >= 0 ? aNumero(fila[cols.precio]) : 0,
         estado: estado || "disponible",
         notas: "",
         origenEstado: origen,
       });
-      b.lotes++;
+      actual.lotes++;
     }
   }
 
   return {
     lotes,
-    bloques,
+    bloques: bloques.filter((b) => b.lotes > 0),
     leyenda,
     coloresSinExplicar: [...sinExplicar].map(([color, n]) => ({ color, lotes: n })),
   };

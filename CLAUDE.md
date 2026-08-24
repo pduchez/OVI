@@ -53,7 +53,16 @@ reserva administrativa, sin pintar disponible— con su leyenda en una esquina.
    desglose por estado. Tiene que poder comprobarla, no confiar a ciegas.
 
 Una columna de estado escrita con letras **manda sobre el color**. El área en m²
-manda sobre la de varas². Las filas de TOTAL se descartan.
+manda sobre la de varas². El precio del lote manda sobre el unitario —las listas
+traen «PRECIO DE VARA» (125) justo antes de «PRECIO» (35,770), y quedarse con el
+primero pondría $125 como precio del lote—. Las filas de TOTAL se descartan.
+
+La hoja **no es una tabla**: es una rejilla de secciones apiladas hacia abajo y
+puestas una al lado de otra, y **cada banda vertical avanza a su propio ritmo**
+(la izquierda va por el POLIGONO 28 mientras la del medio sigue en el 21). Por
+eso no se busca «la fila de encabezados»: se buscan las bandas —las columnas
+donde aparece un encabezado LOTE en cualquier parte de la hoja— y cada una se
+recorre de arriba abajo anotando el polígono que la va titulando.
 
 Al ampliar esto: agregar sinónimos a `aEstado()` es barato y seguro; cambiar el
 orden de confianza (columna → color → disponible) no.

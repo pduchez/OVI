@@ -338,3 +338,15 @@ model LoginAttempt {
 
   @@index([bloqueadoHasta])
 }
+
+// ---------------------------------------------------------------
+//  Operaciones que deben correr UNA SOLA VEZ.
+//  El arranque (`ensureBootstrap`) se ejecuta en cada despliegue, así que una
+//  acción puntual —restablecer la contraseña de alguien, por ejemplo— no puede
+//  ir suelta ahí: se repetiría en cada despliegue y le borraría a la persona
+//  la contraseña que acababa de escoger. Aquí queda anotada la que ya corrió.
+// ---------------------------------------------------------------
+model OperacionUnica {
+  clave      String   @id
+  aplicadaEn DateTime @default(now())
+}

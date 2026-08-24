@@ -44,22 +44,31 @@ export const SEED_PROJECTS = [
 ];
 
 /**
- * PILOTO — Nuevo San Vicente. Las asesoras del proyecto arrancan con los
- * frenos levantados (`modoPiloto`): cargan su propio inventario y bloquean y
- * desbloquean lotes sin adjuntar boleta, para que la implementación no se
- * trabe. Cuando el equipo ya opere solo, se apaga el marcador desde el panel
- * de Usuarios, una por una, y quedan con las reglas normales.
+ * PILOTOS — proyectos que entran a OVI antes que el resto. Su gente arranca
+ * con los frenos levantados (`modoPiloto`): carga su propio inventario y
+ * bloquea y desbloquea lotes sin adjuntar boleta, para que la implementación
+ * no se trabe. Cuando el equipo ya opera solo se apaga el marcador desde el
+ * panel de Usuarios, persona por persona, y quedan con las reglas normales.
+ *
+ * Para sumar un proyecto al piloto basta con agregarlo a esta lista.
  */
-export const PILOTO = {
-  codigoProyecto: "GIC-06", // Nuevo San Vicente
-  /** Cupo genérico del proyecto: sobra al haber personas con nombre propio. */
-  cupoGenerico: "ventasNuevosanvicente",
-  asesoras: [
-    { username: "liz", displayName: "Liz" },
-    { username: "clarita", displayName: "Clarita" },
-    { username: "gaby", displayName: "Gaby" },
-  ],
-};
+export const PILOTOS = [
+  {
+    codigoProyecto: "GIC-06", // Nuevo San Vicente
+    /** Cupo genérico del proyecto: sobra al haber personas con nombre propio. */
+    cupoGenerico: "ventasNuevosanvicente",
+    asesoras: [
+      { username: "liz", displayName: "Liz" },
+      { username: "clarita", displayName: "Clarita" },
+      { username: "gaby", displayName: "Gaby" },
+    ],
+  },
+  {
+    codigoProyecto: "GIC-03", // Adelaida City
+    cupoGenerico: "ventasAdelaidacity",
+    asesoras: [{ username: "meyvelin", displayName: "Meyvelin" }],
+  },
+];
 
 export const SEED_VENDEDORES = [
   { nombre: "Ana Martínez", fuerza: "interna" },
@@ -121,6 +130,11 @@ export async function ensureBootstrap(): Promise<void> {
     where: { username: { in: USUARIOS_OBSOLETOS }, activo: true },
     data: { activo: false },
   });
+
+  // Restablecimientos puntuales pedidos por la Gerencia. Cada uno corre una
+  // sola vez, gracias a su marca; para repetir uno más adelante se agrega una
+  // línea nueva con una marca nueva, nunca se edita la de arriba.
+  await restablecerClaveInicial("clarita", "reset:clarita:2026-08-24");
 
   bootstrapped = true;
 }
@@ -223,6 +237,39 @@ async function renombrarConClaveInicial(viejo: string, nuevo: string) {
   });
 }
 
+/**
+ * Devuelve a un usuario la contraseña inicial («password»), UNA SOLA VEZ.
+ *
+ * El arranque corre en cada despliegue, así que un restablecimiento suelto
+ * aquí se repetiría siempre y le borraría a la persona la contraseña que
+ * acababa de escoger. Por eso queda anotado en `OperacionUnica` con una marca:
+ * mientras esa marca exista, no se vuelve a tocar. Para repetirlo a propósito
+ * —otro olvido más adelante— se usa una marca nueva.
+ */
+async function restablecerClaveInicial(username: string, marca: string) {
+  const yaCorrio = await prisma.operacionUnica.findUnique({ where: { clave: marca } });
+  if (yaCorrio) return;
+
+  const u = await prisma.user.findFirst({
+    where: { username: { equals: username, mode: "insensitive" } },
+  });
+  if (u) {
+    await prisma.user.update({
+      where: { id: u.id },
+      data: {
+        passwordHash: hashPassword("password"),
+        // Al entrar, OVI la lleva sola a escoger una nueva.
+        mustChangePassword: true,
+        // Restablecer cierra cualquier sesión abierta con la clave anterior.
+        sessionEpoch: { increment: 1 },
+      },
+    });
+  }
+  // Se anota aunque el usuario no exista: la operación ya se intentó y no debe
+  // quedar armada, esperando a que alguien cree un usuario con ese nombre.
+  await prisma.operacionUnica.create({ data: { clave: marca } });
+}
+
 /** Retira un cupo que sobra: se borra si nunca se usó; si no, se desactiva. */
 async function retirarCupo(username: string) {
   const u = await prisma.user.findFirst({
@@ -303,10 +350,11 @@ export async function ensureOrgUsers(): Promise<void> {
     await prisma.projectAssignment.deleteMany({ where: { userId: uid } });
   }
 
-  // --- PILOTO: las asesoras de Nuevo San Vicente -------------------------
-  const proyPiloto = projects.find((p) => p.codigo === PILOTO.codigoProyecto);
-  if (proyPiloto) {
-    for (const a of PILOTO.asesoras) {
+  // --- PILOTOS: la gente de los proyectos que van primero ----------------
+  for (const piloto of PILOTOS) {
+    const proy = projects.find((p) => p.codigo === piloto.codigoProyecto);
+    if (!proy) continue;
+    for (const a of piloto.asesoras) {
       const uid = await upsertUser({
         username: a.username,
         role: "vendedor",
@@ -320,13 +368,13 @@ export async function ensureOrgUsers(): Promise<void> {
       // apagarlo desde el panel de Usuarios es definitivo.
       if ((await prisma.projectAssignment.count({ where: { userId: uid } })) === 0) {
         await prisma.projectAssignment.create({
-          data: { userId: uid, projectId: proyPiloto.id },
+          data: { userId: uid, projectId: proy.id },
         });
       }
     }
-    // El cupo genérico del proyecto sobra: ya hay tres personas con nombre.
+    // El cupo genérico del proyecto sobra: ya hay personas con nombre propio.
     await prisma.user.updateMany({
-      where: { username: { equals: PILOTO.cupoGenerico, mode: "insensitive" }, activo: true },
+      where: { username: { equals: piloto.cupoGenerico, mode: "insensitive" }, activo: true },
       data: { activo: false },
     });
   }

@@ -251,3 +251,98 @@ export async function actividadReciente(scope: Scope, limit = 25) {
     include: { registradoPor: { select: { displayName: true, username: true } } },
   });
 }
+
+// --- Pulso de proyectos ---------------------------------------------------
+
+/**
+ * - aldia      → reportó en las últimas 48 h.
+ * - atrasado   → reportaba, y lleva 2 a 7 días sin hacerlo.
+ * - frio       → reportaba, y lleva más de una semana callado. ESTA es la alerta.
+ * - siniciar   → nunca ha reportado nada. No es un descuido: es un proyecto que
+ *                todavía no entra a OVI, y pintarlo de rojo sería ruido que
+ *                tapa las alertas de verdad.
+ */
+export type PulsoEstado = "aldia" | "atrasado" | "frio" | "siniciar";
+
+export interface PulsoProyecto {
+  id: string;
+  codigo: string;
+  nombre: string;
+  /** Último movimiento registrado, o null si nunca hubo. */
+  ultimo: Date | null;
+  /** Días completos desde ese movimiento; null si nunca hubo. */
+  dias: number | null;
+  estado: PulsoEstado;
+}
+
+/** Horas dentro de las que un proyecto se considera al día. */
+const AL_DIA_H = 48;
+/** A partir de aquí ya no es un atraso: es un proyecto que dejó de reportar. */
+const FRIO_D = 7;
+
+/**
+ * Qué tan al día está cada proyecto.
+ *
+ * La pregunta que responde es de seguimiento, no de ventas: ¿quién está
+ * alimentando OVI desde el campo y quién dejó de hacerlo? Por eso cuenta
+ * CUALQUIER movimiento —visita, reserva, venta, abono, novedad o una carga de
+ * inventario—, no solo las ventas: un proyecto puede pasar una semana sin
+ * vender y estar trabajando perfectamente.
+ *
+ * Se ordena por el más descuidado primero: lo que hay que mirar va arriba.
+ */
+export async function pulsoProyectos(scope: Scope): Promise<PulsoProyecto[]> {
+  const where: Record<string, unknown> = { estado: "activo" };
+  if (scope.projectIds) where.id = { in: scope.projectIds };
+
+  const proyectos = await prisma.project.findMany({
+    where,
+    select: { id: true, codigo: true, nombre: true },
+  });
+  if (!proyectos.length) return [];
+  const ids = proyectos.map((p) => p.id);
+
+  // Dos fuentes: la bitácora de movimientos y las cargas de inventario.
+  const [movs, cargas] = await Promise.all([
+    prisma.registro.groupBy({
+      by: ["projectId"],
+      where: { projectId: { in: ids } },
+      _max: { createdAt: true },
+    }),
+    prisma.inventoryImport.groupBy({
+      by: ["projectId"],
+      where: { projectId: { in: ids } },
+      _max: { createdAt: true },
+    }),
+  ]);
+
+  const ultimoPor = new Map<string, Date>();
+  for (const g of [...movs, ...cargas]) {
+    const f = g._max.createdAt;
+    if (!f) continue;
+    const previo = ultimoPor.get(g.projectId);
+    if (!previo || f > previo) ultimoPor.set(g.projectId, f);
+  }
+
+  const ahora = Date.now();
+  const filas = proyectos.map((p) => {
+    const ultimo = ultimoPor.get(p.id) || null;
+    if (!ultimo) {
+      return { ...p, ultimo: null, dias: null, estado: "siniciar" as PulsoEstado };
+    }
+    const horas = (ahora - ultimo.getTime()) / 3600000;
+    const dias = Math.floor(horas / 24);
+    const estado: PulsoEstado =
+      horas < AL_DIA_H ? "aldia" : dias < FRIO_D ? "atrasado" : "frio";
+    return { ...p, ultimo, dias, estado };
+  });
+
+  // Arriba lo que hay que ir a mover HOY: el que dejó de reportar, luego el
+  // atrasado. Los que aún no arrancan van al final: no son un descuido.
+  const peso = { frio: 0, atrasado: 1, siniciar: 2, aldia: 3 };
+  return filas.sort((a, b) => {
+    if (peso[a.estado] !== peso[b.estado]) return peso[a.estado] - peso[b.estado];
+    if (a.dias === null || b.dias === null) return a.nombre.localeCompare(b.nombre);
+    return b.dias - a.dias;
+  });
+}

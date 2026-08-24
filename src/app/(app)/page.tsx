@@ -6,10 +6,12 @@ import {
   funnel,
   ventasPorFuerza,
   actividadReciente,
+  pulsoProyectos,
 } from "@/lib/analytics";
 import { rangoPreset } from "@/lib/format";
 import { money0, money, fechaHora, num } from "@/lib/format";
 import { PageHeader, StatCard, FunnelBars } from "@/components/ui";
+import PulsoProyectos from "@/components/PulsoProyectos";
 import { hasDatabase } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
@@ -54,11 +56,12 @@ export default async function Dashboard({
   const preset = sp.r || "mes";
   const { desde, hasta } = rangoPreset(preset);
 
-  const [kpis, f, fuerza, actividad] = await Promise.all([
+  const [kpis, f, fuerza, actividad, pulso] = await Promise.all([
     dashboardKpis(scope, desde, hasta),
     funnel(scope, desde, hasta),
     ventasPorFuerza(scope, desde, hasta),
     actividadReciente(scope, 12),
+    pulsoProyectos(scope),
   ]);
 
   // Tarjetas de fuerza visibles según el rol: DP solo ve la suya; las fuerzas
@@ -166,8 +169,11 @@ export default async function Dashboard({
         </div>
       </div>
 
-      {/* Actividad reciente */}
-      <div className="mt-6 card">
+      {/* Actividad reciente + pulso de proyectos, en una sola fila: el pulso
+          ocupa el ancho que la lista de actividad dejaba vacío, así que el
+          tablero no se alarga. */}
+      <div className="mt-6 grid gap-4 lg:grid-cols-3">
+      <div className="card lg:col-span-2">
         <div className="mb-3 flex items-center justify-between">
           <h2 className="font-bold text-ovi-ink">Actividad reciente</h2>
           <Link href="/negocios" className="text-sm font-semibold text-ovi-primary">
@@ -201,6 +207,12 @@ export default async function Dashboard({
             ))}
           </ul>
         )}
+      </div>
+        {/* En celular va ARRIBA: para quien va en el carro, saber qué
+            proyecto se quedó callado vale más que releer la actividad. */}
+        <div className="order-first lg:order-last">
+          <PulsoProyectos filas={pulso} />
+        </div>
       </div>
     </div>
   );

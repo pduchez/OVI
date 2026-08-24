@@ -46,6 +46,9 @@ export const SEED_PROJECTS = [
   // propósito: no se dieron, e inventarlos sería peor que dejarlos vacíos
   // para que Dirección los complete desde Administración → Proyectos.
   { codigo: "GIC-21", nombre: "Altos de Las Mercedes", departamento: "", municipio: "", fuerza: "ambas", totalLotes: 0, precioDesde: 0 },
+  // Etapa en venta de Condado Hilo de Oro. Va como proyecto propio porque
+  // tiene sus lotes y sus precios, igual que Cumbres de Santiago.
+  { codigo: "GIC-22", nombre: "Brisas del Valle", departamento: "Cabañas", municipio: "Ilobasco", fuerza: "ambas", totalLotes: 0, precioDesde: 0 },
 ];
 
 /**
@@ -83,6 +86,32 @@ export const PILOTOS = [
     codigos: ["GIC-19"], // Condado El Triunfo
     cupos: ["ventasCondadoeltriunfo"],
     asesoras: [{ username: "luci", displayName: "Luci" }],
+  },
+  {
+    codigos: ["GIC-13"], // Condado del Golfo
+    cupos: ["ventasCondadodelgolfo"],
+    asesoras: [{ username: "kenia", displayName: "Kenia Hernández" }],
+  },
+  {
+    codigos: ["GIC-04"], // Vista al Mar
+    cupos: ["ventasVistaalmar"],
+    asesoras: [{ username: "mirna", displayName: "Mirna" }],
+  },
+  {
+    codigos: ["GIC-18"], // Panamerican City
+    cupos: ["ventasPanamericancity"],
+    asesoras: [{ username: "alexander", displayName: "Alexander" }],
+  },
+  {
+    // Concepción lleva dos proyectos, cada uno con su etapa en venta:
+    // Hilo de Oro vende Brisas del Valle, y Colina City vende Helen City.
+    // Los cuatro están en OVI como listas propias: cada una tiene sus lotes.
+    codigos: ["GIC-07", "GIC-22", "GIC-10", "GIC-11"],
+    cupos: [
+      "ventasCondadohilodeoro", "ventasBrisasdelvalle",
+      "ventasColinacity", "ventasHelencity",
+    ],
+    asesoras: [{ username: "concepcion", displayName: "Concepción" }],
   },
   {
     codigos: ["GIC-21"], // Altos de Las Mercedes

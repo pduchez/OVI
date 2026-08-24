@@ -131,6 +131,11 @@ export async function ensureBootstrap(): Promise<void> {
     data: { activo: false },
   });
 
+  // Restablecimientos puntuales pedidos por la Gerencia. Cada uno corre una
+  // sola vez, gracias a su marca; para repetir uno más adelante se agrega una
+  // línea nueva con una marca nueva, nunca se edita la de arriba.
+  await restablecerClaveInicial("clarita", "reset:clarita:2026-08-24");
+
   bootstrapped = true;
 }
 
@@ -230,6 +235,39 @@ async function renombrarConClaveInicial(viejo: string, nuevo: string) {
       sessionEpoch: { increment: 1 },
     },
   });
+}
+
+/**
+ * Devuelve a un usuario la contraseña inicial («password»), UNA SOLA VEZ.
+ *
+ * El arranque corre en cada despliegue, así que un restablecimiento suelto
+ * aquí se repetiría siempre y le borraría a la persona la contraseña que
+ * acababa de escoger. Por eso queda anotado en `OperacionUnica` con una marca:
+ * mientras esa marca exista, no se vuelve a tocar. Para repetirlo a propósito
+ * —otro olvido más adelante— se usa una marca nueva.
+ */
+async function restablecerClaveInicial(username: string, marca: string) {
+  const yaCorrio = await prisma.operacionUnica.findUnique({ where: { clave: marca } });
+  if (yaCorrio) return;
+
+  const u = await prisma.user.findFirst({
+    where: { username: { equals: username, mode: "insensitive" } },
+  });
+  if (u) {
+    await prisma.user.update({
+      where: { id: u.id },
+      data: {
+        passwordHash: hashPassword("password"),
+        // Al entrar, OVI la lleva sola a escoger una nueva.
+        mustChangePassword: true,
+        // Restablecer cierra cualquier sesión abierta con la clave anterior.
+        sessionEpoch: { increment: 1 },
+      },
+    });
+  }
+  // Se anota aunque el usuario no exista: la operación ya se intentó y no debe
+  // quedar armada, esperando a que alguien cree un usuario con ese nombre.
+  await prisma.operacionUnica.create({ data: { clave: marca } });
 }
 
 /** Retira un cupo que sobra: se borra si nunca se usó; si no, se desactiva. */

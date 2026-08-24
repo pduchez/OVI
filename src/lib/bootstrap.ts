@@ -55,9 +55,10 @@ export const SEED_PROJECTS = [
  */
 export const PILOTOS = [
   {
-    codigoProyecto: "GIC-06", // Nuevo San Vicente
-    /** Cupo genérico del proyecto: sobra al haber personas con nombre propio. */
-    cupoGenerico: "ventasNuevosanvicente",
+    /** Etapas del mismo proyecto van juntas: las lleva la misma persona. */
+    codigos: ["GIC-06"], // Nuevo San Vicente
+    /** Cupos genéricos que sobran al haber personas con nombre propio. */
+    cupos: ["ventasNuevosanvicente"],
     asesoras: [
       { username: "liz", displayName: "Liz" },
       { username: "clarita", displayName: "Clarita" },
@@ -65,19 +66,28 @@ export const PILOTOS = [
     ],
   },
   {
-    codigoProyecto: "GIC-03", // Adelaida City
-    cupoGenerico: "ventasAdelaidacity",
+    codigos: ["GIC-03"], // Adelaida City
+    cupos: ["ventasAdelaidacity"],
     asesoras: [{ username: "meyvelin", displayName: "Meyvelin" }],
   },
   {
-    codigoProyecto: "GIC-14", // Vía Bypass — el proyecto del Bypass, en Usulután
-    cupoGenerico: "ventasViabypass",
+    codigos: ["GIC-14"], // Vía Bypass — el proyecto del Bypass, en Usulután
+    cupos: ["ventasViabypass"],
     asesoras: [{ username: "karla", displayName: "Karla" }],
   },
   {
-    codigoProyecto: "GIC-19", // Condado El Triunfo
-    cupoGenerico: "ventasCondadoeltriunfo",
+    codigos: ["GIC-19"], // Condado El Triunfo
+    cupos: ["ventasCondadoeltriunfo"],
     asesoras: [{ username: "luci", displayName: "Luci" }],
+  },
+  {
+    // Santiago City y Cumbres de Santiago son ETAPAS del mismo proyecto, no
+    // dos proyectos distintos: las lleva una sola persona y por eso van en
+    // una sola sección. En OVI siguen siendo dos inventarios separados,
+    // porque tienen lotes y precios propios.
+    codigos: ["GIC-15", "GIC-17"],
+    cupos: ["ventasSantiagocity", "ventasCumbresdesantiago"],
+    asesoras: [{ username: "morena", displayName: "Morena" }],
   },
 ];
 
@@ -430,8 +440,11 @@ export async function ensureOrgUsers(): Promise<void> {
 
   // --- PILOTOS: la gente de los proyectos que van primero ----------------
   for (const piloto of PILOTOS) {
-    const proy = projects.find((p) => p.codigo === piloto.codigoProyecto);
-    if (!proy) continue;
+    const proyectos = piloto.codigos
+      .map((c) => projects.find((p) => p.codigo === c))
+      .filter((p): p is NonNullable<typeof p> => Boolean(p));
+    if (!proyectos.length) continue;
+
     for (const a of piloto.asesoras) {
       const uid = await upsertUser({
         username: a.username,
@@ -441,18 +454,24 @@ export async function ensureOrgUsers(): Promise<void> {
         supervisorId: aInterna,
         modoPiloto: true,
       });
-      // El marcador se re-afirma en cada arranque solo si nadie lo apagó a
-      // mano: `upsertUser` no toca a los usuarios que ya existen, así que
-      // apagarlo desde el panel de Usuarios es definitivo.
-      if ((await prisma.projectAssignment.count({ where: { userId: uid } })) === 0) {
-        await prisma.projectAssignment.create({
+      // Cada asignación se hace UNA vez y queda anotada. Así una persona puede
+      // llevar varias etapas, y si mañana alguien le quita una desde el panel
+      // de Usuarios, el arranque siguiente no se la devuelve.
+      for (const proy of proyectos) {
+        const marca = `asignacion:${a.username}:${proy.codigo}`;
+        const yaCorrio = await prisma.operacionUnica.findUnique({ where: { clave: marca } });
+        if (yaCorrio) continue;
+        await prisma.projectAssignment.createMany({
           data: { userId: uid, projectId: proy.id },
+          skipDuplicates: true,
         });
+        await prisma.operacionUnica.create({ data: { clave: marca } });
       }
     }
-    // El cupo genérico del proyecto sobra: ya hay personas con nombre propio.
+
+    // Los cupos genéricos sobran: ya hay personas con nombre propio.
     await prisma.user.updateMany({
-      where: { username: { equals: piloto.cupoGenerico, mode: "insensitive" }, activo: true },
+      where: { username: { in: piloto.cupos }, activo: true },
       data: { activo: false },
     });
   }

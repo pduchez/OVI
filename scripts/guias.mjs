@@ -25,6 +25,7 @@ const GUIAS = [
   { fuente: "10-apendice-tecnico", salida: "OVI-apendice-tecnico" },
   { fuente: "11-plan-implementacion-coordinacion", salida: "OVI-plan-implementacion-coordinacion" },
   { fuente: "12-piloto-nuevo-san-vicente", salida: "OVI-Nuevo-San-Vicente" },
+  { fuente: "13-adelaida-city", salida: "OVI-Adelaida-City" },
 ];
 
 let chromium;
@@ -39,7 +40,11 @@ try {
   process.exit(1);
 }
 
-const navegador = await chromium.launch();
+// OVI_CHROMIUM permite apuntar a un Chromium ya instalado en la máquina,
+// para cuando el que Playwright espera no está descargado.
+const navegador = await chromium.launch(
+  process.env.OVI_CHROMIUM ? { executablePath: process.env.OVI_CHROMIUM } : {}
+);
 const pagina = await navegador.newPage();
 
 for (const g of GUIAS) {

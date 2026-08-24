@@ -26,6 +26,8 @@ const GUIAS = [
   { fuente: "11-plan-implementacion-coordinacion", salida: "OVI-plan-implementacion-coordinacion" },
   { fuente: "12-piloto-nuevo-san-vicente", salida: "OVI-Nuevo-San-Vicente" },
   { fuente: "13-adelaida-city", salida: "OVI-Adelaida-City" },
+  { fuente: "14-via-bypass", salida: "OVI-Via-Bypass" },
+  { fuente: "15-condado-el-triunfo", salida: "OVI-Condado-El-Triunfo" },
 ];
 
 let chromium;

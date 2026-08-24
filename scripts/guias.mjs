@@ -12,6 +12,12 @@ import path from "node:path";
 
 const DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "docs", "guias");
 
+import { generar } from "./guias-vendedoras.mjs";
+
+// Los manuales de las vendedoras se generan de una sola plantilla antes de
+// imprimir: así una corrección de redacción sale en todos, no en uno.
+const DE_VENDEDORAS = generar();
+
 const GUIAS = [
   { fuente: "1-direccion", salida: "OVI-direccion" },
   { fuente: "2-mandos", salida: "OVI-mandos" },
@@ -25,10 +31,8 @@ const GUIAS = [
   { fuente: "10-apendice-tecnico", salida: "OVI-apendice-tecnico" },
   { fuente: "11-plan-implementacion-coordinacion", salida: "OVI-plan-implementacion-coordinacion" },
   { fuente: "12-piloto-nuevo-san-vicente", salida: "OVI-Nuevo-San-Vicente" },
-  { fuente: "13-adelaida-city", salida: "OVI-Adelaida-City" },
-  { fuente: "14-via-bypass", salida: "OVI-Via-Bypass" },
-  { fuente: "15-condado-el-triunfo", salida: "OVI-Condado-El-Triunfo" },
   { fuente: "16-guia-sencilla", salida: "OVI-guia-sencilla" },
+  ...DE_VENDEDORAS,
 ];
 
 let chromium;

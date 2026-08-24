@@ -42,6 +42,13 @@ export const SEED_PROJECTS = [
   { codigo: "GIC-18", nombre: "Panamerican City", departamento: "Usulután", municipio: "Usulután", fuerza: "ambas", totalLotes: 0, precioDesde: 0 },
   { codigo: "GIC-19", nombre: "Condado El Triunfo", departamento: "Usulután", municipio: "Jiquilisco", fuerza: "ambas", totalLotes: 0, precioDesde: 0 },
   { codigo: "GIC-20", nombre: "Condado Villa Lourdes", departamento: "La Libertad", municipio: "Lourdes, Colón", fuerza: "ambas", totalLotes: 0, precioDesde: 0 },
+  // Alta pedida por Gerencia. Departamento y municipio quedan en blanco a
+  // propósito: no se dieron, e inventarlos sería peor que dejarlos vacíos
+  // para que Dirección los complete desde Administración → Proyectos.
+  { codigo: "GIC-21", nombre: "Altos de Las Mercedes", departamento: "", municipio: "", fuerza: "ambas", totalLotes: 0, precioDesde: 0 },
+  // Etapa en venta de Condado Hilo de Oro. Va como proyecto propio porque
+  // tiene sus lotes y sus precios, igual que Cumbres de Santiago.
+  { codigo: "GIC-22", nombre: "Brisas del Valle", departamento: "Cabañas", municipio: "Ilobasco", fuerza: "ambas", totalLotes: 0, precioDesde: 0 },
 ];
 
 /**
@@ -55,9 +62,10 @@ export const SEED_PROJECTS = [
  */
 export const PILOTOS = [
   {
-    codigoProyecto: "GIC-06", // Nuevo San Vicente
-    /** Cupo genérico del proyecto: sobra al haber personas con nombre propio. */
-    cupoGenerico: "ventasNuevosanvicente",
+    /** Etapas del mismo proyecto van juntas: las lleva la misma persona. */
+    codigos: ["GIC-06"], // Nuevo San Vicente
+    /** Cupos genéricos que sobran al haber personas con nombre propio. */
+    cupos: ["ventasNuevosanvicente"],
     asesoras: [
       { username: "liz", displayName: "Liz" },
       { username: "clarita", displayName: "Clarita" },
@@ -65,19 +73,59 @@ export const PILOTOS = [
     ],
   },
   {
-    codigoProyecto: "GIC-03", // Adelaida City
-    cupoGenerico: "ventasAdelaidacity",
+    codigos: ["GIC-03"], // Adelaida City
+    cupos: ["ventasAdelaidacity"],
     asesoras: [{ username: "meyvelin", displayName: "Meyvelin" }],
   },
   {
-    codigoProyecto: "GIC-14", // Vía Bypass — el proyecto del Bypass, en Usulután
-    cupoGenerico: "ventasViabypass",
+    codigos: ["GIC-14"], // Vía Bypass — el proyecto del Bypass, en Usulután
+    cupos: ["ventasViabypass"],
     asesoras: [{ username: "karla", displayName: "Karla" }],
   },
   {
-    codigoProyecto: "GIC-19", // Condado El Triunfo
-    cupoGenerico: "ventasCondadoeltriunfo",
+    codigos: ["GIC-19"], // Condado El Triunfo
+    cupos: ["ventasCondadoeltriunfo"],
     asesoras: [{ username: "luci", displayName: "Luci" }],
+  },
+  {
+    codigos: ["GIC-13"], // Condado del Golfo
+    cupos: ["ventasCondadodelgolfo"],
+    asesoras: [{ username: "kenia", displayName: "Kenia Hernández" }],
+  },
+  {
+    codigos: ["GIC-04"], // Vista al Mar
+    cupos: ["ventasVistaalmar"],
+    asesoras: [{ username: "mirna", displayName: "Mirna" }],
+  },
+  {
+    codigos: ["GIC-18"], // Panamerican City
+    cupos: ["ventasPanamericancity"],
+    asesoras: [{ username: "alexander", displayName: "Alexander" }],
+  },
+  {
+    // Concepción lleva dos proyectos, cada uno con su etapa en venta:
+    // Hilo de Oro vende Brisas del Valle, y Colina City vende Helen City.
+    // Los cuatro están en OVI como listas propias: cada una tiene sus lotes.
+    codigos: ["GIC-07", "GIC-22", "GIC-10", "GIC-11"],
+    cupos: [
+      "ventasCondadohilodeoro", "ventasBrisasdelvalle",
+      "ventasColinacity", "ventasHelencity",
+    ],
+    asesoras: [{ username: "concepcion", displayName: "Concepción" }],
+  },
+  {
+    codigos: ["GIC-21"], // Altos de Las Mercedes
+    cupos: ["ventasAltosdelasmercedes"],
+    asesoras: [{ username: "dalila", displayName: "Dalila" }],
+  },
+  {
+    // Santiago City y Cumbres de Santiago son ETAPAS del mismo proyecto, no
+    // dos proyectos distintos: las lleva una sola persona y por eso van en
+    // una sola sección. En OVI siguen siendo dos inventarios separados,
+    // porque tienen lotes y precios propios.
+    codigos: ["GIC-15", "GIC-17"],
+    cupos: ["ventasSantiagocity", "ventasCumbresdesantiago"],
+    asesoras: [{ username: "morena", displayName: "Morena" }],
   },
 ];
 
@@ -110,8 +158,15 @@ export async function ensureBootstrap(): Promise<void> {
   // Asegura que los proyectos OFICIALES existan (crea los que falten por
   // código; no sobreescribe ediciones del director en los existentes).
   for (const p of SEED_PROJECTS) {
-    const ex = await prisma.project.findUnique({ where: { codigo: p.codigo } });
-    if (!ex) await prisma.project.create({ data: { ...p, estado: "activo" } });
+    const porCodigo = await prisma.project.findUnique({ where: { codigo: p.codigo } });
+    if (porCodigo) continue;
+    // Puede que Dirección ya lo haya dado de alta a mano con otro código: en
+    // ese caso NO se crea un segundo, que dejaría el inventario partido en dos.
+    const porNombre = await prisma.project.findFirst({
+      where: { nombre: { equals: p.nombre, mode: "insensitive" } },
+    });
+    if (porNombre) continue;
+    await prisma.project.create({ data: { ...p, estado: "activo" } });
   }
   // Limpia placeholders antiguos (código CHA-*) que no tengan datos operativos.
   const legacy = await prisma.project.findMany({
@@ -430,8 +485,20 @@ export async function ensureOrgUsers(): Promise<void> {
 
   // --- PILOTOS: la gente de los proyectos que van primero ----------------
   for (const piloto of PILOTOS) {
-    const proy = projects.find((p) => p.codigo === piloto.codigoProyecto);
-    if (!proy) continue;
+    // Por código, y si no aparece, por el nombre del catálogo: si Dirección
+    // creó el proyecto a mano con otro código, la asesora igual queda asignada.
+    const proyectos = piloto.codigos
+      .map((c) => {
+        const porCodigo = projects.find((p) => p.codigo === c);
+        if (porCodigo) return porCodigo;
+        const nombre = SEED_PROJECTS.find((p) => p.codigo === c)?.nombre;
+        return nombre
+          ? projects.find((p) => p.nombre.toLowerCase() === nombre.toLowerCase())
+          : undefined;
+      })
+      .filter((p): p is NonNullable<typeof p> => Boolean(p));
+    if (!proyectos.length) continue;
+
     for (const a of piloto.asesoras) {
       const uid = await upsertUser({
         username: a.username,
@@ -441,18 +508,24 @@ export async function ensureOrgUsers(): Promise<void> {
         supervisorId: aInterna,
         modoPiloto: true,
       });
-      // El marcador se re-afirma en cada arranque solo si nadie lo apagó a
-      // mano: `upsertUser` no toca a los usuarios que ya existen, así que
-      // apagarlo desde el panel de Usuarios es definitivo.
-      if ((await prisma.projectAssignment.count({ where: { userId: uid } })) === 0) {
-        await prisma.projectAssignment.create({
+      // Cada asignación se hace UNA vez y queda anotada. Así una persona puede
+      // llevar varias etapas, y si mañana alguien le quita una desde el panel
+      // de Usuarios, el arranque siguiente no se la devuelve.
+      for (const proy of proyectos) {
+        const marca = `asignacion:${a.username}:${proy.codigo}`;
+        const yaCorrio = await prisma.operacionUnica.findUnique({ where: { clave: marca } });
+        if (yaCorrio) continue;
+        await prisma.projectAssignment.createMany({
           data: { userId: uid, projectId: proy.id },
+          skipDuplicates: true,
         });
+        await prisma.operacionUnica.create({ data: { clave: marca } });
       }
     }
-    // El cupo genérico del proyecto sobra: ya hay personas con nombre propio.
+
+    // Los cupos genéricos sobran: ya hay personas con nombre propio.
     await prisma.user.updateMany({
-      where: { username: { equals: piloto.cupoGenerico, mode: "insensitive" }, activo: true },
+      where: { username: { in: piloto.cupos }, activo: true },
       data: { activo: false },
     });
   }

@@ -41,6 +41,13 @@ solo el «casco» de la aplicación. Un lote que apareciera disponible sin serlo
 causaría una doble venta, que es peor que no tener aplicación. Cuando no hay
 señal se avisa con claridad en vez de mostrar algo desactualizado.
 
+Además, **la pantalla abierta se pone al día sola cada minuto**
+(`src/components/AlDia.tsx`, montado en el layout de `(app)`). Sin eso, dos
+personas con OVI abierta a la vez pueden ver inventarios distintos: una aparta
+un lote y la otra lo sigue ofreciendo. Se actualiza solo con la pantalla a la
+vista, se pone al día de inmediato al volver de segundo plano o al recuperar la
+señal, y no interrumpe a quien está escribiendo en un campo.
+
 ## Toda página se renderiza por petición
 
 `export const dynamic = "force-dynamic"` vive en el layout raíz y **no se quita**.

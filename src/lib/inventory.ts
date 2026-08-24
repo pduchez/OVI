@@ -1,5 +1,6 @@
 import { leerLibro, escribirXlsx, leerCsv } from "@/lib/xlsx";
 import { leerPdf } from "@/lib/pdf";
+import { leerHojaDeInventario, type LecturaHoja } from "@/lib/inventario-lectura";
 
 export interface LoteRow {
   numero: string;
@@ -15,6 +16,13 @@ export interface ResultadoLectura {
   hojasIgnoradas: string[];
   /** Qué se encontró en cada hoja. Sirve para explicar por qué falló. */
   diagnostico: { hoja: string; columnas: string[]; lotes: number }[];
+  /**
+   * Cómo se interpretó el archivo: bloques por polígono, leyenda de colores y
+   * rellenos que no se supieron explicar. Va a la pantalla y a la bitácora,
+   * porque cada proyecto arma su archivo distinto y quien lo sube tiene que
+   * poder comprobar que OVI lo entendió como es.
+   */
+  informe?: LecturaHoja;
 }
 
 /** Normaliza encabezados: minúsculas, sin acentos ni signos. */
@@ -247,11 +255,31 @@ export function parseInventoryDetallado(buf: Buffer, nombre = ""): ResultadoLect
   const otras: string[] = [];
   const diag: { hoja: string; columnas: string[]; lotes: number }[] = [];
   for (const h of hojas) {
-    const filas = filasALotes(h.filas);
+    // Lectura nueva: varios bloques por hoja y el estado leído del color, con
+    // la leyenda que el propio archivo trae. La lectura antigua queda de
+    // respaldo para las hojas que sí son una tabla simple con encabezados.
+    const lectura = leerHojaDeInventario(h.filas, h.colores || []);
+    const porBloques: LoteRow[] = lectura.lotes.map((l) => ({
+      numero: l.numero,
+      area: l.area,
+      precio: l.precio,
+      estado: l.estado,
+      notas: l.notas,
+    }));
+    const simple = filasALotes(h.filas);
+    const usaBloques = porBloques.length >= simple.length;
+    const filas = usaBloques ? porBloques : simple;
+
     diag.push({ hoja: h.nombre, columnas: encabezadosDe(h.filas), lotes: filas.length });
     if (filas.length > mejor.filas.length) {
       if (mejor.hoja) otras.push(mejor.hoja);
-      mejor = { filas, hoja: h.nombre, hojasIgnoradas: [], diagnostico: [] };
+      mejor = {
+        filas,
+        hoja: h.nombre,
+        hojasIgnoradas: [],
+        diagnostico: [],
+        informe: usaBloques ? lectura : undefined,
+      };
     } else {
       otras.push(h.nombre);
     }

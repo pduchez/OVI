@@ -110,10 +110,12 @@ export async function importarInventario(_prev: unknown, fd: FormData) {
   let hoja = "";
   let ignoradas: string[] = [];
   let diagnostico: { hoja: string; columnas: string[]; lotes: number }[] = [];
+  let informe: Awaited<ReturnType<typeof parseInventoryDetallado>>["informe"];
   try {
     const buf = Buffer.from(await file.arrayBuffer());
     const lectura = parseInventoryDetallado(buf, nombre);
     rows = lectura.filas;
+    informe = lectura.informe;
     hoja = lectura.hoja;
     ignoradas = lectura.hojasIgnoradas;
     diagnostico = lectura.diagnostico;
@@ -157,6 +159,44 @@ export async function importarInventario(_prev: unknown, fd: FormData) {
     }
   }
 
+  // --- El archivo REEMPLAZA al inventario, no se suma a él ----------------
+  //
+  // Manda lo que sube quien está en el campo. Los proyectos vienen con lotes
+  // precargados que casi nunca coinciden con la realidad del terreno; si se
+  // conservaran, quedarían mezclados con los del archivo y se ofrecerían
+  // lotes que no existen.
+  //
+  // Con UNA excepción que no se negocia: un lote con historial NO se borra.
+  // Si está reservado, vendido, bloqueado, o tiene un negocio colgando, se
+  // conserva aunque no venga en el archivo — borrarlo destruiría el registro
+  // de una venta y el respaldo de un dinero recibido. Esos se informan para
+  // que la Gerencia los revise a mano.
+  const delArchivo = rows.map((r) => r.numero);
+  const sobrantes = await prisma.lote.findMany({
+    where: { projectId, numero: { notIn: delArchivo } },
+    include: { _count: { select: { negocios: true } } },
+  });
+  const retirables = sobrantes.filter(
+    (l) => l.estado === "disponible" && l._count.negocios === 0
+  );
+  const conConHistorial = sobrantes.filter(
+    (l) => !(l.estado === "disponible" && l._count.negocios === 0)
+  );
+  if (retirables.length) {
+    await prisma.lote.deleteMany({ where: { id: { in: retirables.map((l) => l.id) } } });
+  }
+  const eliminados = retirables.length;
+  const conservados = conConHistorial.length;
+
+  // Cómo se entendió el archivo. Va a la pantalla y a la bitácora: cada
+  // proyecto arma el suyo distinto y quien lo sube tiene que poder comprobar
+  // que OVI lo leyó como es, sin tener que confiar a ciegas.
+  const porEstado = { disponible: 0, reservado: 0, vendido: 0, bloqueado: 0 } as Record<string, number>;
+  for (const r of rows) porEstado[r.estado] = (porEstado[r.estado] || 0) + 1;
+  const sinExplicar = (informe?.coloresSinExplicar || []).reduce((a, c) => a + c.lotes, 0);
+  const leyenda = informe?.leyenda || [];
+  const bloques = informe?.bloques || [];
+
   await prisma.inventoryImport.create({
     data: {
       projectId,
@@ -165,20 +205,45 @@ export async function importarInventario(_prev: unknown, fd: FormData) {
       filas: rows.length,
       creados,
       actualizados,
+      eliminados,
+      conservados,
       userId: user.id,
       userName: user.displayName || user.username,
     },
   });
+  const comoSeLeyo =
+    (bloques.length
+      ? ` · ${bloques.length} bloque(s): ${bloques.map((b) => `${b.poligono || "sin polígono"}=${b.lotes}`).join(", ")}`
+      : "") +
+    (leyenda.length
+      ? ` · leyenda del archivo: ${leyenda.map((l) => `${l.etiqueta}→${l.estado}`).join(", ")}`
+      : "") +
+    ` · estados: ${porEstado.disponible} disponibles, ${porEstado.reservado} reservados, ` +
+    `${porEstado.vendido} vendidos, ${porEstado.bloqueado} bloqueados` +
+    (sinExplicar ? ` · ATENCIÓN: ${sinExplicar} lote(s) pintados sin leyenda que lo explique` : "");
+
   await logSecurity(
     user,
     "inventario_import",
-    `Importó ${nombre} (hoja "${hoja}"): ${creados} creados, ${actualizados} actualizados`,
+    `Importó ${nombre} (hoja "${hoja}"): ${creados} creados, ${actualizados} actualizados, ` +
+      `${eliminados} retirados por no venir en el archivo` +
+      (conservados
+        ? `, ${conservados} conservados pese a no venir en el archivo por tener historial (${conConHistorial
+            .slice(0, 10)
+            .map((l) => l.numero)
+            .join(", ")}${conservados > 10 ? "…" : ""})`
+        : "") +
+      comoSeLeyo,
     projectId
   );
 
   revalidatePath(`/inventario/${projectId}`);
   redirect(
-    `/inventario/${projectId}?ok=import&c=${creados}&a=${actualizados}&h=${encodeURIComponent(hoja)}&ig=${ignoradas.length}`
+    `/inventario/${projectId}?ok=import&c=${creados}&a=${actualizados}&e=${eliminados}` +
+      `&k=${conservados}&h=${encodeURIComponent(hoja)}&ig=${ignoradas.length}` +
+      `&vd=${porEstado.vendido}&rs=${porEstado.reservado}&bl=${porEstado.bloqueado}` +
+      `&sc=${sinExplicar}&bq=${bloques.length}` +
+      `&ley=${encodeURIComponent(leyenda.map((l) => `${l.etiqueta}=${l.estado}`).join("|"))}`
   );
 }
 

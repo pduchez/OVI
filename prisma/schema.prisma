@@ -314,6 +314,13 @@ model InventoryImport {
   filas      Int      @default(0)
   creados    Int      @default(0)
   actualizados Int    @default(0)
+  // Lotes que estaban cargados y NO venían en el archivo, así que se
+  // retiraron: manda lo que sube quien está en el campo.
+  eliminados Int      @default(0)
+  // Sobrantes que NO se pudieron retirar por tener historial (reservados,
+  // vendidos o con negocio). Se conservan siempre: borrarlos destruiría el
+  // registro de una venta.
+  conservados Int     @default(0)
   userId     String   @default("")
   userName   String   @default("")
   createdAt  DateTime @default(now())

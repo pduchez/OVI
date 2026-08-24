@@ -28,6 +28,7 @@ const GUIAS = [
   { fuente: "13-adelaida-city", salida: "OVI-Adelaida-City" },
   { fuente: "14-via-bypass", salida: "OVI-Via-Bypass" },
   { fuente: "15-condado-el-triunfo", salida: "OVI-Condado-El-Triunfo" },
+  { fuente: "16-guia-sencilla", salida: "OVI-guia-sencilla" },
 ];
 
 let chromium;

@@ -8,6 +8,7 @@
  */
 import { prisma } from "@/lib/db";
 import { hashPassword } from "@/lib/auth";
+import { GIC06_LOTES, type LoteDato } from "@/lib/datos/gic06-nuevo-san-vicente";
 
 export const SEED_USERS = [
   { username: "director1", role: "director", displayName: "Director 1", fuerza: "ambas" },
@@ -146,6 +147,13 @@ export async function ensureBootstrap(): Promise<void> {
   // línea nueva con una marca nueva, nunca se edita la de arriba.
   await restablecerClaveInicial("clarita", "reset:clarita:2026-08-24");
 
+  // Corrección del inventario de Nuevo San Vicente. Ver la función.
+  await cargarInventarioUnaVez(
+    "GIC-06",
+    GIC06_LOTES,
+    "inventario:GIC-06:lotes-3-etapa:2026-08-24"
+  );
+
   bootstrapped = true;
 }
 
@@ -277,6 +285,66 @@ async function restablecerClaveInicial(username: string, marca: string) {
   }
   // Se anota aunque el usuario no exista: la operación ya se intentó y no debe
   // quedar armada, esperando a que alguien cree un usuario con ese nombre.
+  await prisma.operacionUnica.create({ data: { clave: marca } });
+}
+
+/**
+ * Deja el inventario de un proyecto EXACTAMENTE como dice una lista, una sola vez.
+ *
+ * Por qué existe: las asesoras de Nuevo San Vicente subieron su Excel cuando OVI
+ * todavía no sabía leer el estado PINTADO de los lotes, así que los 293 entraron
+ * como disponibles —y 96 de ellos no lo están—. Corregirlo pidiéndoles que
+ * volvieran a subir el archivo era cargarles a ellas un error nuestro.
+ *
+ * Aplica las MISMAS reglas que una importación normal, que no se relajan por ser
+ * una corrección:
+ *  - Lo que trae la lista manda: lo que no venga en ella se retira.
+ *  - Un lote CON HISTORIAL nunca se borra ni se le pisa el estado. Si alguien ya
+ *    lo reservó o vendió desde OVI, eso vale más que cualquier lista.
+ *
+ * Corre una sola vez, anotada en `OperacionUnica`: el arranque se ejecuta en
+ * cada despliegue y repetir esto le borraría a la gente su trabajo del día.
+ */
+async function cargarInventarioUnaVez(
+  codigoProyecto: string,
+  lista: LoteDato[],
+  marca: string
+) {
+  const yaCorrio = await prisma.operacionUnica.findUnique({ where: { clave: marca } });
+  if (yaCorrio) return;
+
+  const proyecto = await prisma.project.findUnique({ where: { codigo: codigoProyecto } });
+  if (!proyecto || !lista.length) return;
+  const projectId = proyecto.id;
+
+  for (const l of lista) {
+    const existe = await prisma.lote.findUnique({
+      where: { projectId_numero: { projectId, numero: l.numero } },
+    });
+    if (existe) {
+      // Lo que se movió DENTRO de OVI vale más que la lista.
+      const estado = ["reservado", "vendido"].includes(existe.estado) ? existe.estado : l.estado;
+      await prisma.lote.update({
+        where: { id: existe.id },
+        data: { area: l.area, precio: l.precio, estado },
+      });
+    } else {
+      await prisma.lote.create({
+        data: { projectId, numero: l.numero, area: l.area, precio: l.precio, estado: l.estado, notas: "" },
+      });
+    }
+  }
+
+  // Lo que no viene en la lista se retira, salvo que tenga historial.
+  const sobrantes = await prisma.lote.findMany({
+    where: { projectId, numero: { notIn: lista.map((l) => l.numero) } },
+    include: { _count: { select: { negocios: true } } },
+  });
+  const retirables = sobrantes.filter((l) => l.estado === "disponible" && l._count.negocios === 0);
+  if (retirables.length) {
+    await prisma.lote.deleteMany({ where: { id: { in: retirables.map((l) => l.id) } } });
+  }
+
   await prisma.operacionUnica.create({ data: { clave: marca } });
 }
 

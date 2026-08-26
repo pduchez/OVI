@@ -201,6 +201,7 @@ export async function ensureBootstrap(): Promise<void> {
   // sola vez, gracias a su marca; para repetir uno más adelante se agrega una
   // línea nueva con una marca nueva, nunca se edita la de arriba.
   await restablecerClaveInicial("clarita", "reset:clarita:2026-08-24");
+  await restablecerClaveInicial("luci", "reset:luci:2026-08-24");
 
   // Corrección del inventario de Nuevo San Vicente. Ver la función.
   await cargarInventarioUnaVez(

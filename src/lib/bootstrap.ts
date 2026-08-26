@@ -129,6 +129,34 @@ export const PILOTOS = [
   },
 ];
 
+/**
+ * Destinopropiedades.com: cinco personas con nombre propio, que sustituyen a
+ * los cupos genéricos `vdp1..vdp5`.
+ *
+ * Es el MISMO usuario renombrado, no uno nuevo: conserva su historial, su
+ * jerarquía y todo lo que haya registrado. Siguen siendo ITINERANTES —sin
+ * proyecto asignado a propósito— porque ven la disponibilidad de TODOS los
+ * proyectos; ponerles un proyecto fijo se la recortaría (ver `getScope`).
+ */
+export const VENDEDORES_DP = [
+  { cupo: "vdp1", legado: "v_dp_01", username: "william", displayName: "William" },
+  { cupo: "vdp2", legado: "v_dp_02", username: "anes", displayName: "Anes" },
+  { cupo: "vdp3", legado: "v_dp_03", username: "irma", displayName: "Irma" },
+  { cupo: "vdp4", legado: "v_dp_04", username: "josue", displayName: "Josué" },
+  { cupo: "vdp5", legado: "v_dp_05", username: "gerardo", displayName: "Gerardo" },
+];
+
+/**
+ * Cupos de DP que ya no se ocupan: la fuerza quedó con cinco personas de
+ * nombre propio y los cinco restantes nunca tuvieron dueño. Se retiran de la
+ * base. Van las dos escrituras —`vdp6` y `v_dp_06`— porque puede existir
+ * cualquiera de las dos según cuándo se haya creado el cupo.
+ */
+export const CUPOS_DP_RETIRADOS = [
+  "vdp6", "vdp7", "vdp8", "vdp9", "vdp10",
+  "v_dp_06", "v_dp_07", "v_dp_08", "v_dp_09", "v_dp_10",
+];
+
 export const SEED_VENDEDORES = [
   { nombre: "Ana Martínez", fuerza: "interna" },
   { nombre: "Carlos Rivas", fuerza: "interna" },
@@ -136,9 +164,15 @@ export const SEED_VENDEDORES = [
   { nombre: "José Hernández", fuerza: "ucoes" },
   { nombre: "María López", fuerza: "ucoes" },
   { nombre: "Roberto Cruz", fuerza: "ucoes" },
-  { nombre: "Vendedor DP 1", fuerza: "destino" },
-  { nombre: "Vendedor DP 2", fuerza: "destino" },
+  // El crédito de una venta de DP va al nombre de quien la hizo. Antes eran
+  // dos cupos sin dueño («Vendedor DP 1» y «Vendedor DP 2»); ahora son las
+  // cinco personas reales, y salen del mismo lugar que sus usuarios para que
+  // no haya dos listas de nombres que se puedan desfasar.
+  ...VENDEDORES_DP.map((v) => ({ nombre: v.displayName, fuerza: "destino" })),
 ];
+
+/** Cupos del catálogo de vendedores que ya no se usan. */
+const VENDEDORES_CATALOGO_RETIRADOS = ["Vendedor DP 1", "Vendedor DP 2"];
 
 let bootstrapped = false;
 
@@ -186,6 +220,9 @@ export async function ensureBootstrap(): Promise<void> {
     const ex = await prisma.vendedor.findFirst({ where: { nombre: v.nombre } });
     if (!ex) await prisma.vendedor.create({ data: { ...v, activo: true } });
   }
+  // Y retira los cupos sin dueño que sobran, ya que DP tiene sus cinco
+  // nombres: un negocio acreditado a «Vendedor DP 1» no le sirve a nadie.
+  for (const n of VENDEDORES_CATALOGO_RETIRADOS) await retirarVendedorCatalogo(n);
 
   // Estructura organizacional (según el listado del Grupo Chacón).
   await ensureOrgUsers();
@@ -405,6 +442,69 @@ async function cargarInventarioUnaVez(
   await prisma.operacionUnica.create({ data: { clave: marca } });
 }
 
+/**
+ * Le pone nombre propio a un cupo genérico, UNA SOLA VEZ.
+ *
+ * Cambia el usuario y el nombre visible, y le deja la contraseña inicial.
+ * Sigue siendo el MISMO usuario: conserva su historial, su jerarquía y todo lo
+ * que haya registrado; lo único que cambia es cómo se identifica al entrar.
+ *
+ * Va anotado con su marca porque el arranque corre en cada despliegue: suelto,
+ * le borraría a la persona la contraseña que acababa de escoger. La marca se
+ * escribe solo si el cambio de verdad ocurrió — si el cupo no existe (base
+ * nueva) no hay nada que renombrar y el usuario nace ya con su nombre.
+ */
+async function darNombrePropio(
+  cupo: string,
+  username: string,
+  displayName: string,
+  marca: string
+) {
+  const yaCorrio = await prisma.operacionUnica.findUnique({ where: { clave: marca } });
+  if (yaCorrio) return;
+
+  const u = await prisma.user.findFirst({
+    where: { username: { equals: cupo, mode: "insensitive" } },
+  });
+  if (!u) return;
+  const ocupado = await prisma.user.findFirst({
+    where: { username: { equals: username, mode: "insensitive" } },
+  });
+  if (ocupado) return;
+
+  await prisma.user.update({
+    where: { id: u.id },
+    data: {
+      username,
+      displayName,
+      passwordHash: hashPassword("password"),
+      // Al entrar, OVI la lleva sola a escoger una nueva.
+      mustChangePassword: true,
+      // Cambiar la contraseña cierra cualquier sesión abierta anterior.
+      sessionEpoch: { increment: 1 },
+    },
+  });
+  await prisma.operacionUnica.create({ data: { clave: marca } });
+}
+
+/**
+ * Retira del catálogo un vendedor que sobra: se borra si nunca se le acreditó
+ * nada; si ya tiene visitas o negocios se conserva desactivado, porque
+ * borrarlo dejaría esos registros sin el nombre de quien los hizo.
+ */
+async function retirarVendedorCatalogo(nombre: string) {
+  const v = await prisma.vendedor.findFirst({
+    where: { nombre },
+    include: { _count: { select: { visitas: true, negocios: true } } },
+  });
+  if (!v) return;
+  if (!v._count.visitas && !v._count.negocios) {
+    await prisma.vendedor.delete({ where: { id: v.id } });
+  } else if (v.activo) {
+    await prisma.vendedor.update({ where: { id: v.id }, data: { activo: false } });
+  }
+}
+
 /** Retira un cupo que sobra: se borra si nunca se usó; si no, se desactiva. */
 async function retirarCupo(username: string) {
   const u = await prisma.user.findFirst({
@@ -439,7 +539,12 @@ export async function ensureOrgUsers(): Promise<void> {
   const aInterna = await upsertUser({ username: "pamela", role: "asistente", displayName: "Asistente Ejecutiva — Interna", fuerza: "interna", supervisorId: gInterna });
   const gUcoes = await upsertUser({ username: "gerente_ucoes", role: "gerente", displayName: "Gerente de Ventas — UCOES", fuerza: "ucoes", supervisorId: dir1?.id });
   const aUcoes = await upsertUser({ username: "asist_ucoes", role: "asistente", displayName: "Asistente Ejecutiva — UCOES", fuerza: "ucoes", supervisorId: gUcoes });
-  const aDp = await upsertUser({ username: "asist_dp", role: "asistente", displayName: "Asistente Ejecutiva — Destinopropiedades.com", fuerza: "destino", supervisorId: dir2?.id });
+  // La asistente ejecutiva de Destinopropiedades.com es Priscila. Como
+  // asistente ve y gestiona TODOS los proyectos —actividad e inventario, sin
+  // proyecto que la acote— y administra a los usuarios de su fuerza. Fijar
+  // precios sigue siendo de gerencia y dirección (ver `getScope`).
+  await darNombrePropio("asist_dp", "priscila", "Priscila", "nombre:priscila:2026-08-26");
+  const aDp = await upsertUser({ username: "priscila", role: "asistente", displayName: "Priscila", fuerza: "destino", supervisorId: dir2?.id });
 
   // --- Ventas de sitio: un usuario por proyecto ---------------------------
   // El usuario se llama como el proyecto (ventasBypass, ventasCondadovillalourdes)
@@ -477,13 +582,19 @@ export async function ensureOrgUsers(): Promise<void> {
   // fuerza itinerante sobran: se retiran si nunca se usaron.
   for (let i = 11; i <= 20; i++) await retirarCupo(`v_ucoes_${pad(i)}`);
 
-  // --- Destinopropiedades.com: 10, itinerantes ---------------------------
-  for (let i = 1; i <= 10; i++) {
-    const nombre = `Vendedor DP ${i}`;
-    await renombrarUsuario(`v_dp_${pad(i)}`, `vdp${i}`, nombre);
-    const uid = await upsertUser({ username: `vdp${i}`, role: "vendedor", displayName: nombre, fuerza: "destino", supervisorId: aDp });
+  // --- Destinopropiedades.com: cinco personas, itinerantes ---------------
+  // No llevan proyecto asignado A PROPÓSITO: ven la disponibilidad de todos
+  // los proyectos, y asignarles uno se la recortaría a ese solo.
+  for (const v of VENDEDORES_DP) {
+    // Dos migraciones encadenadas, cada una conservando el mismo usuario y
+    // por lo tanto su historial: v_dp_01 → vdp1 → william.
+    await renombrarUsuario(v.legado, v.cupo, v.displayName);
+    await darNombrePropio(v.cupo, v.username, v.displayName, `nombre:${v.username}:2026-08-26`);
+    const uid = await upsertUser({ username: v.username, role: "vendedor", displayName: v.displayName, fuerza: "destino", supervisorId: aDp });
     await prisma.projectAssignment.deleteMany({ where: { userId: uid } });
   }
+  // Los cupos DP que sobran salen de la base.
+  for (const cupo of CUPOS_DP_RETIRADOS) await retirarCupo(cupo);
 
   // --- PILOTOS: la gente de los proyectos que van primero ----------------
   for (const piloto of PILOTOS) {

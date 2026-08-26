@@ -27,13 +27,14 @@ plataforma en línea** con dashboard, reportes y control de acceso por rol.
 |-----|---------|-----------|
 | **Director** | `director1`, `director2` | Todo. Administra proyectos, usuarios y seguridad. |
 | **Gerente de ventas** | `gerente_interna`, `gerente_ucoes` | Toda la actividad de todos los proyectos. **Fija los precios** y carga inventario. |
-| **Asistente ejecutiva** | `asist_interna`, `asist_ucoes`, `asist_dp` | Igual que el gerente pero **sin tocar precios**. Administra los usuarios de su fuerza. |
+| **Asistente ejecutiva** | `pamela` (Interna), `asist_ucoes`, `priscila` (DP) | Igual que el gerente pero **sin tocar precios**. Administra los usuarios de su fuerza. |
 | **Ventas de sitio** | `ventas<Proyecto>` | **Su** proyecto: registra el día a día y **marca los lotes que se reservan o se venden**. |
 | **UCOES** | `vucoes1` … `vucoes10` | Ven el inventario de **todos** los proyectos y venden en cualquiera. Su actividad queda en su fuerza. |
-| **Destinopropiedades.com** | `vdp1` … `vdp10` | Igual que UCOES, en la fuerza DP. Su actividad no se mezcla con la de Chacón. |
+| **Destinopropiedades.com** | `william`, `anes`, `irma`, `josue`, `gerardo` | Igual que UCOES, en la fuerza DP. Su actividad no se mezcla con la de Chacón. |
 
 El usuario de sitio se llama como su proyecto para recordarlo sin lista:
-`ventasBypass`, `ventasCondadovillalourdes`, `ventasCumbresdesantiago`… El
+`ventasBypass`, `ventasCondadovillalourdes`, `ventasCumbresdesantiago`… Los
+demás se llaman como la persona: `pamela`, `priscila`, `william`, `karla`. El
 ingreso **no distingue mayúsculas**.
 
 ### Dos reglas duras

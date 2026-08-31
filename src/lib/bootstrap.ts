@@ -127,6 +127,18 @@ export const PILOTOS = [
     cupos: ["ventasSantiagocity", "ventasCumbresdesantiago"],
     asesoras: [{ username: "morena", displayName: "Morena" }],
   },
+  {
+    // Gaby lleva DOS PROYECTOS DISTINTOS —no dos etapas de uno solo—, en
+    // departamentos distintos: Condado Villa Lourdes en Lourdes, Colón, y
+    // Portal Las Luces en Chalatenango. Cada uno con su lista y sus precios.
+    //
+    // Es la misma Gaby que ya está en Nuevo San Vicente: se le SUMAN estos dos.
+    // Quitarle el que ya tenía no se pidió, y una asignación se retira desde el
+    // panel de Usuarios, nunca de callado desde el arranque.
+    codigos: ["GIC-20", "GIC-08"],
+    cupos: ["ventasCondadovillalourdes", "ventasPortallasluces"],
+    asesoras: [{ username: "gaby", displayName: "Gaby" }],
+  },
 ];
 
 /**
@@ -240,6 +252,7 @@ export async function ensureBootstrap(): Promise<void> {
   await restablecerClaveInicial("clarita", "reset:clarita:2026-08-24");
   await restablecerClaveInicial("luci", "reset:luci:2026-08-24");
   await restablecerClaveInicial("kenia", "reset:kenia:2026-08-26");
+  await restablecerClaveInicial("gaby", "reset:gaby:2026-08-31");
 
   // Corrección del inventario de Nuevo San Vicente. Ver la función.
   await cargarInventarioUnaVez(

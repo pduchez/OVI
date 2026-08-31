@@ -107,6 +107,28 @@ export const VENDEDORAS = [
       "tiene sus lotes y sus precios. En la pantalla busque <b>Condado Villa " +
       "Lourdes</b>: así se llama en OVI, aunque usted le diga Villa Lourdes.",
   },
+  {
+    archivo: "24-alejandra", salida: "OVI-Alejandra-cinco-proyectos",
+    nombre: "Alejandra", usuario: "alejandra", genero: "f",
+    // Cinco proyectos distintos, en cuatro departamentos. Ninguno es etapa de
+    // otro, así que el aviso de abajo no habla de etapas sino de escoger bien.
+    proyectos: [
+      "Adelaida City", "Riviera del Pacífico",
+      "La Estancia", "El Porvenir", "Salitrillo City",
+    ],
+    titulo: "Sus cinco proyectos",
+    pie: "Sonsonate · La Libertad · Santa Ana",
+    clave: "CincoListas2026",
+    etapas: true,
+    notaEtapas:
+      "Usted lleva <b>cinco proyectos distintos</b>, no etapas de uno solo, y " +
+      "cada uno es su propia lista en OVI, con sus lotes y sus precios: " +
+      "<b>Adelaida City</b> (Izalco), <b>Riviera del Pacífico</b> (Playa " +
+      "Suncita), <b>La Estancia</b> y <b>El Porvenir</b> (Colón) y " +
+      "<b>Salitrillo City</b> (Santa Ana). Si a alguno usted le dice de otra " +
+      "manera —a Riviera del Pacífico mucha gente le dice <b>Suncita</b>—, " +
+      "en OVI búsquelo por el nombre de esta lista.",
+  },
 ];
 
 /** Bloque de aviso para quien lleva más de una lista. Es su único riesgo real. */

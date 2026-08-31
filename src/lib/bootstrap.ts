@@ -139,6 +139,22 @@ export const PILOTOS = [
     cupos: ["ventasCondadovillalourdes", "ventasPortallasluces"],
     asesoras: [{ username: "gaby", displayName: "Gaby" }],
   },
+  {
+    // Alejandra lleva CINCO proyectos distintos, repartidos en cuatro
+    // departamentos. Ninguno es etapa de otro: cada uno tiene su lista.
+    //
+    // «Sunsita» es Riviera del Pacífico (GIC-01): no hay proyecto con ese
+    // nombre en el catálogo, pero sí está en Playa Suncita, La Libertad.
+    //
+    // Adelaida City ya lo lleva Meyvelin. Compartirlo se puede —Nuevo San
+    // Vicente lo llevan tres—, y el cupo genérico ya estaba retirado.
+    codigos: ["GIC-03", "GIC-01", "GIC-09", "GIC-12", "GIC-02"],
+    cupos: [
+      "ventasAdelaidacity", "ventasRivieradelpacifico",
+      "ventasLaestancia", "ventasElporvenir", "ventasSalitrillocity",
+    ],
+    asesoras: [{ username: "alejandra", displayName: "Alejandra" }],
+  },
 ];
 
 /**

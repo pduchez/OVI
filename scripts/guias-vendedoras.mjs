@@ -89,6 +89,24 @@ export const VENDEDORAS = [
       "aparecen como listas separadas, porque cada uno tiene sus propios lotes " +
       "y sus propios precios.",
   },
+  {
+    archivo: "23-villa-lourdes-y-portal-las-luces",
+    salida: "OVI-Villa-Lourdes-y-Portal-Las-Luces",
+    nombre: "Gaby", usuario: "gaby", genero: "f",
+    // Dos proyectos DISTINTOS, en departamentos distintos. Por eso el aviso de
+    // abajo no dice «etapas»: decírselo sería enseñarle algo que no es cierto.
+    proyectos: ["Condado Villa Lourdes", "Portal Las Luces"],
+    titulo: "Condado Villa Lourdes<br>y Portal Las Luces",
+    pie: "Lourdes, Colón · Chalatenango",
+    clave: "VillaLourdes2026",
+    etapas: true,
+    notaEtapas:
+      "Usted lleva <b>dos proyectos distintos</b>, no dos etapas de uno solo: " +
+      "<b>Condado Villa Lourdes</b> (Lourdes, Colón) y <b>Portal Las Luces</b> " +
+      "(Chalatenango). En OVI cada uno es su propia lista, porque cada uno " +
+      "tiene sus lotes y sus precios. En la pantalla busque <b>Condado Villa " +
+      "Lourdes</b>: así se llama en OVI, aunque usted le diga Villa Lourdes.",
+  },
 ];
 
 /** Bloque de aviso para quien lleva más de una lista. Es su único riesgo real. */

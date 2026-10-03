@@ -3,6 +3,7 @@
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
+import { motivoDeBase } from "@/lib/db-errores";
 import {
   AUTH_COOKIE,
   findUserByUsername,
@@ -44,20 +45,26 @@ export async function loginAction(_prev: unknown, formData: FormData) {
     return { error: "Ingresa usuario y contraseña." };
   }
 
-  try {
-    await ensureBootstrap();
-  } catch {
-    return {
-      error:
-        "No se pudo conectar a la base de datos. Revisa DATABASE_URL en Vercel (usa la cadena del 'Session pooler' de Supabase).",
-    };
-  }
+  // El arranque NO es requisito para entrar, y antes lo era: cualquier tropiezo
+  // suyo —una carrera entre dos despliegues, un tiempo agotado por las 273
+  // consultas que hacía— dejaba a TODO EL MUNDO fuera. Si falla, se sigue
+  // adelante: si la base de verdad no está, la consulta de abajo lo dirá, y con
+  // el motivo correcto.
+  const falloArranque: unknown = await ensureBootstrap().then(
+    () => null,
+    (e) => e ?? new Error("arranque")
+  );
 
   const ip = await clientIp();
   const claves = [claveUsuario(username), claveIp(ip)];
 
   // Anti fuerza bruta: bloquea por usuario y por IP.
-  const espera = await bloqueoRestante(claves);
+  let espera = 0;
+  try {
+    espera = await bloqueoRestante(claves);
+  } catch (e) {
+    return { error: motivoDeBase(e) };
+  }
   if (espera > 0) {
     const min = Math.ceil(espera / 60);
     return {
@@ -65,7 +72,18 @@ export async function loginAction(_prev: unknown, formData: FormData) {
     };
   }
 
-  const user = await findUserByUsername(username);
+  let user;
+  try {
+    user = await findUserByUsername(username);
+  } catch (e) {
+    return { error: motivoDeBase(e) };
+  }
+
+  // La base responde, pero el arranque falló y no hay con quién comparar: eso
+  // no es una contraseña mal escrita, es que el sistema no terminó de montarse.
+  if (!user && falloArranque) {
+    return { error: motivoDeBase(falloArranque) };
+  }
 
   // Si el usuario no existe se hace igualmente el trabajo de un scrypt: sin
   // esto la respuesta vuelve mucho antes y se puede averiguar qué usuarios

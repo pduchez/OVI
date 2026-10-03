@@ -204,9 +204,70 @@ const VENDEDORES_CATALOGO_RETIRADOS = ["Vendedor DP 1", "Vendedor DP 2"];
 
 let bootstrapped = false;
 
+/**
+ * Versión del arranque. SE SUBE A MANO cada vez que se agrega una vendedora, un
+ * proyecto, un restablecimiento de contraseña o cualquier operación de una sola
+ * vez. Mientras no cambie, el arranque ya hizo su trabajo y no revisa nada.
+ *
+ * Por qué existe: el arranque recorría TODO el catálogo en cada petición —22
+ * proyectos, ~40 cupos de venta, cada piloto con su marca— y eso son **273
+ * consultas a la base antes de comprobar la contraseña de nadie**, medidas. En
+ * local da igual; contra el pooler de Supabase cada una es un viaje de ida y
+ * vuelta, en serie (connection_limit=1), y se comían el límite de tiempo de la
+ * función. Con esta marca el estado normal cuesta UNA consulta.
+ */
+const VERSION_ARRANQUE = "2026-10-03";
+
+/** ¿Una operación de una sola vez ya se hizo? */
+async function yaCorrio(marca: string): Promise<boolean> {
+  return (await prisma.operacionUnica.findUnique({ where: { clave: marca } })) !== null;
+}
+
+/**
+ * Anota una operación de una sola vez.
+ *
+ * Si otra petición la anotó primero, eso NO es un error: en serverless dos
+ * arranques corren a la vez y los dos pasan la comprobación de arriba. Antes esa
+ * carrera lanzaba una excepción y, como el ingreso esperaba al arranque, dejaba
+ * a la persona fuera con un mensaje que además culpaba a DATABASE_URL.
+ */
+async function anotar(marca: string): Promise<void> {
+  try {
+    await prisma.operacionUnica.create({ data: { clave: marca } });
+  } catch (e) {
+    if ((e as { code?: string })?.code !== "P2002") throw e;
+  }
+}
+
+/**
+ * Crea algo que puede estarse creando a la vez en otra petición.
+ *
+ * El patrón «busco, no está, lo creo» no es seguro en serverless: tras un
+ * despliegue entran varias personas a la vez, cada una en su propia instancia,
+ * y las tres arrancan el sistema al mismo tiempo. Las tres ven que el usuario
+ * no existe y las tres lo crean. Chocar contra la restricción de único NO es un
+ * error: significa que alguien se adelantó, así que se relee y se sigue.
+ */
+async function crearSiNoHay<T>(
+  crear: () => Promise<T>,
+  buscar: () => Promise<T | null>
+): Promise<T | null> {
+  try {
+    return await crear();
+  } catch (e) {
+    if ((e as { code?: string })?.code !== "P2002") throw e;
+    return await buscar();
+  }
+}
+
 /** Crea usuarios/proyectos/vendedores base si aún no existen. Idempotente. */
 export async function ensureBootstrap(): Promise<void> {
   if (bootstrapped) return;
+  const marcaVersion = `arranque:${VERSION_ARRANQUE}`;
+  if (await yaCorrio(marcaVersion)) {
+    bootstrapped = true;
+    return;
+  }
   // Asegura que los usuarios base existan (crea los que falten por username;
   // no toca la contraseña de los ya existentes).
   for (const u of SEED_USERS) {
@@ -214,7 +275,10 @@ export async function ensureBootstrap(): Promise<void> {
       where: { username: { equals: u.username, mode: "insensitive" } },
     });
     if (!ex) {
-      await prisma.user.create({ data: { ...u, passwordHash: hashPassword("password") } });
+      await crearSiNoHay(
+        () => prisma.user.create({ data: { ...u, passwordHash: hashPassword("password") } }),
+        () => prisma.user.findFirst({ where: { username: { equals: u.username, mode: "insensitive" } } })
+      );
     }
   }
   // Asegura que los proyectos OFICIALES existan (crea los que falten por
@@ -228,7 +292,10 @@ export async function ensureBootstrap(): Promise<void> {
       where: { nombre: { equals: p.nombre, mode: "insensitive" } },
     });
     if (porNombre) continue;
-    await prisma.project.create({ data: { ...p, estado: "activo" } });
+    await crearSiNoHay(
+      () => prisma.project.create({ data: { ...p, estado: "activo" } }),
+      () => prisma.project.findUnique({ where: { codigo: p.codigo } })
+    );
   }
   // Limpia placeholders antiguos (código CHA-*) que no tengan datos operativos.
   const legacy = await prisma.project.findMany({
@@ -246,7 +313,12 @@ export async function ensureBootstrap(): Promise<void> {
   // Asegura los vendedores base (crea los que falten por nombre).
   for (const v of SEED_VENDEDORES) {
     const ex = await prisma.vendedor.findFirst({ where: { nombre: v.nombre } });
-    if (!ex) await prisma.vendedor.create({ data: { ...v, activo: true } });
+    if (!ex) {
+      await crearSiNoHay(
+        () => prisma.vendedor.create({ data: { ...v, activo: true } }),
+        () => prisma.vendedor.findFirst({ where: { nombre: v.nombre } })
+      );
+    }
   }
   // Y retira los cupos sin dueño que sobran, ya que DP tiene sus cinco
   // nombres: un negocio acreditado a «Vendedor DP 1» no le sirve a nadie.
@@ -277,6 +349,9 @@ export async function ensureBootstrap(): Promise<void> {
     "inventario:GIC-06:lotes-3-etapa:2026-08-24"
   );
 
+  // Todo lo de esta versión quedó hecho. A partir de aquí, el arranque cuesta
+  // una consulta: la que comprueba esta misma marca.
+  await anotar(marcaVersion);
   bootstrapped = true;
 }
 
@@ -289,22 +364,30 @@ async function upsertUser(u: {
   username: string; role: string; displayName: string; fuerza: string;
   supervisorId?: string | null; modoPiloto?: boolean;
 }): Promise<string> {
-  const ex = await prisma.user.findFirst({
-    where: { username: { equals: u.username, mode: "insensitive" } },
-  });
+  const buscar = () =>
+    prisma.user.findFirst({ where: { username: { equals: u.username, mode: "insensitive" } } });
+  const ex = await buscar();
   if (ex) return ex.id;
-  const created = await prisma.user.create({
-    data: {
-      username: u.username,
-      role: u.role,
-      displayName: u.displayName,
-      fuerza: u.fuerza,
-      supervisorId: u.supervisorId || null,
-      passwordHash: hashPassword("password"),
-      mustChangePassword: true,
-      modoPiloto: u.modoPiloto === true,
-    },
-  });
+  const created = await crearSiNoHay(
+    () =>
+      prisma.user.create({
+        data: {
+          username: u.username,
+          role: u.role,
+          displayName: u.displayName,
+          fuerza: u.fuerza,
+          supervisorId: u.supervisorId || null,
+          passwordHash: hashPassword("password"),
+          mustChangePassword: true,
+          modoPiloto: u.modoPiloto === true,
+        },
+      }),
+    buscar
+  );
+  // `crearSiNoHay` solo devuelve null si el usuario desapareció entre el choque
+  // y la relectura, que no pasa: aquí nadie borra. Si pasara, es mejor fallar
+  // que seguir con un id inventado.
+  if (!created) throw new Error(`No se pudo crear ni encontrar el usuario ${u.username}`);
   return created.id;
 }
 
@@ -388,8 +471,7 @@ async function renombrarConClaveInicial(viejo: string, nuevo: string) {
  * —otro olvido más adelante— se usa una marca nueva.
  */
 async function restablecerClaveInicial(username: string, marca: string) {
-  const yaCorrio = await prisma.operacionUnica.findUnique({ where: { clave: marca } });
-  if (yaCorrio) return;
+  if (await yaCorrio(marca)) return;
 
   const u = await prisma.user.findFirst({
     where: { username: { equals: username, mode: "insensitive" } },
@@ -408,7 +490,7 @@ async function restablecerClaveInicial(username: string, marca: string) {
   }
   // Se anota aunque el usuario no exista: la operación ya se intentó y no debe
   // quedar armada, esperando a que alguien cree un usuario con ese nombre.
-  await prisma.operacionUnica.create({ data: { clave: marca } });
+  await anotar(marca);
 }
 
 /**
@@ -433,8 +515,7 @@ async function cargarInventarioUnaVez(
   lista: LoteDato[],
   marca: string
 ) {
-  const yaCorrio = await prisma.operacionUnica.findUnique({ where: { clave: marca } });
-  if (yaCorrio) return;
+  if (await yaCorrio(marca)) return;
 
   const proyecto = await prisma.project.findUnique({ where: { codigo: codigoProyecto } });
   if (!proyecto || !lista.length) return;
@@ -452,9 +533,13 @@ async function cargarInventarioUnaVez(
         data: { area: l.area, precio: l.precio, estado },
       });
     } else {
-      await prisma.lote.create({
-        data: { projectId, numero: l.numero, area: l.area, precio: l.precio, estado: l.estado, notas: "" },
-      });
+      await crearSiNoHay(
+        () =>
+          prisma.lote.create({
+            data: { projectId, numero: l.numero, area: l.area, precio: l.precio, estado: l.estado, notas: "" },
+          }),
+        () => prisma.lote.findUnique({ where: { projectId_numero: { projectId, numero: l.numero } } })
+      );
     }
   }
 
@@ -468,7 +553,7 @@ async function cargarInventarioUnaVez(
     await prisma.lote.deleteMany({ where: { id: { in: retirables.map((l) => l.id) } } });
   }
 
-  await prisma.operacionUnica.create({ data: { clave: marca } });
+  await anotar(marca);
 }
 
 /**
@@ -489,8 +574,7 @@ async function darNombrePropio(
   displayName: string,
   marca: string
 ) {
-  const yaCorrio = await prisma.operacionUnica.findUnique({ where: { clave: marca } });
-  if (yaCorrio) return;
+  if (await yaCorrio(marca)) return;
 
   const u = await prisma.user.findFirst({
     where: { username: { equals: cupo, mode: "insensitive" } },
@@ -513,7 +597,7 @@ async function darNombrePropio(
       sessionEpoch: { increment: 1 },
     },
   });
-  await prisma.operacionUnica.create({ data: { clave: marca } });
+  await anotar(marca);
 }
 
 /**
@@ -595,7 +679,10 @@ export async function ensureOrgUsers(): Promise<void> {
     // Solo se asigna si el usuario no tiene ya proyecto: nunca se pisa una
     // reasignación hecha por la asistente desde el panel de usuarios.
     if ((await prisma.projectAssignment.count({ where: { userId: uid } })) === 0) {
-      await prisma.projectAssignment.create({ data: { userId: uid, projectId: proj.id } });
+      await prisma.projectAssignment.createMany({
+        data: { userId: uid, projectId: proj.id },
+        skipDuplicates: true,
+      });
     }
   }
 
@@ -655,13 +742,12 @@ export async function ensureOrgUsers(): Promise<void> {
       // de Usuarios, el arranque siguiente no se la devuelve.
       for (const proy of proyectos) {
         const marca = `asignacion:${a.username}:${proy.codigo}`;
-        const yaCorrio = await prisma.operacionUnica.findUnique({ where: { clave: marca } });
-        if (yaCorrio) continue;
+        if (await yaCorrio(marca)) continue;
         await prisma.projectAssignment.createMany({
           data: { userId: uid, projectId: proy.id },
           skipDuplicates: true,
         });
-        await prisma.operacionUnica.create({ data: { clave: marca } });
+        await anotar(marca);
       }
     }
 
